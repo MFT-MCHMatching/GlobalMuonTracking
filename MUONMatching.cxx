@@ -14,6 +14,7 @@ MUONMatching::MUONMatching() {
   printf("B field z = %f [kGauss]\n", mField_z);
 
   mMCHTrackExtrap.setField();
+  mMatchFunc = &MUONMatching::matchMFT_MCH_TracksXY;
 }
 
 
@@ -223,16 +224,16 @@ GlobalMuonTrack MUONMatching::matchMFT_MCH_TracksXY(GlobalMuonTrack& mchTrack, M
   using SMatrix25 = ROOT::Math::SMatrix<double, 2, 5>;
   using SMatrix52 = ROOT::Math::SMatrix<double, 5, 2>;
   using SMatrix55Std = ROOT::Math::SMatrix<double, 5>;
-  using SMatrix55 = ROOT::Math::SMatrix<double, 5, 5, ROOT::Math::MatRepSym<double, 5>>;
+  using SMatrix55Sym = ROOT::Math::SMatrix<double, 5, 5, ROOT::Math::MatRepSym<double, 5>>;
   using SMatrix5 = ROOT::Math::SVector<Double_t, 5>;
 
 
-  SMatrix55 I = ROOT::Math::SMatrixIdentity();
+  SMatrix55Sym I = ROOT::Math::SMatrixIdentity();
   SMatrix25 H_k;
   SMatrix22 V_k;
   SVector2 m_k(mftTrack.getX(), mftTrack.getY()), r_k_kminus1;
   SMatrix5 GlobalMuonTrackParameters = mchTrack.getParameters();
-  SMatrix55 GlobalMuonTrackCovariances = mchTrack.getCovariances();
+  SMatrix55Sym GlobalMuonTrackCovariances = mchTrack.getCovariances();
   V_k(0, 0) = mftTrack.getCovariances()(0,0);
   V_k(1, 1) = mftTrack.getCovariances()(1,1);
   H_k(0, 0) = 1.0;
@@ -263,51 +264,154 @@ GlobalMuonTrack MUONMatching::matchMFT_MCH_TracksXY(GlobalMuonTrack& mchTrack, M
 
 }
 
+
 //_________________________________________________________________________________________________
-double MUONMatching::matchMFT_MCH_TracksXY(MCHTrack& mchTrack, MFTTrack& mftTrack) {
+GlobalMuonTrack MUONMatching::matchMFT_MCH_TracksXYPhiTanl(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack) {
+// Match two tracks evaluating positions & angles
 
-// Propagate MCH Track to Matching Plane
-mMCHTrackExtrap.extrapToZCov(&mchTrack, sMatchingPlaneZ);
+  using SVector4 = ROOT::Math::SVector<double, 4>;
+  using SMatrix44 = ROOT::Math::SMatrix<double, 4>;
+  using SMatrix45 = ROOT::Math::SMatrix<double, 4, 5>;
+  using SMatrix54 = ROOT::Math::SMatrix<double, 5, 4>;
+  using SMatrix55Std = ROOT::Math::SMatrix<double, 5>;
+  using SMatrix55Sym = ROOT::Math::SMatrix<double, 5, 5, ROOT::Math::MatRepSym<double, 5>>;
+  using SMatrix5 = ROOT::Math::SVector<Double_t, 5>;
 
-// Convert MCH Track to MFT Coordinate System
-auto convertedTrack = MCHtoGlobal(mchTrack);
 
-// Get matching Chi2
-return matchMFT_MCH_TracksXY(convertedTrack,mftTrack).getMatchingChi2();
+  SMatrix55Sym I = ROOT::Math::SMatrixIdentity();
+  SMatrix45 H_k;
+  SMatrix44 V_k;
+  SVector4 m_k(mftTrack.getX(), mftTrack.getY(), mftTrack.getPhi(), mftTrack.getTanl()), r_k_kminus1;
+  SMatrix5 GlobalMuonTrackParameters = mchTrack.getParameters();
+  SMatrix55Sym GlobalMuonTrackCovariances = mchTrack.getCovariances();
+  V_k(0, 0) = mftTrack.getCovariances()(0,0);
+  V_k(1, 1) = mftTrack.getCovariances()(1,1);
+  V_k(2, 2) = mftTrack.getCovariances()(2,2);
+  V_k(3, 3) = mftTrack.getCovariances()(3,3);
+  H_k(0, 0) = 1.0;
+  H_k(1, 1) = 1.0;
+  H_k(2, 2) = 1.0;
+  H_k(3, 3) = 1.0;
+
+  // Covariance of residuals
+  SMatrix44 invResCov = (V_k + ROOT::Math::Similarity(H_k, GlobalMuonTrackCovariances));
+  invResCov.Invert();
+
+  // Kalman Gain Matrix
+  SMatrix54 K_k = GlobalMuonTrackCovariances * ROOT::Math::Transpose(H_k) * invResCov;
+
+  // Update Parameters
+  r_k_kminus1 = m_k - H_k * GlobalMuonTrackParameters; // Residuals of prediction
+  GlobalMuonTrackParameters = GlobalMuonTrackParameters + K_k * r_k_kminus1;
+
+  // Update covariances Matrix
+  SMatrix55Std updatedCov = (I - K_k * H_k) * GlobalMuonTrackCovariances;
+
+  auto matchChi2Track = ROOT::Math::Similarity(r_k_kminus1, invResCov);
+
+  GlobalMuonTrack matchTrack;
+  matchTrack.setZ(mchTrack.getZ());
+  matchTrack.setParameters(GlobalMuonTrackParameters);
+  matchTrack.setCovariances(GlobalMuonTrackCovariances);
+  matchTrack.setMatchingChi2(matchChi2Track);
+  return matchTrack;
 
 }
 
+
+//_________________________________________________________________________________________________
+GlobalMuonTrack MUONMatching::matchMFT_MCH_TracksFull(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack) {
+// Match two tracks evaluating all parameters: X,Y, phi, tanl & q/pt
+
+  using SVector5 = ROOT::Math::SVector<double, 5>;
+  using SMatrix55Std = ROOT::Math::SMatrix<double, 5>;
+  using SMatrix55Sym = ROOT::Math::SMatrix<double, 5, 5, ROOT::Math::MatRepSym<double, 5>>;
+  using SMatrix5 = ROOT::Math::SVector<Double_t, 5>;
+
+
+  SMatrix55Sym I = ROOT::Math::SMatrixIdentity(), H_k, V_k;
+  SVector5 m_k(mftTrack.getX(), mftTrack.getY(), mftTrack.getPhi(), mftTrack.getTanl(), mftTrack.getInvQPt()), r_k_kminus1;
+  SMatrix5 GlobalMuonTrackParameters = mchTrack.getParameters();
+  SMatrix55Sym GlobalMuonTrackCovariances = mchTrack.getCovariances();
+  V_k(0, 0) = mftTrack.getCovariances()(0,0);
+  V_k(1, 1) = mftTrack.getCovariances()(1,1);
+  V_k(2, 2) = mftTrack.getCovariances()(2,2);
+  V_k(3, 3) = mftTrack.getCovariances()(3,3);
+  V_k(4, 4) = mftTrack.getCovariances()(4,4);
+  H_k(0, 0) = 1.0;
+  H_k(1, 1) = 1.0;
+  H_k(2, 2) = 1.0;
+  H_k(3, 3) = 1.0;
+  H_k(4, 4) = 1.0;
+
+
+  // Covariance of residuals
+  SMatrix55Std invResCov = (V_k + ROOT::Math::Similarity(H_k, GlobalMuonTrackCovariances));
+  invResCov.Invert();
+
+  // Kalman Gain Matrix
+  SMatrix55Std K_k = GlobalMuonTrackCovariances * ROOT::Math::Transpose(H_k) * invResCov;
+
+  // Update Parameters
+  r_k_kminus1 = m_k - H_k * GlobalMuonTrackParameters; // Residuals of prediction
+  GlobalMuonTrackParameters = GlobalMuonTrackParameters + K_k * r_k_kminus1;
+
+  // Update covariances Matrix
+  SMatrix55Std updatedCov = (I - K_k * H_k) * GlobalMuonTrackCovariances;
+
+  auto matchChi2Track = ROOT::Math::Similarity(r_k_kminus1, invResCov);
+
+  GlobalMuonTrack matchTrack;
+  matchTrack.setZ(mchTrack.getZ());
+  matchTrack.setParameters(GlobalMuonTrackParameters);
+  matchTrack.setCovariances(GlobalMuonTrackCovariances);
+  matchTrack.setMatchingChi2(matchChi2Track);
+  return matchTrack;
+
+}
 
 
 //_________________________________________________________________________________________________
 void MUONMatching::runHeavyMatching() {
 // Runs matching over all track combinations
 
-auto mchTrackID=0;
+auto GTrackID=0;
 
 for (auto gTrack: mGlobalMuonTracks) {
 auto mftTrackID=0;
 std::vector<GlobalMuonTrack> candidates;
 std::vector<double> scores;
 
+if(mCustomMatchFunc) {
   for (auto mftTrack: mMFTTracks) {
-    auto candidate = matchMFT_MCH_TracksXY(gTrack, mftTrack);
+    auto candidate = (*mCustomMatchFunc)(gTrack, mftTrack);
     scores.push_back(candidate.getMatchingChi2());
     candidates.push_back(candidate);
     mftTrackID++;
   }
+}
+  else {
+  for (auto mftTrack: mMFTTracks) {
+    auto candidate = (this->*mMatchFunc)(gTrack, mftTrack);
+    scores.push_back(candidate.getMatchingChi2());
+    candidates.push_back(candidate);
+    mftTrackID++;
+  }
+}
+
+
+
 
   std::vector<double>::iterator best_match = std::min_element(scores.begin(), scores.end());
   auto bestMFTMatch = std::distance(scores.begin(), best_match);
   candidates[bestMFTMatch].setBestMFTTrackMatchID(bestMFTMatch);
-  mGlobalMuonTracks[mchTrackID]=candidates[bestMFTMatch];
+  mGlobalMuonTracks[GTrackID]=candidates[bestMFTMatch];
   mftTrackID=0;
-  mchTrackID++;
+  GTrackID++;
 
 }
 
 }
-
 
 //_________________________________________________________________________________________________
 void MUONMatching::saveGlobalMuonTracks() {
@@ -322,15 +426,87 @@ TTree outTree("o2sim", "Global Muon Tracks");
   outFile.cd();
   outTree.Write();
   outFile.Close();
+  std::cout << "Global Muon Tracks saved to GlobalMuonTracks.root" << std::endl;
+
 }
 
 
+//_________________________________________________________________________________________________
+void MUONMatching::fitTracks() {
 
+  auto GTrackID=0;
+  for (auto& gTrack: mGlobalMuonTracks) {
+    //if(GTrackID < 5)
+    fitGlobalMuonTrack(gTrack);
+    GTrackID++;
+  }
+}
 
 
 //_________________________________________________________________________________________________
 void MUONMatching::fitGlobalMuonTrack(GlobalMuonTrack& gTrack) {
 
 const auto& mftTrack = mMFTTracks[gTrack.getBestMFTTrackMatchID()];
+
+auto ncls = mftTrack.getNumberOfPoints();
+auto offset = mftTrack.getExternalClusterIndexOffset();
+ for (int icls = ncls-1; icls > -1; --icls) {
+     auto clsEntry = mtrackExtClsIDs[offset + icls];
+     auto& thiscluster = mMFTClusters[clsEntry];
+     computeCluster(gTrack,thiscluster);
+     //auto& clsLabel = (clsLabels->getLabels(clsEntry))[0];
+   }
+
+
+}
+
+//_________________________________________________________________________________________________
+bool MUONMatching::computeCluster(GlobalMuonTrack& track, MFTCluster& cluster ) {
+
+  const auto& clx = cluster.getX();
+  const auto& cly = cluster.getY();
+  const auto& clz = cluster.getZ();
+
+  // add MCS effects for the new cluster
+  using o2::mft::constants::LayerZPosition;
+  int startingLayerID, newLayerID;
+
+  double dZ = clz - track.getZ();
+  //LayerID of each cluster from ZPosition // TODO: Use ChipMapping
+  for (auto layer = 10; layer--;)
+    if (track.getZ() < LayerZPosition[layer] + .3 & track.getZ() > LayerZPosition[layer] - .3)
+      startingLayerID = layer;
+  for (auto layer = 10; layer--;)
+    if (clz<LayerZPosition[layer] + .3 & clz> LayerZPosition[layer] - .3)
+      newLayerID = layer;
+  // Number of disks crossed by this tracklet
+  int NDisksMS;
+  if (clz - track.getZ() > 0)
+    NDisksMS = (startingLayerID % 2 == 0) ? (startingLayerID - newLayerID) / 2 : (startingLayerID - newLayerID + 1) / 2;
+  else
+    NDisksMS = (startingLayerID % 2 == 0) ? (newLayerID - startingLayerID + 1) / 2 : (newLayerID - startingLayerID) / 2;
+
+  double MFTDiskThicknessInX0 = 0.1 / 5.0; // FIXME!
+
+
+  if ((NDisksMS * MFTDiskThicknessInX0) != 0)
+    track.addMCSEffect(-1, NDisksMS * MFTDiskThicknessInX0);
+
+
+track.propagateToZhelix(clz, mField_z);
+
+const std::array<float, 2>& pos = {clx, cly};
+const std::array<float, 2>& cov = {cluster.sigmaX2, cluster.sigmaY2};
+
+if (track.update(pos, cov)) {
+  if (0) {
+    std::cout << "   New Cluster: X = " << clx << " Y = " << cly << " Z = " << clz << std::endl;
+    std::cout << "   AfterKalman: X = " << track.getX() << " Y = " << track.getY() << " Z = " << track.getZ() << " Tgl = " << track.getTanl() << "  Phi = " << track.getPhi() << " pz = " << track.getPz() << " qpt = " << 1.0 / track.getInvQPt() << std::endl;
+    std::cout << std::endl;
+    // Outputs track covariance matrix:
+    // param.getCovariances().Print();
+  }
+  return true;
+}
 
 }

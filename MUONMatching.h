@@ -26,7 +26,7 @@
 #include "MCHTracking/TrackParam.h"
 #include "MFTTracking/Cluster.h"
 #include "MFTTracking/Constants.h"
-
+#include "MFTBase/Constants.h"
 #include "MFTTracking/IndexTableUtils.h"
 
 
@@ -57,6 +57,14 @@ class MUONMatching
 
 
    // Matching methods
+   // Position
+   GlobalMuonTrack matchMFT_MCH_TracksXY(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack); // Compute track matching
+   //// Position & Angles
+   GlobalMuonTrack matchMFT_MCH_TracksXYPhiTanl(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack);
+   //// Position, Angles & Charged Momentum
+   GlobalMuonTrack matchMFT_MCH_TracksFull(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack);
+   void setMatchingFunction(GlobalMuonTrack (MUONMatching::*func)(GlobalMuonTrack&, MFTTrack&)) { mMatchFunc = func; }
+   void setCustomMatchingFunction(GlobalMuonTrack (*func)(GlobalMuonTrack&, MFTTrack&)) { mCustomMatchFunc = func; }
    void runHeavyMatching(); //Finds best match (no search window)
    void fitTracks(); //Fit all matched tracks
 
@@ -70,25 +78,18 @@ class MUONMatching
    bool propagateMCHTrackToMFT(MCHTrack& track); //Propagates MCH Track to Last MFT Plane;
    GlobalMuonTrack MCHtoGlobal(MCHTrack&); // Convert MCH Track to GlobalMuonTrack;
 
-   // Matching methods
-   // Position
-   GlobalMuonTrack matchMFT_MCH_TracksXY(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack); // Compute track matching; returns matching chi2
-   double matchMFT_MCH_TracksXY(MCHTrack& mchTrack, MFTTrack& mftTrack); // Compute track matching; returns matching chi2
-   //// Position & Angles
-   double matchMFT_MCH_TracksXYPhiTanl(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack); // Compute track matching; returns matching chi2
-   double matchMFT_MCH_TracksXYPhiTanl(MCHTrack& mchTrack, MFTTrack& mftTrack); // Compute track matching; returns matching chi2
-   //// Position, Angles & Charged Momentum
-   double matchMFT_MCH_TracksFull(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack); // Compute track matching; returns matching chi2
-   double matchMFT_MCH_TracksFull(MCHTrack& mchTrack, MFTTrack& mftTrack); // Compute track matching; returns matching chi2
+
 
    // Global Muon Track Methods
    void fitGlobalMuonTrack(GlobalMuonTrack&); // Kalman filter
-
+   bool computeCluster(GlobalMuonTrack&, MFTCluster&);
+   GlobalMuonTrack (MUONMatching::*mMatchFunc)(GlobalMuonTrack&,MFTTrack&) ;
+   GlobalMuonTrack (*mCustomMatchFunc)(GlobalMuonTrack&,MFTTrack&) = nullptr;
 
    // Data Members
    std::vector<MFTTrack> mMFTTracks;
    std::vector<MCHTrack> mMCHTracks;
-   std::vector<MFTTrack> mMCHTracksDummy; // Dummy MCH at the MFT coordinate system
+   std::vector<MFTTrack> mMCHTracksDummy; // Dummy MCH tracks at the MFT coordinate system
    std::vector<GlobalMuonTrack> mGlobalMuonTracks;
    std::vector<MFTCluster> mMFTClusters;
    std::vector<int> mtrackExtClsIDs;
