@@ -2,6 +2,7 @@
 #ifndef ALICEO2_GLOBALMUONTRACK_H
 #define ALICEO2_GLOBALMUONTRACK_H
 
+
 #include <vector>
 #include <TMath.h>
 #include "Math/SMatrix.h"
@@ -29,11 +30,15 @@ class GlobalMuonTrack : public o2::track::TrackParCovFwd
   void setMatchingChi2(double chi2) { mMatchingChi2 = chi2; }
   const double getMatchingChi2() const { return mMatchingChi2; }
 
+  void setBestMFTTrackMatchID(int ID) { mBestMCHTrackMatchID = ID; }
+  const double getBestMFTTrackMatchID() const { return mBestMCHTrackMatchID; }
+
   void print() const;
 
  private:
   std::uint32_t mROFrame = 0; ///< RO Frame
   double mMatchingChi2 = 0;
+  int mBestMCHTrackMatchID = -1;
 
 };
 

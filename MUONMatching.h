@@ -40,14 +40,15 @@ class MUONMatching
    void loadDummyMCHTracks();
    void loadMFTTracksOut();
    void saveGlobalMuonTracks();
+   std::vector<GlobalMuonTrack> getGlobalMuonTracks() const { return mGlobalMuonTracks;}
 
    void loadROFrameData(int); //Loads data from
    void initGlobalTracks(); //
 
 
-   //
-   void runHeavyMatching(); //No search window
-
+   // Matching methods
+   void runHeavyMatching(); //Finds best match (no search window)
+   void fitTracks(); //Fit all matched tracks
 
 
  private:
@@ -58,7 +59,7 @@ class MUONMatching
 
    // Matching methods
    // Position
-   double matchMFT_MCH_TracksXY(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack); // Compute track matching; returns matching chi2
+   GlobalMuonTrack matchMFT_MCH_TracksXY(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack); // Compute track matching; returns matching chi2
    double matchMFT_MCH_TracksXY(MCHTrack& mchTrack, MFTTrack& mftTrack); // Compute track matching; returns matching chi2
    //// Position & Angles
    double matchMFT_MCH_TracksXYPhiTanl(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack); // Compute track matching; returns matching chi2
@@ -68,7 +69,7 @@ class MUONMatching
    double matchMFT_MCH_TracksFull(MCHTrack& mchTrack, MFTTrack& mftTrack); // Compute track matching; returns matching chi2
 
    // Global Muon Track Methods
-   void fitGlobalMuonTracks(); // Kalman filter
+   void fitGlobalMuonTrack(GlobalMuonTrack&); // Kalman filter
 
 
    // Data Members
