@@ -1,5 +1,4 @@
 #include "MUONMatching.h"
-#include <random>
 
 //_________________________________________________________________________________________________
 MUONMatching::MUONMatching() {
@@ -77,12 +76,16 @@ void MUONMatching::loadMFTTracksOut() {
   std::vector<o2::mft::TrackMFT> trackMFTVec, *trackMFTVecP = &trackMFTVec;
   mftTrackTree->SetBranchAddress("MFTTrack", &trackMFTVecP);
 
+  std::vector<int> trackExtClsVec, *trackExtClsVecP = &trackExtClsVec;
+  mftTrackTree->SetBranchAddress("MFTTrackClusIdx", &trackExtClsVecP);
+
   o2::dataformats::MCTruthContainer<o2::MCCompLabel>* mcLabels = nullptr;
   mftTrackTree -> SetBranchAddress("MFTTrackMCTruth",&mcLabels);
 
   mftTrackTree -> GetEntry(0);
-  //mftTrackLabels.swap(*mcLabels);
+  mftTrackLabels = *mcLabels;
   mMFTTracks.swap(trackMFTVec);
+  mtrackExtClsIDs.swap(trackExtClsVec);
   std::cout << "Loaded " <<  mMFTTracks.size() << " MFT Tracks" << std::endl;
 
   for (auto& track: mMFTTracks) {
@@ -92,7 +95,95 @@ void MUONMatching::loadMFTTracksOut() {
     track.propagateToZhelix(sMatchingPlaneZ,mField_z);
   }
 
+loadMFTClusters();
+
+
 }
+
+//_________________________________________________________________________________________________
+void MUONMatching::loadMFTClusters() {
+
+  using o2::itsmft::CompClusterExt;
+
+  // Geometry and matrix transformations
+  std::string inputGeom = "o2sim_geometry.root";
+  o2::base::GeometryManager::loadGeometry(inputGeom);
+  auto gman = o2::mft::GeometryTGeo::Instance();
+  gman->fillMatrixCache(o2::utils::bit2Mask(o2::TransformType::L2G));
+
+  // Cluster pattern dictionary
+  std::string dictfile = "MFTdictionary.bin";
+  o2::itsmft::TopologyDictionary dict;
+  std::ifstream file(dictfile.c_str());
+  if (file.good()) {
+    printf("Running with dictionary: %s \n", dictfile.c_str());
+    dict.readBinaryFile(dictfile);
+  } else {
+    printf("Can not run without dictionary !\n");
+    return;
+  }
+
+  // Clusters
+
+  TFile fileC("mftclusters.root");
+  TTree *clsTree = (TTree*)fileC.Get("o2sim");
+  std::vector<CompClusterExt> clsVec, *clsVecP = &clsVec;
+  clsTree->SetBranchAddress("MFTClusterComp", &clsVecP);
+  o2::dataformats::MCTruthContainer<o2::MCCompLabel>* clsLabels = nullptr;
+  if (clsTree->GetBranch("MFTClusterMCTruth")) {
+    clsTree->SetBranchAddress("MFTClusterMCTruth", &clsLabels);
+  } else {
+    printf("No Monte-Carlo information in this file\n");
+    return;
+  }
+
+  int nEntries = clsTree->GetEntries();
+  printf("Number of entries in clusters tree %d \n", nEntries);
+
+  clsTree->GetEntry(0);
+
+  int nClusters = clsVec.size();
+  printf("Number of clusters %d \n", nClusters);
+
+ auto clusterId = 0;
+ for (auto& c : clsVec) {
+     auto chipID = c.getChipID();
+     auto pattID = c.getPatternID();
+     Point3D<float> locC;
+     float sigmaX2 = o2::mft::ioutils::DefClusError2Row, sigmaY2 = o2::mft::ioutils::DefClusError2Col;
+
+     if (pattID != o2::itsmft::CompCluster::InvalidPatternID) {
+       //sigmaX2 = dict.getErr2X(pattID); // ALPIDE local X coordinate => MFT global X coordinate (ALPIDE rows)
+       //sigmaY2 = dict.getErr2Z(pattID); // ALPIDE local Z coordinate => MFT global Y coordinate (ALPIDE columns)
+       // temporary, until ITS bug fix
+       sigmaX2 = dict.getErrX(pattID) * dict.getErrX(pattID);
+       sigmaY2 = dict.getErrZ(pattID) * dict.getErrZ(pattID);
+       if (!dict.isGroup(pattID)) {
+         locC = dict.getClusterCoordinates(c);
+       } else {
+         locC = dict.getClusterCoordinates(c);
+       }
+     } else {
+       locC = dict.getClusterCoordinates(c);
+     }
+
+ // Transformation to the local --> global
+  auto gloC = gman->getMatrixL2G(chipID) * locC;
+ // printf("Cluster %5d   chip ID %03d   evn %2d   mctrk %4d   x,y,z  %7.3f  %7.3f  %7.3f \n", icls, cluster.getChipID(), evnID, trkID, gloC.X(), gloC.Y(), gloC.Z());
+
+  auto clsPoint2D = Point2D<Float_t>(gloC.x(), gloC.y());
+  Float_t rCoord = clsPoint2D.R();
+  Float_t phiCoord = clsPoint2D.Phi();
+  o2::utils::BringTo02PiGen(phiCoord);
+  int rBinIndex = 0;//constants::index_table::getRBinIndex(rCoord);
+  int phiBinIndex = 0;//constants::index_table::getPhiBinIndex(phiCoord);
+  int binIndex = 0;//constants::index_table::getBinIndex(rBinIndex, phiBinIndex);
+  MFTCluster& thisCluster = mMFTClusters.emplace_back(gloC.x(), gloC.y(), gloC.z(), phiCoord, rCoord, clusterId, binIndex, sigmaX2, sigmaY2, chipID);
+  clusterId++;
+ }
+
+}
+
 
 //_________________________________________________________________________________________________
 void MUONMatching::initGlobalTracks() {
@@ -231,4 +322,15 @@ TTree outTree("o2sim", "Global Muon Tracks");
   outFile.cd();
   outTree.Write();
   outFile.Close();
+}
+
+
+
+
+
+//_________________________________________________________________________________________________
+void MUONMatching::fitGlobalMuonTrack(GlobalMuonTrack& gTrack) {
+
+const auto& mftTrack = mMFTTracks[gTrack.getBestMFTTrackMatchID()];
+
 }
