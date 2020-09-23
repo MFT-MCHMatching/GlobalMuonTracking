@@ -27,15 +27,20 @@ GlobalMuonTrack MyMatchingFunc (GlobalMuonTrack& mchTrack, MFTTrack& mftTrack) {
 //_________________________________________________________________________________________________
 int runMatching()  {
 
-//matcher.loadMCHTracks();
-matcher.loadDummyMCHTracks();
-matcher.loadMFTTracksOut();
 
-
+//Custom matching function
 //matcher.setCustomMatchingFunction(&MyMatchingFunc);
+
+// Built-in matching functions
 //matcher.setMatchingFunction(&MUONMatching::matchMFT_MCH_TracksXY);
 //matcher.setMatchingFunction(&MUONMatching::matchMFT_MCH_TracksXYPhiTanl);
 matcher.setMatchingFunction(&MUONMatching::matchMFT_MCH_TracksFull);
+//matcher.SetMatchingPlane(-45.3);
+
+
+//matcher.loadMCHTracks();
+matcher.loadDummyMCHTracks();
+matcher.loadMFTTracksOut();
 
 
 matcher.initGlobalTracks();

@@ -23,11 +23,14 @@ void MUONMatching::Clear() {
 
   mMFTTracks.clear();
   mMCHTracksDummy.clear();
-  mMCHTracks.clear(); //
+  mMCHTracks.clear();
+  mGlobalMuonTracks.clear();
+  mMFTClusters.clear();
+  mtrackExtClsIDs.clear();
   mftTrackLabels.clear();
   mchTrackLabels.clear();
+  mGlobalTrackLabels.clear();
 }
-
 
 //_________________________________________________________________________________________________
 void MUONMatching::loadMCHTracks() {
@@ -58,8 +61,8 @@ o2::dataformats::MCTruthContainer<o2::MCCompLabel>* mcLabels = nullptr;
 mftTrackTree -> SetBranchAddress("MFTTrackMCTruth",&mcLabels);
 
 mftTrackTree -> GetEntry(0);
-//mftTrackLabels.swap(*mcLabels);
-
+mchTrackLabels = *mcLabels;
+mGlobalTrackLabels = *mcLabels;
 mMCHTracksDummy.swap(trackMFTVec);
 std::cout << "Loaded " <<  mMCHTracksDummy.size() << " Fake MCH Tracks" << std::endl;
 
@@ -93,7 +96,7 @@ void MUONMatching::loadMFTTracksOut() {
     track.setParameters(track.getOutParam().getParameters());
     track.setCovariances(track.getOutParam().getCovariances());
     track.setZ(track.getOutParam().getZ());
-    track.propagateToZhelix(sMatchingPlaneZ,mField_z);
+    track.propagateToZhelix(mMatchingPlaneZ,mField_z);
   }
 
 loadMFTClusters();
@@ -190,12 +193,12 @@ void MUONMatching::loadMFTClusters() {
 void MUONMatching::initGlobalTracks() {
 // Populates mGlobalMuonTracks using MCH track data
 
-for (auto track: mMCHTracksDummy) { // Running on dummy MCH tracks while MCH Tracks are not loaded
-    track.propagateToZhelix(sMatchingPlaneZ,mField_z);
+for (auto& track: mMCHTracksDummy) { // Running on dummy MCH tracks while MCH Tracks are not loaded
     GlobalMuonTrack gTrack;
     gTrack.setParameters(track.getParameters());
     gTrack.setCovariances(track.getCovariances());
     gTrack.setZ(track.getZ());
+    gTrack.propagateToZhelix(mMatchingPlaneZ,mField_z);
     mGlobalMuonTracks.push_back(gTrack);
 }
 
@@ -404,6 +407,11 @@ if(mCustomMatchFunc) {
 
   std::vector<double>::iterator best_match = std::min_element(scores.begin(), scores.end());
   auto bestMFTMatch = std::distance(scores.begin(), best_match);
+  auto MCHlabel = mchTrackLabels.getLabels(GTrackID);
+  auto MFTlabel = mftTrackLabels.getLabels(bestMFTMatch);
+  if (MCHlabel[0] != MFTlabel[0]) {
+    mGlobalTrackLabels.getLabels(GTrackID)[0].setFakeFlag();
+  }
   candidates[bestMFTMatch].setBestMFTTrackMatchID(bestMFTMatch);
   mGlobalMuonTracks[GTrackID]=candidates[bestMFTMatch];
   mftTrackID=0;
@@ -419,7 +427,7 @@ void MUONMatching::saveGlobalMuonTracks() {
 TFile outFile("GlobalMuonTracks.root", "RECREATE");
 TTree outTree("o2sim", "Global Muon Tracks");
   std::vector<GlobalMuonTrack>* tracks = &mGlobalMuonTracks;
-  MCLabels* trackLabels = new MCLabels();
+  MCLabels* trackLabels = &mGlobalTrackLabels;
   outTree.Branch("GlobalMuonTrack", &tracks);
   outTree.Branch("GlobalMuonTrackMCTruth", &trackLabels);
   outTree.Fill();

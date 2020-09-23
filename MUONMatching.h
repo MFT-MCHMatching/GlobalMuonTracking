@@ -43,7 +43,7 @@ class MUONMatching
    MUONMatching();
    ~MUONMatching() = default;
    void Clear();
-   void SetMatchingPlane(double z) {sMatchingPlaneZ = z;}
+   void SetMatchingPlane(double z) { mMatchingPlaneZ = z;}
 
    // Track IO
    void loadMCHTracks();
@@ -97,13 +97,15 @@ class MUONMatching
 
    o2::dataformats::MCTruthContainer<o2::MCCompLabel> mftTrackLabels;
    o2::dataformats::MCTruthContainer<o2::MCCompLabel> mchTrackLabels;
+   o2::dataformats::MCTruthContainer<o2::MCCompLabel> mGlobalTrackLabels;
+
 
    // MCH Track Propagation clasee
    o2::mch::TrackExtrap mMCHTrackExtrap;
 
    double mField_z;
    const double sLastMFTPlaneZ = -77.5;
-   double sMatchingPlaneZ = sLastMFTPlaneZ;
+   double mMatchingPlaneZ = sLastMFTPlaneZ;
 
 };
 
