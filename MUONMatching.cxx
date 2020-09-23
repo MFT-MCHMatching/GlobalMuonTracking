@@ -211,7 +211,76 @@ GlobalMuonTrack MUONMatching::MCHtoGlobal(MCHTrack& mchTrack) {
 // Convert a MCH Track parameters and covariances matrix to the GlobalMuonTrack format.
 // Must be called after propagation on the absorber
 
+using SMatrix55Std = ROOT::Math::SMatrix<double, 5>;
+using SMatrix55Sym = ROOT::Math::SMatrix<double, 5, 5, ROOT::Math::MatRepSym<double, 5>>;
+
 GlobalMuonTrack convertedTrack;
+
+// Parameter conversion
+double  alpha1, alpha3, alpha4, x2, x3, x4;
+
+alpha1 = mchTrack.getNonBendingSlope();
+alpha3 = mchTrack.getBendingSlope();
+alpha4 = mchTrack.getInverseBendingMomentum();
+
+x2 = TMath::ATan2(-alpha3,-alpha1);
+x3 = -1./TMath::Sqrt(alpha3*alpha3+alpha1*alpha1);
+x4 = alpha4 * -x3 * TMath::Sqrt(1+alpha3*alpha3);
+
+auto K = alpha1*alpha1+alpha3*alpha3;
+auto K32 = K*TMath::Sqrt(K);
+auto L = TMath::Sqrt(alpha3*alpha3+1);
+
+// Covariances matrix conversion
+SMatrix55Std jacobian;
+SMatrix55Sym covariances;
+
+covariances(0,0) = mchTrack.getCovariances()(0,0);
+covariances(0,1) = mchTrack.getCovariances()(0,1);
+covariances(0,2) = mchTrack.getCovariances()(0,2);
+covariances(0,3) = mchTrack.getCovariances()(0,3);
+covariances(0,4) = mchTrack.getCovariances()(0,4);
+
+covariances(1,1) = mchTrack.getCovariances()(1,1);
+covariances(1,2) = mchTrack.getCovariances()(1,2);
+covariances(1,3) = mchTrack.getCovariances()(1,3);
+covariances(1,4) = mchTrack.getCovariances()(1,4);
+
+covariances(2,2) = mchTrack.getCovariances()(2,2);
+covariances(2,3) = mchTrack.getCovariances()(2,3);
+covariances(2,4) = mchTrack.getCovariances()(2,4);
+
+covariances(3,3) = mchTrack.getCovariances()(3,3);
+covariances(3,4) = mchTrack.getCovariances()(3,4);
+
+covariances(4,4) = mchTrack.getCovariances()(4,4);
+
+jacobian(0,0) = 1;
+
+jacobian(1,1) = 1;
+
+jacobian(2,2) = -alpha3/K;
+jacobian(2,3) = alpha1/K;
+
+jacobian(3,2) = -alpha1/K32;
+jacobian(3,3) = alpha3/K32;
+
+jacobian(4,2) = -alpha1*alpha4*L/K32;
+jacobian(4,3) = alpha3*alpha4/(1/(TMath::Sqrt(K)*L)-L/K32);
+jacobian(4,4) = L/TMath::Sqrt(K);
+
+// jacobian*covariances*jacobian^T
+covariances = ROOT::Math::Similarity(jacobian, covariances);
+
+// Set output
+convertedTrack.setX(mchTrack.getNonBendingCoor());
+convertedTrack.setY(mchTrack.getBendingCoor());
+convertedTrack.setZ(mchTrack.getZ());
+convertedTrack.setPhi(x2);
+convertedTrack.setTanl(x3);
+convertedTrack.setInvQPt(x4);
+convertedTrack.setCharge(mchTrack.getCharge());
+convertedTrack.setCovariances(covariances);
 
 return convertedTrack;
 
@@ -377,8 +446,11 @@ GlobalMuonTrack MUONMatching::matchMFT_MCH_TracksFull(GlobalMuonTrack& mchTrack,
 //_________________________________________________________________________________________________
 void MUONMatching::runHeavyMatching() {
 // Runs matching over all track combinations
+std::cout << "Starting runHeavyMatching..." << std::endl;
 
 auto GTrackID=0;
+auto fakeMatch=0;
+auto goodMatch=0;
 
 for (auto gTrack: mGlobalMuonTracks) {
 auto mftTrackID=0;
@@ -402,15 +474,15 @@ if(mCustomMatchFunc) {
   }
 }
 
-
-
-
   std::vector<double>::iterator best_match = std::min_element(scores.begin(), scores.end());
   auto bestMFTMatch = std::distance(scores.begin(), best_match);
   auto MCHlabel = mchTrackLabels.getLabels(GTrackID);
   auto MFTlabel = mftTrackLabels.getLabels(bestMFTMatch);
   if (MCHlabel[0] != MFTlabel[0]) {
     mGlobalTrackLabels.getLabels(GTrackID)[0].setFakeFlag();
+    fakeMatch++;
+  } else {
+    goodMatch++;
   }
   candidates[bestMFTMatch].setBestMFTTrackMatchID(bestMFTMatch);
   mGlobalMuonTracks[GTrackID]=candidates[bestMFTMatch];
@@ -418,6 +490,10 @@ if(mCustomMatchFunc) {
   GTrackID++;
 
 }
+std::cout << " Total = " << goodMatch+fakeMatch << " global muon tracks." << std::endl;
+std::cout << " Good Matches = " << goodMatch << " tracks (" << 100.0*goodMatch/(goodMatch+fakeMatch) << "%)" << std::endl;
+std::cout << " Fake Matches = " << fakeMatch << " tracks (" << 100.0*fakeMatch/(goodMatch+fakeMatch) << "%)" << std::endl;
+std::cout << "Finised runHeavyMatching" << std::endl;
 
 }
 
