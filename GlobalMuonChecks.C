@@ -39,7 +39,7 @@ using eventFoundTracks = std::vector<bool>;
 using std::vector;
 vector<eventFoundTracks> allFoundGMTracks; // True for reconstructed tracks - one vector of bool per event
 
-bool DEBUG_VERBOSE = false;
+bool DEBUG_VERBOSE = true;
 bool EXPORT_HISTOS_IMAGES = false;
 
 //_________________________________________________________________________________________________
@@ -473,7 +473,7 @@ std::map<int, std::array<double,6>> TH2Binning {
 
  auto field_z = getZField(0, 0, -61.4); // Get field at Center of MFT
 
- std::string outfilename = "GlobalMuonChecks_" + std::string(trkFile);
+ std::string outfilename = "GlobalMuonChecks.root";
  TFile outFile(outfilename.c_str(),"RECREATE");
 
  // Reconstructed Global Muon Tracks

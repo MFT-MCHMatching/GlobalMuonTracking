@@ -23,6 +23,7 @@
 
 #include "include/TrackExtrap.h"
 #include "include/GlobalMuonTrack.h"
+#include "include/tempMCHTrack.h"
 #include "MCHTracking/TrackParam.h"
 #include "MFTTracking/Cluster.h"
 #include "MFTTracking/Constants.h"
@@ -52,8 +53,9 @@ class MUONMatching
    void saveGlobalMuonTracks();
    std::vector<GlobalMuonTrack> getGlobalMuonTracks() const { return mGlobalMuonTracks;}
 
-   void loadROFrameData(int); //Loads data from
-   void initGlobalTracks(); //
+   void loadROFrameData(int); // Loads data from a ROFrame
+   void initGlobalTracks(); // Configure Global Tracks with MCH track parameters
+   void initDummyGlobalTracks(); // Configure Global Tracks with MFT tracks (Dummy)
 
 
    // Matching methods

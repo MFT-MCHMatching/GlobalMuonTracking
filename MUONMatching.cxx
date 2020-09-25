@@ -37,13 +37,72 @@ void MUONMatching::loadMCHTracks() {
 // This function populates mMCHTracks (vector of MCH tracks)
 //
 
-std::vector<MCHTrack> inputMCHTracks;
-// TODO: Load inputMCHTracks & MCLabels from disk
+// For now loading MCH Tracks
+Char_t *trkFile = "tempMCHTracks.root";
+TFile *trkFileIn = new TFile(trkFile);
+TTree *mchTrackTree = (TTree*) trkFileIn -> Get("treeMCH");
+std::vector<tempMCHTrack> trackMCHVec, *trackMCHVecP = &trackMCHVec;
+mchTrackTree->SetBranchAddress("tempMCHTracks", &trackMCHVecP);
 
-// Propagate MCH Tracks to last MFT Plane & convert to MFT Coordinate system
-for (auto track: inputMCHTracks) {
-  mMCHTracks.push_back(track);
+
+mchTrackTree -> GetEntry(0);
+
+auto MCHTrkID = 0;
+for (auto& mchtrackIn: trackMCHVec) {
+  MCHTrack mchTrackOut;
+  mchTrackOut.setZ(mchtrackIn.fZ);
+  mchTrackOut.setNonBendingCoor(mchtrackIn.fNonBendingCoor);
+  mchTrackOut.setNonBendingSlope(mchtrackIn.fThetaX);
+  mchTrackOut.setBendingCoor(mchtrackIn.fBendingCoor);
+  mchTrackOut.setBendingSlope(mchtrackIn.fThetaY);
+  mchTrackOut.setInverseBendingMomentum(mchtrackIn.fInverseBendingMomentum);
+
+
+  TMatrixD cov(5, 5);
+  cov(0,0) = mchtrackIn.fCovariances[0];
+  cov(0,1) = mchtrackIn.fCovariances[1];
+  cov(0,2) = mchtrackIn.fCovariances[3];
+  cov(0,3) = mchtrackIn.fCovariances[6];
+  cov(0,4) = mchtrackIn.fCovariances[10];
+
+  cov(1,1) = mchtrackIn.fCovariances[2];
+  cov(1,2) = mchtrackIn.fCovariances[4];
+  cov(1,3) = mchtrackIn.fCovariances[7];
+  cov(1,4) = mchtrackIn.fCovariances[11];
+
+  cov(2,2) = mchtrackIn.fCovariances[5];
+  cov(2,3) = mchtrackIn.fCovariances[8];
+  cov(2,4) = mchtrackIn.fCovariances[12];
+
+  cov(3,3) = mchtrackIn.fCovariances[9];
+  cov(3,4) = mchtrackIn.fCovariances[13];
+
+  cov(4,4) = mchtrackIn.fCovariances[14];
+
+  cov(1,0) = cov(0,1);
+  cov(2,0) = cov(0,2);
+  cov(3,0) = cov(0,3);
+  cov(4,0) = cov(0,4);
+
+  cov(2,1) = cov(1,2);
+  cov(3,1) = cov(1,3);
+  cov(4,1) = cov(1,4);
+
+  cov(3,2) = cov(2,3);
+  cov(4,2) = cov(2,4);
+
+  cov(4,3) = cov(3,4);
+
+  mchTrackOut.setCovariances(cov);
+
+  std::cout << " Loading MCH Track with Label = " << mchtrackIn.fLabel << std::endl;
+  o2::MCCompLabel thisLabel(mchtrackIn.fLabel,mchtrackIn.fiEv,0); // FIXME: srcID
+  mchTrackLabels.addElement(MCHTrkID,thisLabel);
+  mMCHTracks.push_back(mchTrackOut);
+  MCHTrkID++;
 }
+
+std::cout << "Loaded " <<  mMCHTracks.size() << " MCH Tracks" << std::endl;
 
 }
 
@@ -62,7 +121,6 @@ mftTrackTree -> SetBranchAddress("MFTTrackMCTruth",&mcLabels);
 
 mftTrackTree -> GetEntry(0);
 mchTrackLabels = *mcLabels;
-mGlobalTrackLabels = *mcLabels;
 mMCHTracksDummy.swap(trackMFTVec);
 std::cout << "Loaded " <<  mMCHTracksDummy.size() << " Fake MCH Tracks" << std::endl;
 
@@ -193,6 +251,24 @@ void MUONMatching::loadMFTClusters() {
 void MUONMatching::initGlobalTracks() {
 // Populates mGlobalMuonTracks using MCH track data
 
+if(mGlobalMuonTracks.empty()) {
+for (auto& track: mMCHTracks) {
+
+    mMCHTrackExtrap.extrapToVertex(&track,mMatchingPlaneZ);
+    //mMCHTrackExtrap.extrapToVertexWithoutBranson(&track,mMatchingPlaneZ);
+    mGlobalMuonTracks.push_back(MCHtoGlobal(track));
+}
+mMCHTracks.clear();
+}
+else std::cout << "WARNING: mGlobalMuonTracks already initialized! Skipping initGlobalTracks()";
+
+}
+
+//_________________________________________________________________________________________________
+void MUONMatching::initDummyGlobalTracks() {
+// Populates mGlobalMuonTracks using MFT track inner parameters
+
+if(mGlobalMuonTracks.empty()) {
 for (auto& track: mMCHTracksDummy) { // Running on dummy MCH tracks while MCH Tracks are not loaded
     GlobalMuonTrack gTrack;
     gTrack.setParameters(track.getParameters());
@@ -201,9 +277,169 @@ for (auto& track: mMCHTracksDummy) { // Running on dummy MCH tracks while MCH Tr
     gTrack.propagateToZhelix(mMatchingPlaneZ,mField_z);
     mGlobalMuonTracks.push_back(gTrack);
 }
+}
+else std::cout << "WARNING: mGlobalMuonTracks already initialized! Skipping initDummyGlobalTracks()";
+
+}
+
+
+
+//_________________________________________________________________________________________________
+void MUONMatching::runHeavyMatching() {
+// Runs matching over all track combinations
+std::cout << "Starting runHeavyMatching..." << std::endl;
+
+uint32_t GTrackID = 0;
+auto fakeMatch = 0;
+auto goodMatch = 0;
+
+for (auto gTrack: mGlobalMuonTracks) {
+auto mftTrackID = 0;
+std::vector<GlobalMuonTrack> candidates;
+std::vector<double> scores;
+
+if(mCustomMatchFunc) {
+  for (auto mftTrack: mMFTTracks) {
+    auto candidate = (*mCustomMatchFunc)(gTrack, mftTrack);
+    scores.push_back(candidate.getMatchingChi2());
+    candidates.push_back(candidate);
+    mftTrackID++;
+  }
+}
+  else {
+  for (auto mftTrack: mMFTTracks) {
+    auto candidate = (this->*mMatchFunc)(gTrack, mftTrack);
+    scores.push_back(candidate.getMatchingChi2());
+    candidates.push_back(candidate);
+    mftTrackID++;
+  }
+}
+
+  std::vector<double>::iterator best_match = std::min_element(scores.begin(), scores.end());
+  auto bestMFTMatch = std::distance(scores.begin(), best_match);
+  auto MCHlabel = mchTrackLabels.getLabels(GTrackID);
+  auto MFTlabel = mftTrackLabels.getLabels(bestMFTMatch);
+
+
+  if ((MCHlabel[0].getTrackID() != MFTlabel[0].getTrackID()) &&  (MCHlabel[0].getEventID() != MFTlabel[0].getEventID()) ) {
+    o2::MCCompLabel thisLabel(MCHlabel[0].getTrackID(),MCHlabel[0].getEventID(),1); // FIXME: evID & srcID
+    mGlobalTrackLabels.addElement(GTrackID,thisLabel);
+    fakeMatch++;
+  } else {
+    o2::MCCompLabel thisLabel(MCHlabel[0].getTrackID(),MCHlabel[0].getEventID(),0); // FIXME: evID & srcID
+    mGlobalTrackLabels.addElement(GTrackID,thisLabel);
+    goodMatch++;
+  }
+  candidates[bestMFTMatch].setBestMFTTrackMatchID(bestMFTMatch);
+  mGlobalMuonTracks[GTrackID]=candidates[bestMFTMatch];
+  mftTrackID=0;
+  GTrackID++;
+
+}
+std::cout << " Total = " << goodMatch+fakeMatch << " global muon tracks." << std::endl;
+std::cout << " Good Matches = " << goodMatch << " tracks (" << 100.0*goodMatch/(goodMatch+fakeMatch) << "%)" << std::endl;
+std::cout << " Fake Matches = " << fakeMatch << " tracks (" << 100.0*fakeMatch/(goodMatch+fakeMatch) << "%)" << std::endl;
+std::cout << "Finished runHeavyMatching" << std::endl;
+
+}
+
+//_________________________________________________________________________________________________
+void MUONMatching::saveGlobalMuonTracks() {
+
+TFile outFile("GlobalMuonTracks.root", "RECREATE");
+TTree outTree("o2sim", "Global Muon Tracks");
+  std::vector<GlobalMuonTrack>* tracks = &mGlobalMuonTracks;
+  MCLabels* trackLabels = &mGlobalTrackLabels;
+  outTree.Branch("GlobalMuonTrack", &tracks);
+  outTree.Branch("GlobalMuonTrackMCTruth", &trackLabels);
+  outTree.Fill();
+  outFile.cd();
+  outTree.Write();
+  outFile.Close();
+  std::cout << "Global Muon Tracks saved to GlobalMuonTracks.root" << std::endl;
+
+}
+
+
+//_________________________________________________________________________________________________
+void MUONMatching::fitTracks() {
+
+  auto GTrackID=0;
+  for (auto& gTrack: mGlobalMuonTracks) {
+    //if(GTrackID < 5)
+    fitGlobalMuonTrack(gTrack);
+    GTrackID++;
+  }
+}
+
+
+//_________________________________________________________________________________________________
+void MUONMatching::fitGlobalMuonTrack(GlobalMuonTrack& gTrack) {
+
+const auto& mftTrack = mMFTTracks[gTrack.getBestMFTTrackMatchID()];
+
+auto ncls = mftTrack.getNumberOfPoints();
+auto offset = mftTrack.getExternalClusterIndexOffset();
+ for (int icls = ncls-1; icls > -1; --icls) {
+     auto clsEntry = mtrackExtClsIDs[offset + icls];
+     auto& thiscluster = mMFTClusters[clsEntry];
+     computeCluster(gTrack,thiscluster);
+   }
 
 
 }
+
+//_________________________________________________________________________________________________
+bool MUONMatching::computeCluster(GlobalMuonTrack& track, MFTCluster& cluster ) {
+
+  const auto& clx = cluster.getX();
+  const auto& cly = cluster.getY();
+  const auto& clz = cluster.getZ();
+
+  // add MCS effects for the new cluster
+  using o2::mft::constants::LayerZPosition;
+  int startingLayerID, newLayerID;
+
+  double dZ = clz - track.getZ();
+  //LayerID of each cluster from ZPosition // TODO: Use ChipMapping
+  for (auto layer = 10; layer--;)
+    if (track.getZ() < LayerZPosition[layer] + .3 & track.getZ() > LayerZPosition[layer] - .3)
+      startingLayerID = layer;
+  for (auto layer = 10; layer--;)
+    if (clz<LayerZPosition[layer] + .3 & clz> LayerZPosition[layer] - .3)
+      newLayerID = layer;
+  // Number of disks crossed by this tracklet
+  int NDisksMS;
+  if (clz - track.getZ() > 0)
+    NDisksMS = (startingLayerID % 2 == 0) ? (startingLayerID - newLayerID) / 2 : (startingLayerID - newLayerID + 1) / 2;
+  else
+    NDisksMS = (startingLayerID % 2 == 0) ? (newLayerID - startingLayerID + 1) / 2 : (newLayerID - startingLayerID) / 2;
+
+  double MFTDiskThicknessInX0 = 0.1 / 5.0; // FIXME!
+
+
+  if ((NDisksMS * MFTDiskThicknessInX0) != 0)
+    track.addMCSEffect(-1, NDisksMS * MFTDiskThicknessInX0);
+
+
+track.propagateToZhelix(clz, mField_z);
+
+const std::array<float, 2>& pos = {clx, cly};
+const std::array<float, 2>& cov = {cluster.sigmaX2, cluster.sigmaY2};
+
+if (track.update(pos, cov)) {
+  if (0) {
+    std::cout << "   New Cluster: X = " << clx << " Y = " << cly << " Z = " << clz << std::endl;
+    std::cout << "   AfterKalman: X = " << track.getX() << " Y = " << track.getY() << " Z = " << track.getZ() << " Tgl = " << track.getTanl() << "  Phi = " << track.getPhi() << " pz = " << track.getPz() << " qpt = " << 1.0 / track.getInvQPt() << std::endl;
+    std::cout << std::endl;
+    // Outputs track covariance matrix:
+    // param.getCovariances().Print();
+  }
+  return true;
+}
+
+}
+
 
 
 //_________________________________________________________________________________________________
@@ -439,158 +675,5 @@ GlobalMuonTrack MUONMatching::matchMFT_MCH_TracksFull(GlobalMuonTrack& mchTrack,
   matchTrack.setCovariances(GlobalMuonTrackCovariances);
   matchTrack.setMatchingChi2(matchChi2Track);
   return matchTrack;
-
-}
-
-
-//_________________________________________________________________________________________________
-void MUONMatching::runHeavyMatching() {
-// Runs matching over all track combinations
-std::cout << "Starting runHeavyMatching..." << std::endl;
-
-auto GTrackID=0;
-auto fakeMatch=0;
-auto goodMatch=0;
-
-for (auto gTrack: mGlobalMuonTracks) {
-auto mftTrackID=0;
-std::vector<GlobalMuonTrack> candidates;
-std::vector<double> scores;
-
-if(mCustomMatchFunc) {
-  for (auto mftTrack: mMFTTracks) {
-    auto candidate = (*mCustomMatchFunc)(gTrack, mftTrack);
-    scores.push_back(candidate.getMatchingChi2());
-    candidates.push_back(candidate);
-    mftTrackID++;
-  }
-}
-  else {
-  for (auto mftTrack: mMFTTracks) {
-    auto candidate = (this->*mMatchFunc)(gTrack, mftTrack);
-    scores.push_back(candidate.getMatchingChi2());
-    candidates.push_back(candidate);
-    mftTrackID++;
-  }
-}
-
-  std::vector<double>::iterator best_match = std::min_element(scores.begin(), scores.end());
-  auto bestMFTMatch = std::distance(scores.begin(), best_match);
-  auto MCHlabel = mchTrackLabels.getLabels(GTrackID);
-  auto MFTlabel = mftTrackLabels.getLabels(bestMFTMatch);
-  if (MCHlabel[0] != MFTlabel[0]) {
-    mGlobalTrackLabels.getLabels(GTrackID)[0].setFakeFlag();
-    fakeMatch++;
-  } else {
-    goodMatch++;
-  }
-  candidates[bestMFTMatch].setBestMFTTrackMatchID(bestMFTMatch);
-  mGlobalMuonTracks[GTrackID]=candidates[bestMFTMatch];
-  mftTrackID=0;
-  GTrackID++;
-
-}
-std::cout << " Total = " << goodMatch+fakeMatch << " global muon tracks." << std::endl;
-std::cout << " Good Matches = " << goodMatch << " tracks (" << 100.0*goodMatch/(goodMatch+fakeMatch) << "%)" << std::endl;
-std::cout << " Fake Matches = " << fakeMatch << " tracks (" << 100.0*fakeMatch/(goodMatch+fakeMatch) << "%)" << std::endl;
-std::cout << "Finised runHeavyMatching" << std::endl;
-
-}
-
-//_________________________________________________________________________________________________
-void MUONMatching::saveGlobalMuonTracks() {
-
-TFile outFile("GlobalMuonTracks.root", "RECREATE");
-TTree outTree("o2sim", "Global Muon Tracks");
-  std::vector<GlobalMuonTrack>* tracks = &mGlobalMuonTracks;
-  MCLabels* trackLabels = &mGlobalTrackLabels;
-  outTree.Branch("GlobalMuonTrack", &tracks);
-  outTree.Branch("GlobalMuonTrackMCTruth", &trackLabels);
-  outTree.Fill();
-  outFile.cd();
-  outTree.Write();
-  outFile.Close();
-  std::cout << "Global Muon Tracks saved to GlobalMuonTracks.root" << std::endl;
-
-}
-
-
-//_________________________________________________________________________________________________
-void MUONMatching::fitTracks() {
-
-  auto GTrackID=0;
-  for (auto& gTrack: mGlobalMuonTracks) {
-    //if(GTrackID < 5)
-    fitGlobalMuonTrack(gTrack);
-    GTrackID++;
-  }
-}
-
-
-//_________________________________________________________________________________________________
-void MUONMatching::fitGlobalMuonTrack(GlobalMuonTrack& gTrack) {
-
-const auto& mftTrack = mMFTTracks[gTrack.getBestMFTTrackMatchID()];
-
-auto ncls = mftTrack.getNumberOfPoints();
-auto offset = mftTrack.getExternalClusterIndexOffset();
- for (int icls = ncls-1; icls > -1; --icls) {
-     auto clsEntry = mtrackExtClsIDs[offset + icls];
-     auto& thiscluster = mMFTClusters[clsEntry];
-     computeCluster(gTrack,thiscluster);
-     //auto& clsLabel = (clsLabels->getLabels(clsEntry))[0];
-   }
-
-
-}
-
-//_________________________________________________________________________________________________
-bool MUONMatching::computeCluster(GlobalMuonTrack& track, MFTCluster& cluster ) {
-
-  const auto& clx = cluster.getX();
-  const auto& cly = cluster.getY();
-  const auto& clz = cluster.getZ();
-
-  // add MCS effects for the new cluster
-  using o2::mft::constants::LayerZPosition;
-  int startingLayerID, newLayerID;
-
-  double dZ = clz - track.getZ();
-  //LayerID of each cluster from ZPosition // TODO: Use ChipMapping
-  for (auto layer = 10; layer--;)
-    if (track.getZ() < LayerZPosition[layer] + .3 & track.getZ() > LayerZPosition[layer] - .3)
-      startingLayerID = layer;
-  for (auto layer = 10; layer--;)
-    if (clz<LayerZPosition[layer] + .3 & clz> LayerZPosition[layer] - .3)
-      newLayerID = layer;
-  // Number of disks crossed by this tracklet
-  int NDisksMS;
-  if (clz - track.getZ() > 0)
-    NDisksMS = (startingLayerID % 2 == 0) ? (startingLayerID - newLayerID) / 2 : (startingLayerID - newLayerID + 1) / 2;
-  else
-    NDisksMS = (startingLayerID % 2 == 0) ? (newLayerID - startingLayerID + 1) / 2 : (newLayerID - startingLayerID) / 2;
-
-  double MFTDiskThicknessInX0 = 0.1 / 5.0; // FIXME!
-
-
-  if ((NDisksMS * MFTDiskThicknessInX0) != 0)
-    track.addMCSEffect(-1, NDisksMS * MFTDiskThicknessInX0);
-
-
-track.propagateToZhelix(clz, mField_z);
-
-const std::array<float, 2>& pos = {clx, cly};
-const std::array<float, 2>& cov = {cluster.sigmaX2, cluster.sigmaY2};
-
-if (track.update(pos, cov)) {
-  if (0) {
-    std::cout << "   New Cluster: X = " << clx << " Y = " << cly << " Z = " << clz << std::endl;
-    std::cout << "   AfterKalman: X = " << track.getX() << " Y = " << track.getY() << " Z = " << track.getZ() << " Tgl = " << track.getTanl() << "  Phi = " << track.getPhi() << " pz = " << track.getPz() << " qpt = " << 1.0 / track.getInvQPt() << std::endl;
-    std::cout << std::endl;
-    // Outputs track covariance matrix:
-    // param.getCovariances().Print();
-  }
-  return true;
-}
 
 }

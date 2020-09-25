@@ -73,7 +73,7 @@ class TrackExtrap
     /// Add dispersion due to multiple scattering and energy loss fluctuation to parameter covariances
     return extrapToVertex(trackParam, 0., 0., zVtx, 0., 0., false, true);
   }
-  static bool extrapToVertexUncorrected(TrackParam* trackParam, double zVtx)
+  static bool extrapToVertex(TrackParam* trackParam, double zVtx)
   {
     /// Extrapolate track parameters to vertex without multiple scattering and energy loss corrections
     /// Add dispersion due to multiple scattering to parameter covariances

@@ -5,8 +5,9 @@
 #ifdef __MAKECINT__
 #pragma link C++ class GlobalMuonTrack+;
 #pragma link C++ class std::vector<GlobalMuonTrack>+;
+#pragma link C++ class tempMCHTrack+;
+#pragma link C++ class std::vector<tempMCHTrack>+;
 #endif
-
 
 #include "MUONMatching.h"
 
@@ -37,14 +38,16 @@ int runMatching()  {
 matcher.setMatchingFunction(&MUONMatching::matchMFT_MCH_TracksFull);
 //matcher.SetMatchingPlane(-45.3);
 
-
-//matcher.loadMCHTracks();
-matcher.loadDummyMCHTracks();
 matcher.loadMFTTracksOut();
 
+//matcher.loadMCHTracks();
+//matcher.initGlobalTracks();
 
-matcher.initGlobalTracks();
+matcher.loadDummyMCHTracks();
+matcher.initDummyGlobalTracks();
+
 matcher.runHeavyMatching();
+
 matcher.fitTracks();
 matcher.saveGlobalMuonTracks();
 
