@@ -37,7 +37,7 @@ class GlobalMuonTrack : public o2::track::TrackParCovFwd
 
  private:
   std::uint32_t mROFrame = 0; ///< RO Frame
-  double mMatchingChi2 = 0;
+  double mMatchingChi2 = 1.0E308;
   int mBestMFTTrackMatchID = -1;
 
 };

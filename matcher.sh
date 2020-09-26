@@ -2,40 +2,43 @@
 
 Usage()
 {
-cat <<-END
+  cat <<-END
   ${0##*/}: Tool to study MCH-MFT Track matching
 
   Usage:
-  To generate common MCH & MFT Tracks:
+  1) Generate common MCH & MFT Tracks:
 
-    ${0##*/} --gen -n <number_of_events> -o <outputdir> -j <jobs>
-    --npions <number_of_pions>
-    --nmuons <number_of_muons>
+  ${0##*/} --gen -n <number_of_events> -o <outputdir> -j <jobs>
 
+  Will create outputdir, include a copy of the macros and generate
+  MCH tracks with aliroot and MFT tracks with O2. Alienv is automatically loaded.
+  Do not run this script with a loaded environment.
 
-  To run track matching:
+  Option to further configure the generator:
+  --npions <number_of_pions>
+  --nmuons <number_of_muons>
 
-    ${0##*/} --match -o <outputdir>
+  2) Run track matching:
 
-  To run checks:
+  ${0##*/} --match -o <outputdir>
 
-     ${0##*/} --check -n <number_of_events> -o <outputdir> -j <jobs>
+  3) Run checks:
+
+  ${0##*/} --check -n <number_of_events> -o <outputdir> -j <jobs>
 
 END
-exit
+  exit
 }
 
+updatecode() {
+  cp -r ${SCRIPTDIR}/${GENERATOR}/* ${SCRIPTDIR}/*.bin ${SCRIPTDIR}/include ${SCRIPTDIR}/*.C ${SCRIPTDIR}/*.h ${SCRIPTDIR}/*.cxx ${SCRIPTDIR}/macrohelpers ${OUTDIR}
+}
 
 generateMCHMFTTracks()
 {
 
-  if [ -d "$OUTDIR" ]; then
-      echo -e "${OUTDIR} already exists. Aborting."
-      exit
-  fi
-
   mkdir -p ${OUTDIR}
-  cp -r ${SCRIPTDIR}/${GENERATOR}/* ${SCRIPTDIR}/*.bin ${SCRIPTDIR}/include ${SCRIPTDIR}/*.C ${SCRIPTDIR}/*.h ${SCRIPTDIR}/*.cxx ${SCRIPTDIR}/macrohelpers ${OUTDIR}
+  updatecode
   pushd ${OUTDIR} && \
 
   sed -i -e s/NPIONS/${NPIONS}/g Config.C
@@ -47,13 +50,13 @@ generateMCHMFTTracks()
   ## 1) aliroot generation of MCH Tracks
   alienv setenv AliPhysics/latest-master-next-root6 -c bash ./runtest.sh -n ${NEV} | tee aliroot_gen.log ;
 
-  ## 2) aliroot conversion of MCH tracks to temporary format
-  alienv setenv AliPhysics/latest-master-next-root6 -c aliroot -q -l "ConvertMCHESDTracks.C+(\".\")"
-
-  ## 3) Generate MFT tracks using same Kinematics.root
+  ## 2) Generate MFT tracks using same Kinematics.root
   alienv setenv O2/latest-dev-o2 -c o2-sim -g extkin --extKinFile Kinematics.root -m PIPE ITS MFT ABS SHIL -e TGeant3 -n ${NEV} -j $JOBS | tee O2Sim.log
   alienv setenv O2/latest-dev-o2 -c o2-sim-digitizer-workflow -b --skipDet TPC,ITS,TOF,FT0,EMC,HMP,ZDC,TRD,MCH,MID,FDD,PHS,FV0,CPV >  O2Digitizer.log
   alienv setenv O2/latest-dev-o2 -c o2-mft-reco-workflow -b > O2Reco.log
+
+  ## 3) aliroot conversion of MCH tracks to temporary format
+  alienv setenv AliPhysics/latest-master-next-root6 -c aliroot -q -l "ConvertMCHESDTracks.C+(\".\")"
 
   echo " Leaving  ${OUTDIR}"
   popd
@@ -64,8 +67,11 @@ runMatching()
 {
 
   if [ -d "$OUTDIR" ]; then
+    if ! [ -z ${UPDATECODE+x} ]; then updatecode ; fi
+
     pushd ${OUTDIR} && \
     echo "Running on `pwd` ..." && \
+
 
     ## 4) MFT MCH track matching & global muon track fitting:
     alienv setenv O2/latest-dev-o2 -c root.exe -l -q -b runMatching.C+
@@ -82,68 +88,77 @@ runMatching()
 runChecks()
 {
   if [ -d "$OUTDIR" ]; then
-  pushd ${OUTDIR} && \
-  echo "Running on `pwd` ..." && \
+    if ! [ -z ${UPDATECODE+x} ]; then updatecode ; fi
+    pushd ${OUTDIR} && \
+    echo "Running on `pwd` ..." && \
 
-  ## 5) Check global muon Tracks
-  alienv setenv O2/latest-dev-o2 -c root.exe -l -q -b GlobalMuonChecks.C+
+    ## 5) Check global muon Tracks
+    alienv setenv O2/latest-dev-o2 -c root.exe -l -q -b GlobalMuonChecks.C+
 
-  echo " Leaving  ${OUTDIR}"
-  popd
-fi
-echo -e "${OUTDIR} not found..."
+    echo " Leaving  ${OUTDIR}"
+    popd
+  fi
+  echo -e "${OUTDIR} not found..."
 
 }
 
 
 while [ $# -gt 0 ] ; do
-case $1 in
-      -n)
-      NEV="$2";
-      shift 2
-      ;;
-      -j)
-      JOBS="$2";
-      shift 2
-      ;;
-      -o)
-      OUTDIR="$2";
-      shift 2
-      ;;
-      --npions)
-      NPIONS="$2";
-      shift 2
-      ;;
-      --nmuons)
-      NMUONS="$2";
-      shift 2
-      ;;
-      --g)
-      GENERATOR="$2";
-      shift 2
-      ;;
-      --gen)
-      GENERATE="1";
-      shift 1
-      ;;
-      --match)
-      MATCHING="1";
-      shift 1
-      ;;
-      --check)
-      CHECKS="1";
-      shift 1
-      ;;
-      -h)
-      Usage
-      ;;
-      *) echo "Wrong input"; Usage;
+  case $1 in
+    -n)
+    NEV="$2";
+    shift 2
+    ;;
+    -j)
+    JOBS="$2";
+    shift 2
+    ;;
+    -o)
+    OUTDIR="$2";
+    shift 2
+    ;;
+    --npions)
+    NPIONS="$2";
+    shift 2
+    ;;
+    --nmuons)
+    NMUONS="$2";
+    shift 2
+    ;;
+    --g)
+    GENERATOR="$2";
+    shift 2
+    ;;
+    --gen)
+    GENERATE="1";
+    shift 1
+    ;;
+    --match)
+    MATCHING="1";
+    shift 1
+    ;;
+    --convert)
+    CONVERT="1";
+    shift 1
+    ;;
+    --check)
+    CHECKS="1";
+    shift 1
+    ;;
+    --updatecode)
+    UPDATECODE="1";
+    shift 1
+    ;;
+    -h)
+    Usage
+    ;;
+    *) echo "Wrong input"; Usage;
 
-esac
+  esac
 done
 
 if [ -z ${GENERATE+x} ] && [ -z ${MATCHING+x} ] && [ -z ${CHECKS+x} ]
-  then
+then
   echo "Missing use mode!"
   echo " "
   Usage
@@ -161,6 +176,27 @@ export ALIROOT_OCDB_ROOT=~
 SCRIPTDIR=`dirname "$0"`
 
 
-if ! [ -z ${GENERATE+x} ]; then generateMCHMFTTracks ; fi
+if ! [ -z ${GENERATE+x} ]; then
+  if [ -d "$OUTDIR" ]; then
+    echo " Warning! `realpath ${OUTDIR}` already exists."
+    read -p " Delete data & proceed (y/N)? " choice
+    case "$choice" in
+      y|Y )
+      rm -rf ${OUTDIR}/*;
+      ;;
+      *) exit ;
+    esac
+  fi
+  generateMCHMFTTracks ;
+
+
+fi
+
+if ! [ -d "$OUTDIR" ]; then
+  echo "$OUTDIR not found. Nothing to do"
+  exit
+fi
+
 if ! [ -z ${MATCHING+x} ]; then runMatching ; fi
+
 if ! [ -z ${CHECKS+x} ]; then runChecks ; fi

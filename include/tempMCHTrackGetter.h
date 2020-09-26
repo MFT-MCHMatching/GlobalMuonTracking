@@ -11,12 +11,12 @@ struct tempMCHTrackGetter : public  AliESDMuonTrack {
 
          }
   void update(tempMCHTrack& local) {
-    local.fInverseBendingMomentum = this->GetInverseBendingMomentum();
-    local.fThetaX = this->GetThetaX();
-    local.fThetaY = this->GetThetaY();
-    local.fZ = this->GetZ();
-    local.fBendingCoor = this->GetBendingCoor();
-    local.fNonBendingCoor = this->GetNonBendingCoor();
+    local.fInverseBendingMomentum = this->GetInverseBendingMomentumUncorrected();
+    local.fThetaX = this->GetThetaXUncorrected();
+    local.fThetaY = this->GetThetaYUncorrected();
+    local.fZ = this->GetZUncorrected();
+    local.fBendingCoor = this->GetBendingCoorUncorrected();
+    local.fNonBendingCoor = this->GetNonBendingCoorUncorrected();
     local.fLabel = this->GetLabel();
     for (int i = 0 ; i < 15 ; i++ ) local.fCovariances[i] = this->fCovariances[i];
   }

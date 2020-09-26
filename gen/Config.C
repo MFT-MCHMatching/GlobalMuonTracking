@@ -39,7 +39,7 @@ void Config()
 	return;
       }
     rl->SetCompressionLevel(2);
-    rl->SetNumberOfEventsPerFile(3);
+    rl->SetNumberOfEventsPerFile(10000);
     gAlice->SetRunLoader(rl);
 
     // Set the trigger configuration

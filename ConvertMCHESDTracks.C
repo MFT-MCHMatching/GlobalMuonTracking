@@ -116,7 +116,6 @@ void ConvertMCHESDTracks(string in_dir=""){
       //if(esdTrack->GetChi2() / esdTrack->GetNDF()>5.0)                             continue;
       if(-3.6>esdTrack->Eta() && esdTrack->Eta()>-2.1)                             continue;
       if(17.6>esdTrack->GetRAtAbsorberEnd() && esdTrack->GetRAtAbsorberEnd()>89.5) continue;
-      std::cout << " " << iTr << " " ;
 
       tempMCHTrackGetter t(*esdTrack);
       tempMCHTrack thisTrack;

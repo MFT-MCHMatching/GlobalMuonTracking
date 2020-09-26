@@ -487,7 +487,7 @@ std::map<int, std::array<double,6>> TH2Binning {
    for (auto &gmTrack : trackGMVec) {
      auto label = mcLabels->getLabels(iTrack);
      //label[0].print();
-     if(iEvent==label[0].getEventID()) {
+     if(iEvent==label[0].getEventID()== iEvent) {
        if(DEBUG_VERBOSE) std::cout << "  Track #" << iTrack << ":  trackID = " << label[0].getTrackID() <<
 			   " ; EventID = " << label[0].getEventID() <<
 			   " ; SourceID = " << label[0].getSourceID() <<

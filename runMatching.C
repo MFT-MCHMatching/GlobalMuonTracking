@@ -34,31 +34,36 @@ int runMatching()  {
 
 // Built-in matching functions
 //matcher.setMatchingFunction(&MUONMatching::matchMFT_MCH_TracksXY);
-//matcher.setMatchingFunction(&MUONMatching::matchMFT_MCH_TracksXYPhiTanl);
-matcher.setMatchingFunction(&MUONMatching::matchMFT_MCH_TracksFull);
-//matcher.SetMatchingPlane(-45.3);
+matcher.setMatchingFunction(&MUONMatching::matchMFT_MCH_TracksXYPhiTanl);
+//matcher.setMatchingFunction(&MUONMatching::matchMFT_MCH_TracksFull);
+//matcher.SetMatchingPlaneZ(-45.3);
+//matcher.SetMatchingPlaneZ(0.);
+matcher.SetMatchingPlaneZ(-80.0);
+
+//matcher.SetVerbosity(1);
 
 matcher.loadMFTTracksOut();
+matcher.loadMCHTracks();
+matcher.initGlobalTracks();
 
-//matcher.loadMCHTracks();
-//matcher.initGlobalTracks();
 
-matcher.loadDummyMCHTracks();
-matcher.initDummyGlobalTracks();
 
-matcher.runHeavyMatching();
+//matcher.loadDummyMCHTracks();
+//matcher.initDummyGlobalTracks();
 
+matcher.runEventMatching();
 matcher.fitTracks();
 matcher.saveGlobalMuonTracks();
 
 
+/*
 std::cout << " *** Matching Summary ***" << std::endl;
 auto globalTrackID=0;
 for (auto gTrack: matcher.getGlobalMuonTracks() ) {
   if (globalTrackID < 15) std::cout << "Best match to MCH Track " << globalTrackID << " is MFT track " << gTrack.getBestMFTTrackMatchID() << " with chi^2 = " <<  gTrack.getMatchingChi2() << std::endl;
   globalTrackID++;
 }
-
+*/
 return 0;
 
 }
