@@ -9,19 +9,17 @@
 #pragma link C++ class std::vector<tempMCHTrack>+;
 #endif
 
-#include "MUONMatching.h"
+#include "MUONMatcher.h"
 
-MUONMatching matcher;
+MUONMatcher matcher;
 
 //_________________________________________________________________________________________________
-// Sample custom matching function that can be passed to MUONMatching
-GlobalMuonTrack MyMatchingFunc (GlobalMuonTrack& mchTrack, MFTTrack& mftTrack) {
+// Sample custom matching function that can be passed to MUONMatcher
+double MyMatchingFunc (GlobalMuonTrack& mchTrack, MFTTrack& mftTrack) {
     auto dx = mchTrack.getX() - mftTrack.getX();
     auto dy = mchTrack.getY() - mftTrack.getY();
     auto score = dx*dx + dy*dy;
-    GlobalMuonTrack matchTrack;
-    matchTrack.setMatchingChi2(score);
-    return matchTrack;
+    return score;
  };
 
 
@@ -33,28 +31,23 @@ int runMatching()  {
 //matcher.setCustomMatchingFunction(&MyMatchingFunc);
 
 // Built-in matching functions
-//matcher.setMatchingFunction(&MUONMatching::matchMFT_MCH_TracksXY);
-matcher.setMatchingFunction(&MUONMatching::matchMFT_MCH_TracksXYPhiTanl);
-//matcher.setMatchingFunction(&MUONMatching::matchMFT_MCH_TracksFull);
+//matcher.setMatchingFunction(&MUONMatcher::matchMFT_MCH_TracksXY);
+//matcher.setMatchingFunction(&MUONMatcher::matchMFT_MCH_TracksXYPhiTanl);
+matcher.setMatchingFunction(&MUONMatcher::matchMFT_MCH_TracksFull);
 //matcher.SetMatchingPlaneZ(-45.3);
 //matcher.SetMatchingPlaneZ(0.);
 matcher.SetMatchingPlaneZ(-80.0);
+matcher.SetVerbosity(true);
 
-matcher.SetVerbosity(1);
 
-matcher.loadMFTTracksOut();
+matcher.loadMFTTracksOut(); // Load and propagates to matching plane
 matcher.loadMCHTracks();
-matcher.initGlobalTracks();
-
-
-
+matcher.initGlobalTracks(); // Propagate MCH tracks to matching plane and convert parameters and covariances matrix to MFT coordinate system
 //matcher.loadDummyMCHTracks();
 //matcher.initDummyGlobalTracks();
-
-matcher.runEventMatching();
-matcher.fitTracks();
+matcher.runEventMatching(); // Runs track matching event-by-event
+matcher.fitTracks(); // Kalman filter
 matcher.saveGlobalMuonTracks();
-
 
 /*
 std::cout << " *** Matching Summary ***" << std::endl;

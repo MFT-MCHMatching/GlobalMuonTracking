@@ -59,11 +59,11 @@ using SMatrix5 = ROOT::Math::SVector<Double_t, 5>;
 
 
 
-class MUONMatching
+class MUONMatcher
 {
 public:
-  MUONMatching();
-  ~MUONMatching() = default;
+  MUONMatcher();
+  ~MUONMatcher() = default;
   void Clear();
   void SetMatchingPlaneZ(double z) { mMatchingPlaneZ = z;}
   void SetVerbosity(bool v = true) { mVerbose = v; }
@@ -95,7 +95,7 @@ public:
   double matchMFT_MCH_TracksXYPhiTanl(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack);
   //// Position, Angles & Charged Momentum
   double matchMFT_MCH_TracksFull(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack);
-  void setMatchingFunction(double (MUONMatching::*func)(GlobalMuonTrack&, MFTTrack&)) { mMatchFunc = func; }
+  void setMatchingFunction(double (MUONMatcher::*func)(GlobalMuonTrack&, MFTTrack&)) { mMatchFunc = func; }
   void setCustomMatchingFunction(double (*func)(GlobalMuonTrack&, MFTTrack&)) { mCustomMatchFunc = func; }
   void runHeavyMatching(); // Finds best match (no search window, no event separation)
   void runEventMatching(); // Finds best match event-per-event
@@ -116,7 +116,7 @@ private:
   // Global Muon Track Methods
   void fitGlobalMuonTrack(GlobalMuonTrack&); // Kalman filter
   bool computeCluster(GlobalMuonTrack&, MFTCluster&);
-  double (MUONMatching::*mMatchFunc)(GlobalMuonTrack&,MFTTrack&) ;
+  double (MUONMatcher::*mMatchFunc)(GlobalMuonTrack&,MFTTrack&) ;
   double (*mCustomMatchFunc)(GlobalMuonTrack&,MFTTrack&) = nullptr;
 
   // Data Members
@@ -149,7 +149,7 @@ private:
 
 };
 
-#include "MUONMatching.cxx"
+#include "MUONMatcher.cxx"
 
 
 #endif /* MUON_MATCHING */

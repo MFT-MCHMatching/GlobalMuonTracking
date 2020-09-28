@@ -1,7 +1,7 @@
-#include "MUONMatching.h"
+#include "MUONMatcher.h"
 
 //_________________________________________________________________________________________________
-MUONMatching::MUONMatching() {
+MUONMatcher::MUONMatcher() {
 
   const auto grp = o2::parameters::GRPObject::loadFrom("o2sim_grp.root");
   std::unique_ptr<o2::parameters::GRPObject> mGRP = nullptr;
@@ -14,12 +14,12 @@ MUONMatching::MUONMatching() {
   printf("B field z = %f [kGauss]\n", mField_z);
 
   mMCHTrackExtrap.setField();
-  mMatchFunc = &MUONMatching::matchMFT_MCH_TracksXY;
+  mMatchFunc = &MUONMatcher::matchMFT_MCH_TracksXY;
 }
 
 
 //_________________________________________________________________________________________________
-void MUONMatching::Clear() {
+void MUONMatcher::Clear() {
 
   mMFTTracks.clear();
   mMCHTracksDummy.clear();
@@ -33,7 +33,7 @@ void MUONMatching::Clear() {
 }
 
 //_________________________________________________________________________________________________
-void MUONMatching::loadMCHTracks() {
+void MUONMatcher::loadMCHTracks() {
 // This function populates mMCHTracks (vector of MCH tracks)
 //
 
@@ -113,7 +113,7 @@ std::cout << "Loaded " <<  mMCHTracks.size() << " MCH Tracks in " << mNEvents <<
 }
 
 //_________________________________________________________________________________________________
-void MUONMatching::loadDummyMCHTracks() {
+void MUONMatcher::loadDummyMCHTracks() {
 
 // For now loading MFT Tracks as Dummy MCH tracks
 Char_t *trkFile = "mfttracks.root";
@@ -135,7 +135,7 @@ std::cout << "Loaded " <<  mMCHTracksDummy.size() << " Fake MCH Tracks" << std::
 
 
 //_________________________________________________________________________________________________
-void MUONMatching::loadMFTTracksOut() {
+void MUONMatcher::loadMFTTracksOut() {
   // Load all MFTTracks and propagate to last MFT Layer;
 
   Char_t *trkFile = "mfttracks.root";
@@ -173,7 +173,7 @@ loadMFTClusters();
 }
 
 //_________________________________________________________________________________________________
-void MUONMatching::loadMFTClusters() {
+void MUONMatcher::loadMFTClusters() {
 
   using o2::itsmft::CompClusterExt;
 
@@ -258,7 +258,7 @@ void MUONMatching::loadMFTClusters() {
 
 
 //_________________________________________________________________________________________________
-void MUONMatching::initGlobalTracks() {
+void MUONMatcher::initGlobalTracks() {
 // Populates mGlobalMuonTracks using MCH track data
 
 if(mGlobalMuonTracks.empty()) {
@@ -275,7 +275,7 @@ else std::cout << "WARNING: mGlobalMuonTracks already initialized! Skipping init
 }
 
 //_________________________________________________________________________________________________
-void MUONMatching::initDummyGlobalTracks() {
+void MUONMatcher::initDummyGlobalTracks() {
 // Populates mGlobalMuonTracks using MFT track inner parameters
 
 if(mGlobalMuonTracks.empty()) {
@@ -293,7 +293,7 @@ else std::cout << "WARNING: mGlobalMuonTracks already initialized! Skipping init
 }
 
 //_________________________________________________________________________________________________
-void MUONMatching::runEventMatching() {
+void MUONMatcher::runEventMatching() {
   // Runs matching over all tracks on a single event
   std::cout << "Starting runEventMatching..." << std::endl;
   std::cout << " mGlobalMuonTracks.size() = " << mGlobalMuonTracks.size() << std::endl;
@@ -353,7 +353,7 @@ void MUONMatching::runEventMatching() {
 }
 
 //_________________________________________________________________________________________________
-void MUONMatching::ComputeLabels() {
+void MUONMatcher::ComputeLabels() {
   auto GTrackID = 0;
   auto nFakes = 0;
   auto nNoMatch = 0;
@@ -407,7 +407,7 @@ void MUONMatching::ComputeLabels() {
 }
 
 //_________________________________________________________________________________________________
-void MUONMatching::saveGlobalMuonTracks() {
+void MUONMatcher::saveGlobalMuonTracks() {
 
 TFile outFile("GlobalMuonTracks.root", "RECREATE");
 TTree outTree("o2sim", "Global Muon Tracks");
@@ -425,7 +425,7 @@ TTree outTree("o2sim", "Global Muon Tracks");
 
 
 //_________________________________________________________________________________________________
-void MUONMatching::fitTracks() {
+void MUONMatcher::fitTracks() {
 
   auto GTrackID=0;
   for (auto& gTrack: mGlobalMuonTracks) {
@@ -445,7 +445,7 @@ void MUONMatching::fitTracks() {
 
 
 //_________________________________________________________________________________________________
-void MUONMatching::fitGlobalMuonTrack(GlobalMuonTrack& gTrack) {
+void MUONMatcher::fitGlobalMuonTrack(GlobalMuonTrack& gTrack) {
 
   const auto& mftTrack = mMFTTracks[gTrack.getBestMFTTrackMatchID()];
   auto ncls = mftTrack.getNumberOfPoints();
@@ -568,7 +568,7 @@ void MUONMatching::fitGlobalMuonTrack(GlobalMuonTrack& gTrack) {
 }
 
 //_________________________________________________________________________________________________
-bool MUONMatching::computeCluster(GlobalMuonTrack& track, MFTCluster& cluster ) {
+bool MUONMatcher::computeCluster(GlobalMuonTrack& track, MFTCluster& cluster ) {
 
   const auto& clx = cluster.getX();
   const auto& cly = cluster.getY();
@@ -619,7 +619,7 @@ if (track.update(pos, cov)) {
 }
 
 //_________________________________________________________________________________________________
-GlobalMuonTrack MUONMatching::MCHtoGlobal(MCHTrack& mchTrack) {
+GlobalMuonTrack MUONMatcher::MCHtoGlobal(MCHTrack& mchTrack) {
 // Convert a MCH Track parameters and covariances matrix to the GlobalMuonTrack format.
 // Must be called after propagation on the absorber
 
@@ -699,7 +699,7 @@ return convertedTrack;
 
 
 //_________________________________________________________________________________________________
-double MUONMatching::matchMFT_MCH_TracksXY(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack) {
+double MUONMatcher::matchMFT_MCH_TracksXY(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack) {
 // Calculate Matching Chi2 - X and Y positions
 
 
@@ -743,7 +743,7 @@ double MUONMatching::matchMFT_MCH_TracksXY(GlobalMuonTrack& mchTrack, MFTTrack& 
 
 
 //_________________________________________________________________________________________________
-double MUONMatching::matchMFT_MCH_TracksXYPhiTanl(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack) {
+double MUONMatcher::matchMFT_MCH_TracksXYPhiTanl(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack) {
 // Match two tracks evaluating positions & angles
 
 
@@ -791,7 +791,7 @@ double MUONMatching::matchMFT_MCH_TracksXYPhiTanl(GlobalMuonTrack& mchTrack, MFT
 
 
 //_________________________________________________________________________________________________
-double MUONMatching::matchMFT_MCH_TracksFull(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack) {
+double MUONMatcher::matchMFT_MCH_TracksFull(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack) {
 // Match two tracks evaluating all parameters: X,Y, phi, tanl & q/pt
 
   SMatrix55Sym I = ROOT::Math::SMatrixIdentity(), H_k, V_k;
