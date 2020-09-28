@@ -356,6 +356,7 @@ void MUONMatching::runEventMatching() {
 void MUONMatching::ComputeLabels() {
   auto GTrackID = 0;
   auto nFakes = 0;
+  auto nNoMatch = 0;
   std::cout << "Computing Track Labels..." << std::endl;
 
   for (auto& gTrack: mGlobalMuonTracks) {
@@ -380,6 +381,8 @@ void MUONMatching::ComputeLabels() {
          else {
          nFakes++;
        }
+    } else {
+      nNoMatch++;
     }
     if(mVerbose) {
       std::cout << "    Global Track Label => "; thisLabel.print();
@@ -390,12 +393,13 @@ void MUONMatching::ComputeLabels() {
     GTrackID++;
   }
 
-    auto nGoodMatches = GTrackID - nFakes;
+    auto nGoodMatches = GTrackID - nFakes - nNoMatch;
     auto nTracks = mGlobalMuonTracks.size();
     std::cout << " **************** Matching Summary ***************** " << std::endl;
     std::cout << " Total = " << GTrackID << " global muon tracks." << std::endl;
     std::cout << " Good Matches = " << nGoodMatches  << " tracks (" << 100.0*nGoodMatches/nTracks << "%)" << std::endl;
     std::cout << " Fake Matches = " << nFakes << " tracks (" << 100.0*nFakes/nTracks << "%)" << std::endl;
+    std::cout << " No Match = " << nNoMatch << " tracks (" << 100.0*nNoMatch/nTracks << "%)" << std::endl;
     std::cout << " *************************************************** " << std::endl;
 
 

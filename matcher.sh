@@ -38,31 +38,52 @@ updatecode() {
   cp -r ${SCRIPTDIR}/${GENERATOR}/* ${SCRIPTDIR}/*.bin ${SCRIPTDIR}/include ${SCRIPTDIR}/*.C ${SCRIPTDIR}/*.h ${SCRIPTDIR}/*.cxx ${SCRIPTDIR}/macrohelpers ${OUTDIR}
 }
 
-generateMCHMFTTracks()
+generateMCHTracks()
 {
 
   mkdir -p ${OUTDIR}
   updatecode
-  pushd ${OUTDIR} && \
+  pushd ${OUTDIR}
 
   sed -i -e s/NPIONS/${NPIONS}/g Config.C
   sed -i -e s/NMUONS/${NMUONS}/g Config.C
 
-  echo "Running on `pwd` ..." && \
+  echo "Generating MCH tracks on `pwd` ..."
 
 
   ## 1) aliroot generation of MCH Tracks
-  alienv setenv ${ALIROOTENV} -c bash ./runtest.sh -n ${NEV} | tee aliroot_gen.log ;
+  alienv setenv ${ALIROOTENV} -c bash ./runtest.sh -n ${NEV} | tee aliroot_MCHgen.log
 
-  ## 2) Generate MFT tracks using same Kinematics.root
+  ## 2) aliroot conversion of MCH tracks to temporary format
+  echo " Converting MCH Tracks to O2-compatible format"
+  alienv setenv ${ALIROOTENV} -c aliroot -q -l "ConvertMCHESDTracks.C+(\".\")" | tee MCH-O2Conversion.log
+
+  echo " Finished MCH track generation `realpath ${OUTDIR}`"
+  popd
+
+}
+
+
+generateMFTTracks()
+{
+
+  if ! [ -f "${OUTDIR}/Kinematics.root" ]; then
+    echo " ERROR! MCH Tracks Kinematics.root not found on `realpath ${OUTDIR}/Kinematics.root` ... exiting."
+    exit
+  fi
+
+  if ! [ -z ${UPDATECODE+x} ]; then updatecode ; fi
+  pushd ${OUTDIR}
+
+  echo "Generating MFT Tracks `pwd` ..."
+
+
+  ## O2 simulation and generation of MFT tracks using same Kinematics.root
   alienv setenv ${O2ENV} -c o2-sim -g extkin --extKinFile Kinematics.root -m PIPE ITS MFT ABS SHIL -e TGeant3 -n ${NEV} -j $JOBS | tee O2Sim.log
   alienv setenv ${O2ENV} -c o2-sim-digitizer-workflow -b --skipDet TPC,ITS,TOF,FT0,EMC,HMP,ZDC,TRD,MCH,MID,FDD,PHS,FV0,CPV >  O2Digitizer.log
   alienv setenv ${O2ENV} -c o2-mft-reco-workflow -b > O2Reco.log
 
-  ## 3) aliroot conversion of MCH tracks to temporary format
-  alienv setenv ${ALIROOTENV} -c aliroot -q -l "ConvertMCHESDTracks.C+(\".\")"
-
-  echo " Leaving  ${OUTDIR}"
+  echo " Leaving MFT Track generation on `realpath ${OUTDIR}`"
   popd
 
 }
@@ -70,39 +91,61 @@ generateMCHMFTTracks()
 runMatching()
 {
 
-  if [ -d "$OUTDIR" ]; then
+  if ! [ -f "${OUTDIR}/tempMCHTracks.root" ]; then
+    echo " Nothing to Match... MCH Tracks not found on `realpath ${OUTDIR}/tempMCHTracks.root` ..."
+    EXITERROR="1"
+  fi
+
+  if ! [ -f "${OUTDIR}/mfttracks.root" ]; then
+    echo " Nothing to Match... MFT Tracks not found on `realpath ${OUTDIR}/mfttracks.root` ..."
+    EXITERROR="1"
+  fi
+
+  if ! [ -z ${EXITERROR+x} ]; then exit ; fi
+
+  if [ -d "${OUTDIR}" ]; then
     if ! [ -z ${UPDATECODE+x} ]; then updatecode ; fi
 
-    pushd ${OUTDIR} && \
-    echo "Running on `pwd` ..." && \
+    pushd ${OUTDIR}
+    echo "Matching MCH & MFT Tracks on `pwd` ..."
 
 
-    ## 4) MFT MCH track matching & global muon track fitting:
+    ## MFT MCH track matching & global muon track fitting:
     alienv setenv ${O2ENV} -c root.exe -l -q -b runMatching.C+ | tee matching.log
 
-    echo " Leaving  ${OUTDIR}"
+    echo " Finished matching on `realpath ${OUTDIR}`"
     popd
 
   fi
-  echo -e "${OUTDIR} not found..."
 
 }
 
 
 runChecks()
 {
-  if [ -d "$OUTDIR" ]; then
-    if ! [ -z ${UPDATECODE+x} ]; then updatecode ; fi
-    pushd ${OUTDIR} && \
-    echo "Running on `pwd` ..." && \
 
-    ## 5) Check global muon Tracks
-    alienv setenv ${O2ENV} -c root.exe -l -q -b GlobalMuonChecks.C+ | tee checks.log
-
-    echo " Leaving  ${OUTDIR}"
-    popd
+  if ! [ -f "${OUTDIR}/GlobalMuonTracks.root" ]; then
+    echo " Nothing to check... MCH Tracks not found on `realpath ${OUTDIR}/GlobalMuonChecks.root` ..."
+    EXITERROR="1"
   fi
-  echo -e "${OUTDIR} not found..."
+
+  if ! [ -f "${OUTDIR}/mfttracks.root" ]; then
+    echo " Nothing to check... MFT Tracks not found on `realpath ${OUTDIR}/mfttracks.root` ..."
+    EXITERROR="1"
+  fi
+
+  if ! [ -z ${EXITERROR+x} ]; then exit ; fi
+
+  if ! [ -z ${UPDATECODE+x} ]; then updatecode ; fi
+  pushd ${OUTDIR}
+  echo "Checking global muon tracks on `pwd` ..." && \
+
+  ## Check global muon Tracks
+  alienv setenv ${O2ENV} -c root.exe -l -q -b GlobalMuonChecks.C+ | tee checks.log
+
+  echo " Finished checking Global muon tracks on `realpath ${OUTDIR}`"
+  popd
+
 
 }
 
@@ -132,8 +175,12 @@ while [ $# -gt 0 ] ; do
     GENERATOR="$2";
     shift 2
     ;;
-    --gen)
-    GENERATE="1";
+    --genMCH)
+    GENERATEMCH="1";
+    shift 1
+    ;;
+    --genMFT)
+    GENERATEMFT="1";
     shift 1
     ;;
     --match)
@@ -169,7 +216,7 @@ if ! [[ -z "$LOADEDMODULES" ]]
  fi
 
 
-if [ -z ${GENERATE+x} ] && [ -z ${MATCHING+x} ] && [ -z ${CHECKS+x} ]
+if [ -z ${GENERATEMCH+x} ] && [ -z ${GENERATEMFT+x} ] && [ -z ${MATCHING+x} ] && [ -z ${CHECKS+x} ]
 then
   echo "Missing use mode!"
   echo " "
@@ -184,35 +231,36 @@ GENERATOR=${GENERATOR:-"gun"}
 NPIONS=${NPIONS:-"10"}
 NMUONS=${NMUONS:-"2"}
 
-export ALIROOT_OCDB_ROOT=~
+export ALIROOT_OCDB_ROOT=~/alice/OCDB
 SCRIPTDIR=`dirname "$0"`
 
 #ALIROOTENV=AliPhysics/latest-master-release
-ALIROOTENV=AliPhysics/latest-master-next-root6
+ALIROOTENV=AliPhysics/latest
 O2ENV=O2/latest-dev-o2
 
 
-if ! [ -z ${GENERATE+x} ]; then
-  if [ -d "$OUTDIR" ]; then
+if ! [ -z ${GENERATEMCH+x} ]; then
+  if [ -d "${OUTDIR}" ]; then
     echo " Warning! `realpath ${OUTDIR}` already exists."
     read -p " Delete output & proceed (y/N)? " choice
     case "$choice" in
       y|Y )
-      echo " "
-      #rm -rf ${OUTDIR}/*;
+      rm -rf ${OUTDIR}/*.root;
       ;;
       *) exit ;
     esac
   fi
-  generateMCHMFTTracks ;
-
-
+  generateMCHTracks ;
 fi
 
-if ! [ -d "$OUTDIR" ]; then
-  echo "$OUTDIR not found. Nothing to do"
-  exit
+if ! [ -z ${GENERATEMFT+x} ]; then
+  generateMFTTracks ;
 fi
+
+#if ! [ -d "${OUTDIR}" ]; then
+#  echo "${OUTDIR} not found. Nothing to do"
+#  exit
+#fi
 
 if ! [ -z ${MATCHING+x} ]; then runMatching ; fi
 
