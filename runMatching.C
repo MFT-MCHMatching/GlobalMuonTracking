@@ -40,7 +40,7 @@ matcher.setMatchingFunction(&MUONMatching::matchMFT_MCH_TracksXYPhiTanl);
 //matcher.SetMatchingPlaneZ(0.);
 matcher.SetMatchingPlaneZ(-80.0);
 
-//matcher.SetVerbosity(1);
+matcher.SetVerbosity(1);
 
 matcher.loadMFTTracksOut();
 matcher.loadMCHTracks();

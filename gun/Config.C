@@ -111,34 +111,37 @@ void Config()
 
 
     // Pions
-    AliGenBox * gPPions = new AliGenBox(NPIONS);
-    gPPions->SetMomentumRange(0.,100.1);
+    int nPions = NPIONS / 2;
+    AliGenBox * gPPions = new AliGenBox(nPions);
+    gPPions->SetMomentumRange(0.1,100.1);
     gPPions->SetPhiRange(0., 360.);
     gPPions->SetThetaRange(171.000,178.001);
     gPPions->SetPart(kPiPlus);           // Positive pions
     gener->AddGenerator(gPPions,"POS PIONS",1);
 
-    AliGenBox * gNPions = new AliGenBox(NPIONS);
-    gNPions->SetMomentumRange(0.,100.1);
+    AliGenBox * gNPions = new AliGenBox(nPions);
+    gNPions->SetMomentumRange(0.1,100.1);
     gNPions->SetPhiRange(0., 360.);
     gNPions->SetThetaRange(171.000,178.001);
     gNPions->SetPart(kPiMinus);           // Positive pions
     gener->AddGenerator(gNPions,"NEG PIONS",1);
 
     // MUON
-    AliGenBox * gmuon1 = new AliGenBox(NMUONS);
-    gmuon1->SetMomentumRange(0.,100);
+    int nMuons = NMUONS / 2;
+
+    AliGenBox * gmuon1 = new AliGenBox(nMuons);
+    gmuon1->SetMomentumRange(0.1,100);
     gmuon1->SetPhiRange(0., 360.);
     gmuon1->SetThetaRange(171.000,178.001);
-    gmuon1->SetPart(kMuonMinus);           // Muons
+    gmuon1->SetPart(kMuonMinus);           // Negative muons
     gener->AddGenerator(gmuon1,"GENBOX MUON1",1);
 
-    AliGenBox * gmuon2 = new AliGenBox(NMUONS);
-    gmuon2->SetMomentumRange(0.,100);
+    AliGenBox * gmuon2 = new AliGenBox(nMuons);
+    gmuon2->SetMomentumRange(0.1,100);
     gmuon2->SetPhiRange(0., 360.);
     gmuon2->SetThetaRange(171.000,178.001);
-    gmuon2->SetPart(kMuonPlus);           // Muons
-    gener->AddGenerator(gmuon2,"GENBOX MUON1",1);
+    gmuon2->SetPart(kMuonPlus);           // Positive muons
+    gener->AddGenerator(gmuon2,"GENBOX MUON2",1);
 
 
     gener->Init();

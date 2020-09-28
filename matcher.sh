@@ -18,6 +18,10 @@ Usage()
   --npions <number_of_pions>
   --nmuons <number_of_muons>
 
+  -g <gen> # selects which generator to use (as defined by folder name in `dirname "$0"`)
+     default generator: gun
+
+
   2) Run track matching:
 
   ${0##*/} --match -o <outputdir>
@@ -48,15 +52,15 @@ generateMCHMFTTracks()
 
 
   ## 1) aliroot generation of MCH Tracks
-  alienv setenv AliPhysics/latest-master-next-root6 -c bash ./runtest.sh -n ${NEV} | tee aliroot_gen.log ;
+  alienv setenv ${ALIROOTENV} -c bash ./runtest.sh -n ${NEV} | tee aliroot_gen.log ;
 
   ## 2) Generate MFT tracks using same Kinematics.root
-  alienv setenv O2/latest-dev-o2 -c o2-sim -g extkin --extKinFile Kinematics.root -m PIPE ITS MFT ABS SHIL -e TGeant3 -n ${NEV} -j $JOBS | tee O2Sim.log
-  alienv setenv O2/latest-dev-o2 -c o2-sim-digitizer-workflow -b --skipDet TPC,ITS,TOF,FT0,EMC,HMP,ZDC,TRD,MCH,MID,FDD,PHS,FV0,CPV >  O2Digitizer.log
-  alienv setenv O2/latest-dev-o2 -c o2-mft-reco-workflow -b > O2Reco.log
+  alienv setenv ${O2ENV} -c o2-sim -g extkin --extKinFile Kinematics.root -m PIPE ITS MFT ABS SHIL -e TGeant3 -n ${NEV} -j $JOBS | tee O2Sim.log
+  alienv setenv ${O2ENV} -c o2-sim-digitizer-workflow -b --skipDet TPC,ITS,TOF,FT0,EMC,HMP,ZDC,TRD,MCH,MID,FDD,PHS,FV0,CPV >  O2Digitizer.log
+  alienv setenv ${O2ENV} -c o2-mft-reco-workflow -b > O2Reco.log
 
   ## 3) aliroot conversion of MCH tracks to temporary format
-  alienv setenv AliPhysics/latest-master-next-root6 -c aliroot -q -l "ConvertMCHESDTracks.C+(\".\")"
+  alienv setenv ${ALIROOTENV} -c aliroot -q -l "ConvertMCHESDTracks.C+(\".\")"
 
   echo " Leaving  ${OUTDIR}"
   popd
@@ -74,7 +78,7 @@ runMatching()
 
 
     ## 4) MFT MCH track matching & global muon track fitting:
-    alienv setenv O2/latest-dev-o2 -c root.exe -l -q -b runMatching.C+
+    alienv setenv ${O2ENV} -c root.exe -l -q -b runMatching.C+ | tee matching.log
 
     echo " Leaving  ${OUTDIR}"
     popd
@@ -93,7 +97,7 @@ runChecks()
     echo "Running on `pwd` ..." && \
 
     ## 5) Check global muon Tracks
-    alienv setenv O2/latest-dev-o2 -c root.exe -l -q -b GlobalMuonChecks.C+
+    alienv setenv ${O2ENV} -c root.exe -l -q -b GlobalMuonChecks.C+ | tee checks.log
 
     echo " Leaving  ${OUTDIR}"
     popd
@@ -101,7 +105,6 @@ runChecks()
   echo -e "${OUTDIR} not found..."
 
 }
-
 
 while [ $# -gt 0 ] ; do
   case $1 in
@@ -125,7 +128,7 @@ while [ $# -gt 0 ] ; do
     NMUONS="$2";
     shift 2
     ;;
-    --g)
+    -g)
     GENERATOR="$2";
     shift 2
     ;;
@@ -149,13 +152,22 @@ while [ $# -gt 0 ] ; do
     UPDATECODE="1";
     shift 1
     ;;
-    -h)
+    -h|--help)
     Usage
     ;;
     *) echo "Wrong input"; Usage;
 
   esac
 done
+
+# Ensure no enviroment is loaded
+if ! [[ -z "$LOADEDMODULES" ]]
+ then
+   echo "Do not run this script with alienv environment loaded. Aborting..."
+   echo "Run '${0##*/} --help'"
+   exit
+ fi
+
 
 if [ -z ${GENERATE+x} ] && [ -z ${MATCHING+x} ] && [ -z ${CHECKS+x} ]
 then
@@ -168,21 +180,26 @@ fi
 if [ -z ${OUTDIR+x} ]; then echo "Missing output dir" ; Usage ; fi
 NEV=${NEV:-"10"}
 JOBS=${JOBS:-"4"}
-GENERATOR=${GENERATOR:-"gen"}
+GENERATOR=${GENERATOR:-"gun"}
 NPIONS=${NPIONS:-"10"}
 NMUONS=${NMUONS:-"2"}
 
 export ALIROOT_OCDB_ROOT=~
 SCRIPTDIR=`dirname "$0"`
 
+#ALIROOTENV=AliPhysics/latest-master-release
+ALIROOTENV=AliPhysics/latest-master-next-root6
+O2ENV=O2/latest-dev-o2
+
 
 if ! [ -z ${GENERATE+x} ]; then
   if [ -d "$OUTDIR" ]; then
     echo " Warning! `realpath ${OUTDIR}` already exists."
-    read -p " Delete data & proceed (y/N)? " choice
+    read -p " Delete output & proceed (y/N)? " choice
     case "$choice" in
       y|Y )
-      rm -rf ${OUTDIR}/*;
+      echo " "
+      #rm -rf ${OUTDIR}/*;
       ;;
       *) exit ;
     esac

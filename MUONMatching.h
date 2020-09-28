@@ -39,6 +39,26 @@ using GlobalMuonTrack = o2::track::GlobalMuonTrack;
 using MCLabels = o2::dataformats::MCTruthContainer<o2::MCCompLabel>;
 using MFTCluster = o2::mft::Cluster;
 
+
+using SMatrix22 = ROOT::Math::SMatrix<double, 2>;
+using SMatrix25 = ROOT::Math::SMatrix<double, 2, 5>;
+using SMatrix52 = ROOT::Math::SMatrix<double, 5, 2>;
+using SMatrix5 = ROOT::Math::SVector<Double_t, 5>;
+
+using SVector2 = ROOT::Math::SVector<double, 2>;
+using SVector4 = ROOT::Math::SVector<double, 4>;
+using SVector5 = ROOT::Math::SVector<double, 5>;
+
+using SMatrix44 = ROOT::Math::SMatrix<double, 4>;
+using SMatrix45 = ROOT::Math::SMatrix<double, 4, 5>;
+using SMatrix54 = ROOT::Math::SMatrix<double, 5, 4>;
+using SMatrix55Std = ROOT::Math::SMatrix<double, 5>;
+using SMatrix55Sym = ROOT::Math::SMatrix<double, 5, 5, ROOT::Math::MatRepSym<double, 5>>;
+using SMatrix5 = ROOT::Math::SVector<Double_t, 5>;
+
+
+
+
 class MUONMatching
 {
 public:
