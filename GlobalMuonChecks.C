@@ -43,7 +43,7 @@ bool DEBUG_VERBOSE = true;
 bool EXPORT_HISTOS_IMAGES = false;
 
 //_________________________________________________________________________________________________
-int GlobalMuonChecks( const Char_t *trkFile = "GlobalMuonTracks.root",
+int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
 const Char_t *o2sim_KineFile = "o2sim_Kine.root"
 )
 {
@@ -460,7 +460,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   Int_t numberOfEvents = o2SimKineTree -> GetEntries();
 
   // Global Muon Tracks
-  TFile *trkFileIn = new TFile(trkFile);
+  TFile *trkFileIn = new TFile(trkFile.c_str());
   TTree *gmTrackTree = (TTree*) trkFileIn -> Get("o2sim");
   std::vector<GlobalMuonTrack> trackGMVec, *trackGMVecP = &trackGMVec;
   gmTrackTree->SetBranchAddress("GlobalMuonTrack", &trackGMVecP);

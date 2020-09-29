@@ -177,6 +177,12 @@ void MUONMatcher::loadMFTClusters() {
 
   using o2::itsmft::CompClusterExt;
 
+  constexpr float DefClusErrorRow = 26.88e-4 * 0.5;
+  constexpr float DefClusErrorCol = 29.24e-4 * 0.5;
+  constexpr float DefClusError2Row = DefClusErrorRow * DefClusErrorRow;
+  constexpr float DefClusError2Col = DefClusErrorCol * DefClusErrorCol;
+
+
   // Geometry and matrix transformations
   std::string inputGeom = "o2sim_geometry.root";
   o2::base::GeometryManager::loadGeometry(inputGeom);
@@ -222,7 +228,7 @@ void MUONMatcher::loadMFTClusters() {
      auto chipID = c.getChipID();
      auto pattID = c.getPatternID();
      Point3D<float> locC;
-     float sigmaX2 = o2::mft::ioutils::DefClusError2Row, sigmaY2 = o2::mft::ioutils::DefClusError2Col;
+     float sigmaX2 = DefClusError2Row, sigmaY2 = DefClusError2Col;
 
      if (pattID != o2::itsmft::CompCluster::InvalidPatternID) {
        //sigmaX2 = dict.getErr2X(pattID); // ALPIDE local X coordinate => MFT global X coordinate (ALPIDE rows)

@@ -52,6 +52,7 @@ generateMCHTracks()
 
 
   ## 1) aliroot generation of MCH Tracks
+  echo ${NEV} > nMCHEvents
   alienv setenv ${ALIROOTENV} -c bash ./runtest.sh -n ${NEV} | tee aliroot_MCHgen.log
 
   ## 2) aliroot conversion of MCH tracks to temporary format
@@ -77,7 +78,7 @@ generateMFTTracks()
 
   echo "Generating MFT Tracks `pwd` ..."
 
-
+  NEV=`cat nMCHEvents`
   ## O2 simulation and generation of MFT tracks using same Kinematics.root
   alienv setenv ${O2ENV} -c o2-sim -g extkin --extKinFile Kinematics.root -m PIPE ITS MFT ABS SHIL -e TGeant3 -n ${NEV} -j $JOBS | tee O2Sim.log
   alienv setenv ${O2ENV} -c o2-sim-digitizer-workflow -b --skipDet TPC,ITS,TOF,FT0,EMC,HMP,ZDC,TRD,MCH,MID,FDD,PHS,FV0,CPV >  O2Digitizer.log
@@ -125,7 +126,7 @@ runChecks()
 {
 
   if ! [ -f "${OUTDIR}/GlobalMuonTracks.root" ]; then
-    echo " Nothing to check... MCH Tracks not found on `realpath ${OUTDIR}/GlobalMuonChecks.root` ..."
+    echo " Nothing to check... Global Muon Tracks not found on `realpath ${OUTDIR}/GlobalMuonChecks.root` ..."
     EXITERROR="1"
   fi
 
@@ -234,9 +235,11 @@ NMUONS=${NMUONS:-"2"}
 export ALIROOT_OCDB_ROOT=~/alice/OCDB
 SCRIPTDIR=`dirname "$0"`
 
-#ALIROOTENV=AliPhysics/latest-master-release
-ALIROOTENV=AliPhysics/latest
-O2ENV=O2/latest-dev-o2
+#ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest-master-release"}
+#ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest-master-next-root6"}
+ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest"}
+O2ENV=${O2ENV:-"O2/latest-dev-o2"}
+
 
 
 if ! [ -z ${GENERATEMCH+x} ]; then
@@ -256,11 +259,6 @@ fi
 if ! [ -z ${GENERATEMFT+x} ]; then
   generateMFTTracks ;
 fi
-
-#if ! [ -d "${OUTDIR}" ]; then
-#  echo "${OUTDIR} not found. Nothing to do"
-#  exit
-#fi
 
 if ! [ -z ${MATCHING+x} ]; then runMatching ; fi
 

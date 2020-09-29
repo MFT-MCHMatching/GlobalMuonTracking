@@ -1,40 +1,15 @@
 #include <iostream>
 // MUON includes
-#include "AliMUONCDB.h"
-#include "AliMUONConstants.h"
-#include "AliMUONRecoParam.h"
-#include "AliMUONESDInterface.h"
-#include "AliMUONVTrackReconstructor.h"
-#include "AliMUONTrack.h"
-#include "AliMUONTrackParam.h"
-#include "AliMUONTrackExtrap.h"
-#include "AliMUONVCluster.h"
-#include "AliMUONVDigit.h"
-#include "AliESDMuonTrack.h"
-#include "AliMUONGeometryTransformer.h"
-#include "AliMUONGeometryModuleTransformer.h"
-#include "AliMUONGeometryDetElement.h"
-#include "AliMpDEIterator.h"
-#include "AliMpSegmentation.h"
-#include "AliMpVSegmentation.h"
-#include "AliMpConstants.h"
-#include "AliMpDDLStore.h"
-#include "AliMpPad.h"
-#include "AliMpDetElement.h"
-#include "AliMpCathodType.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "AliESDEvent.h"
-#include "AliCDBManager.h"
-#include "AliGeomManager.h"
 #include "AliRunLoader.h"
 #include "AliStack.h"
-
+#include "include/tempMCHTrackGetter.h"
 
 
 using namespace std;
 
-#include "include/tempMCHTrackGetter.h"
 
 #pragma link C++ class tempMCHTrack+;
 #pragma link C++ class std::vector<tempMCHTrack>+;
@@ -51,25 +26,6 @@ void ConvertMCHESDTracks(string in_dir=""){
 
   string out_dir = in_dir;
   if(!TFile::Open(Form("%s/AliESDs.root",in_dir.c_str()))) return;
-
-  TString ocdbPath = "$ALIROOT_OCDB_ROOT/OCDB";
-  TString fAlignOCDBpath     = "";
-  TString fRecoParamOCDBpath = "";
-
-  AliCDBManager *cdbm = AliCDBManager::Instance();
-  cdbm->SetDefaultStorage("local://$ALIROOT_OCDB_ROOT/OCDB");
-  if (!fAlignOCDBpath.IsNull()) cdbm->SetSpecificStorage("MUON/Align/Data",fAlignOCDBpath.Data());
-  if (!fRecoParamOCDBpath.IsNull()) cdbm->SetSpecificStorage("MUON/Calib/RecoParam",fRecoParamOCDBpath.Data());
-  cdbm->SetRun(255173);
-
-
-
-  // load geometry for track extrapolation to vertex and for checking hits are under pads in reconstructible tracks
-  if (!AliGeomManager::GetGeometry()) {
-    AliGeomManager::LoadGeometry();
-    if (!AliGeomManager::GetGeometry()) return;
-    if (!AliGeomManager::ApplyAlignObjsFromCDB("MUON")) return;
-  }
 
   TFile* inFile = new TFile(Form("%s/AliESDs.root",in_dir.c_str()),"read");
 

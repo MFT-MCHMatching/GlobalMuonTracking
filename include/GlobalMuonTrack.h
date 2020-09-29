@@ -28,10 +28,10 @@ class GlobalMuonTrack : public o2::track::TrackParCovFwd
   void setROFrame(std::uint32_t f) { mROFrame = f; }
 
   void setMatchingChi2(double chi2) { mMatchingChi2 = chi2; }
-  const double getMatchingChi2() const { return mMatchingChi2; }
+  double getMatchingChi2() { return mMatchingChi2; }
 
   void setBestMFTTrackMatchID(int ID) { mBestMFTTrackMatchID = ID; }
-  const double getBestMFTTrackMatchID() const { return mBestMFTTrackMatchID; }
+  double getBestMFTTrackMatchID() { return mBestMFTTrackMatchID; }
 
   void print() const;
 

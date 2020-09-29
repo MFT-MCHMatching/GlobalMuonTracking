@@ -2,14 +2,15 @@
 
 #endif
 
-#ifdef __MAKECINT__
+#include "MUONMatcher.h"
+
+//#ifdef __MAKECINT__
 #pragma link C++ class GlobalMuonTrack+;
 #pragma link C++ class std::vector<GlobalMuonTrack>+;
 #pragma link C++ class tempMCHTrack+;
 #pragma link C++ class std::vector<tempMCHTrack>+;
-#endif
+//#endif
 
-#include "MUONMatcher.h"
 
 MUONMatcher matcher;
 
