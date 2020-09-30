@@ -37,8 +37,10 @@ int runMatching()  {
 matcher.setMatchingFunction(&MUONMatcher::matchMFT_MCH_TracksFull);
 //matcher.SetMatchingPlaneZ(-45.3);
 //matcher.SetMatchingPlaneZ(0.);
+//matcher.setCutFunction(&MUONMatcher::matchCutDistance);
+//matcher.setCutDistance(0.1);
 matcher.SetMatchingPlaneZ(-80.0);
-matcher.SetVerbosity(true);
+//matcher.SetVerbosity(true);
 
 
 matcher.loadMFTTracksOut(); // Load and propagates to matching plane

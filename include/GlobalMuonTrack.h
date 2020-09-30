@@ -29,6 +29,8 @@ class GlobalMuonTrack : public o2::track::TrackParCovFwd
 
   void setMatchingChi2(double chi2) { mMatchingChi2 = chi2; }
   double getMatchingChi2() { return mMatchingChi2; }
+  void countCandidate() { mNMFTCandidates++; }
+  int getNMFTCandidates()  { return mNMFTCandidates; }
 
   void setBestMFTTrackMatchID(int ID) { mBestMFTTrackMatchID = ID; }
   double getBestMFTTrackMatchID() { return mBestMFTTrackMatchID; }
@@ -39,6 +41,8 @@ class GlobalMuonTrack : public o2::track::TrackParCovFwd
   std::uint32_t mROFrame = 0; ///< RO Frame
   double mMatchingChi2 = 1.0E308;
   int mBestMFTTrackMatchID = -1;
+  int mNMFTCandidates = 0; // Number of candidates within search cut
+
 
 };
 

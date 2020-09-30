@@ -86,21 +86,30 @@ public:
 
   void initGlobalTracks(); // Configure Global Tracks with MCH track parameters
   void initDummyGlobalTracks(); // Configure Global Tracks with MFT tracks (Dummy)
+  void fitTracks(); //Fit all matched tracks
 
 
   // Matching methods
   // Position
-  double matchMFT_MCH_TracksXY(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack); // Compute track matching
+  double matchMFT_MCH_TracksXY(const GlobalMuonTrack& mchTrack, const MFTTrack& mftTrack); // Compute track matching
   //// Position & Angles
-  double matchMFT_MCH_TracksXYPhiTanl(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack);
+  double matchMFT_MCH_TracksXYPhiTanl(const GlobalMuonTrack& mchTrack, const MFTTrack& mftTrack);
   //// Position, Angles & Charged Momentum
-  double matchMFT_MCH_TracksFull(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack);
-  void setMatchingFunction(double (MUONMatcher::*func)(GlobalMuonTrack&, MFTTrack&)) { mMatchFunc = func; }
-  void setCustomMatchingFunction(double (*func)(GlobalMuonTrack&, MFTTrack&)) { mCustomMatchFunc = func; }
-  void runHeavyMatching(); // Finds best match (no search window, no event separation)
+  double matchMFT_MCH_TracksFull(const GlobalMuonTrack& mchTrack, const MFTTrack& mftTrack);
+  void setMatchingFunction(double (MUONMatcher::*func)(const GlobalMuonTrack&, const MFTTrack&)) { mMatchFunc = func; }
+  void setCustomMatchingFunction(double (*func)(const GlobalMuonTrack&, const MFTTrack&)) { mCustomMatchFunc = func; }
+  void runHeavyMatching(); // Finds best match (no search cut, no event separation)
   void runEventMatching(); // Finds best match event-per-event
 
-  void fitTracks(); //Fit all matched tracks
+  // Matching cuts
+  bool matchingCut(const GlobalMuonTrack&, const MFTTrack&); // Calls configured cut function
+  void setCutFunction(bool (MUONMatcher::*func)(const GlobalMuonTrack&, const MFTTrack&)) { mCutFunc = func; }
+  void setCustomCutFunction(bool (*func)(const GlobalMuonTrack&, const MFTTrack&)) { mCustomCutFunc = func; }
+  //  Built-in cut functions
+  bool matchCutDisabled(const GlobalMuonTrack&, const MFTTrack&);
+  bool matchCutDistance(const GlobalMuonTrack&, const MFTTrack&);
+  void setCutDistance(double distance) { mCutDistance = distance; };
+
 
 
 private:
@@ -116,8 +125,12 @@ private:
   // Global Muon Track Methods
   void fitGlobalMuonTrack(GlobalMuonTrack&); // Kalman filter
   bool computeCluster(GlobalMuonTrack&, MFTCluster&);
-  double (MUONMatcher::*mMatchFunc)(GlobalMuonTrack&,MFTTrack&) ;
-  double (*mCustomMatchFunc)(GlobalMuonTrack&,MFTTrack&) = nullptr;
+  double (MUONMatcher::*mMatchFunc)(const GlobalMuonTrack&, const MFTTrack&) ;
+  double (*mCustomMatchFunc)(const GlobalMuonTrack&, const MFTTrack&) = nullptr;
+  bool (MUONMatcher::*mCutFunc)(const GlobalMuonTrack&, const MFTTrack&) ;
+  bool (*mCustomCutFunc)(const GlobalMuonTrack&,const MFTTrack&) = nullptr;
+
+
 
   // Data Members
   std::vector<MFTTrack> mMFTTracks;
@@ -145,6 +158,7 @@ private:
   double mField_z;
   const double sLastMFTPlaneZ = -77.5;
   double mMatchingPlaneZ = sLastMFTPlaneZ;
+  double mCutDistance = 1.0;
   bool mVerbose = false;
 
 };

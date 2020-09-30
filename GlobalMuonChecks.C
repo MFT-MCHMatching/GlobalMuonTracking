@@ -446,6 +446,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   Int_t nChargeMiss4plus = 0;
   Int_t nCleanGMTracks = 0;
   Int_t nInvalidGMTracks = 0;
+  Int_t nNoMatchGMTracks = 0;
 
   // Files & Trees
   // MC
@@ -650,8 +651,11 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
           qMatchEff->Fill(!d_Charge,Pt_MC);
         }
         else {
+          if(bestMFTTrackMatchID>=0) {
           trackMatchEff->Fill(0,gmTrack.getPt());
           nInvalidGMTracks++;
+        } else nNoMatchGMTracks++;
+
         }
 
       }
@@ -912,11 +916,13 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   Int_t totalRecoGMTracks = nCleanGMTracks + nInvalidGMTracks;
   std::cout << std::endl;
   std::cout << "---------------------------------------------------" << std::endl;
-  std::cout << "-----------   Track finding Summary   -------------" << std::endl;
+  std::cout << "-----------   Track matching Summary   -------------" << std::endl;
   std::cout << "---------------------------------------------------" << std::endl;
   std::cout << "Number of reconstructed Global Muon Tracks = " << totalRecoGMTracks << std::endl;
   std::cout << "Number of clean Global Muon Tracks = " << nCleanGMTracks << std::endl;
   std::cout << "Number of invalid Global Muon Tracks = " << nInvalidGMTracks << std::endl;
+  std::cout << "Number of non-MFT-Matched MCH Tracks = " << nNoMatchGMTracks << std::endl;
+
   std::cout << "---------------------------------------------------" << std::endl;
   std::cout << std::endl;
 
@@ -951,7 +957,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   std::cout << " R_StdDev = " << TH1Histos[kGMTrackR]->GetStdDev() << std::endl;
   std::cout << " Charge_mean = " << TH1Histos[kGMTrackDeltaY]->GetMean() << std::endl;
   std::cout << " nChargeMatch = " << nChargeMatch << " (" << 100.*nChargeMatch/(nChargeMiss+nChargeMatch) << "%)" << std::endl;
-  std::cout << " nTrackMatch = " << nCleanGMTracks << " (" << 100.*nCleanGMTracks/(nInvalidGMTracks+nCleanGMTracks) << "%)" << std::endl;
+  std::cout << " nTrackMatch = " << nCleanGMTracks << " (" << 100.*nCleanGMTracks/(totalRecoGMTracks) << "%)" << std::endl;
 
   std::cout << "---------------------------------------------------" << std::endl;
 
