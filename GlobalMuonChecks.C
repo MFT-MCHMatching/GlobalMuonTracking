@@ -39,7 +39,7 @@ using eventFoundTracks = std::vector<bool>;
 using std::vector;
 vector<eventFoundTracks> allFoundGMTracks; // True for reconstructed tracks - one vector of bool per event
 
-bool DEBUG_VERBOSE = true;
+bool DEBUG_VERBOSE = false;
 bool EXPORT_HISTOS_IMAGES = false;
 
 //_________________________________________________________________________________________________
@@ -140,23 +140,23 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   };
 
   std::map<int, std::array<double,6>> TH2Binning {
-    {kGMTrackDeltaXYVertex, {300, -.05, .05, 300, -.05, .05} },
-    {kGMTrackDeltaXYVertex0_1, {300, -.05, .05, 300, -.05, .05} },
-    {kGMTrackDeltaXYVertex1_4, {300, -.05, .05, 300, -.05, .05} },
-    {kGMTrackDeltaXYVertex4plus, {300, -.05, .05, 300, -.05, .05} },
+    {kGMTrackDeltaXYVertex, {100, -.5, .5, 100, -.5, .5} },
+    {kGMTrackDeltaXYVertex0_1, {100, -.5, .5, 100, -.5, .5} },
+    {kGMTrackDeltaXYVertex1_4, {100, -.5, .5, 100, -.5, .5} },
+    {kGMTrackDeltaXYVertex4plus, {100, -.5, .5, 100, -.5, .5} },
     {kGMTrackChi2vsFitChi2, {500, 0, 1000, 250, 0., 500.}},
-    {kGMTrackQPRec_MC, {100, -10, 10, 100, -10, 10} },
-    {kGMTrackPtResolution, {14, 0, 7, 250, 0, 25} },
+    {kGMTrackQPRec_MC, {50, -100, 100, 50, -100, 100} },
+    {kGMTrackPtResolution, {20, 0, 10, 100, 0, 5} },
     {kGMTrackInvPtResolution, {14, 0, 7, 300, -2, 2} },
     {kMCTracksEtaZ, {31, -15, 16, 25, etaMin, etaMax} }
   };
 
 
   std::map<int,const char *> TH2XaxisTitles {
-    {kGMTrackDeltaXYVertex, "\\Delta x ~[cm]"},
-    {kGMTrackDeltaXYVertex0_1, "\\Delta x ~[cm]"},
-    {kGMTrackDeltaXYVertex1_4, "\\Delta x ~[cm]"},
-    {kGMTrackDeltaXYVertex4plus, "\\Delta x ~[cm]"},
+    {kGMTrackDeltaXYVertex, "\\Delta x ~[mm]"},
+    {kGMTrackDeltaXYVertex0_1, "\\Delta x ~[mm]"},
+    {kGMTrackDeltaXYVertex1_4, "\\Delta x ~[mm]"},
+    {kGMTrackDeltaXYVertex4plus, "\\Delta x ~[mm]"},
     {kGMTrackChi2vsFitChi2, "Fit ~ \\chi^2"},
     {kGMTrackQPRec_MC, "(q.p)_{MC} [GeV]"},
     {kGMTrackPtResolution, "pt_{MC} [GeV]"},
@@ -165,10 +165,10 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   };
 
   std::map<int,const char *> TH2YaxisTitles {
-    {kGMTrackDeltaXYVertex, "\\Delta y ~[cm]"},
-    {kGMTrackDeltaXYVertex0_1, "\\Delta y ~[cm]"},
-    {kGMTrackDeltaXYVertex1_4, "\\Delta y ~[cm]"},
-    {kGMTrackDeltaXYVertex4plus, "\\Delta y ~[cm]"},
+    {kGMTrackDeltaXYVertex, "\\Delta y ~[mm]"},
+    {kGMTrackDeltaXYVertex0_1, "\\Delta y ~[mm]"},
+    {kGMTrackDeltaXYVertex1_4, "\\Delta y ~[mm]"},
+    {kGMTrackDeltaXYVertex4plus, "\\Delta y ~[mm]"},
     {kGMTrackChi2vsFitChi2, "Track ~ \\chi^2"},
     {kGMTrackQPRec_MC, "(q.p)_{fit} [GeV]"},
     {kGMTrackPtResolution, "pt_{fit} / pt_{MC}"},
@@ -268,7 +268,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
     {kGMTracksP, "Standalone Global Muon Tracks P"},
     {kGMTrackDeltaXErr, "\\Delta X / \\sigma_X"},
     {kGMTrackDeltaYErr, "\\Delta Y / \\sigma_Y"},
-    {kGMTrackDeltaPhiErr, "(\\Delta \\phi / \\sigma_\\phi"},
+    {kGMTrackDeltaPhiErr, "\\Delta \\phi / \\sigma_\\phi"},
     {kGMTrackDeltaTanLErr, "\\Delta TanL / \\sigma_{TanL} "},
     {kGMTrackDeltainvQPtErr, "\\Delta(q/Pt) / \\sigma_{q/pt}"},
     {kGMTrackXChi2, "\\chi^2(x)"},
@@ -433,7 +433,10 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   //qMatchEff->GetPaintedHistogram()->GetXaxis()->SetTitleSize(0.06);
   //qMatchEff->GetPaintedHistogram()->GetYaxis()->SetTitleSize(0.06);
 
-  TEfficiency* trackMatchEff = new TEfficiency("TrackMatchEff","Track Match;p_t [GeV];#epsilon",20,0,10);
+  TEfficiency* pairedMCHTracksEff = new TEfficiency("PairedMCHTracksEff","Paired MCH tracks;p_t [GeV];#epsilon",10,0,10);
+  TEfficiency* globalMuonPurity = new TEfficiency("GMTracks Purity"," Purity (NGoodTracks/NGlobalMuonTracks);p_t [GeV];#epsilon",10,0,10);
+  TEfficiency* goodCandidateEff = new TEfficiency("GoodMFTTrackTested","Good MFT match tested;p_t [GeV];#epsilon",10,0,10);
+
 
   // Counters
   Int_t nChargeMatch = 0;
@@ -445,7 +448,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   Int_t nChargeMatch4plus = 0;
   Int_t nChargeMiss4plus = 0;
   Int_t nCleanGMTracks = 0;
-  Int_t nInvalidGMTracks = 0;
+  Int_t nFakeGMTracks = 0;
   Int_t nNoMatchGMTracks = 0;
 
   // Files & Trees
@@ -525,10 +528,13 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
           //labelMFTBestMatch[0].print();
 
         }
-
+        if(bestMFTTrackMatchID>=0) globalMuonPurity->Fill(0,gmTrack.getPt());
+        pairedMCHTracksEff->Fill(0,gmTrack.getPt());
+        goodCandidateEff->Fill(gmTrack.goodMatchTested(),gmTrack.getPt());
         if(label[0].isCorrect()) { // Good track: add to histograms
           nCleanGMTracks++;
-          trackMatchEff->Fill(1,gmTrack.getPt());
+          pairedMCHTracksEff->Fill(1,gmTrack.getPt());
+          globalMuonPurity->Fill(1,gmTrack.getPt());
           auto thisTrkID = label[0].getTrackID();
           MCTrackT<float>* thisTrack =  &(*mcTr).at(thisTrkID);
           auto vx_MC = thisTrack->GetStartVertexCoordinatesX();
@@ -606,7 +612,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
           TH1Histos[kGMTrackR]->Fill(sqrt(dx*dx+dy*dy));
           TH1Histos[kGMTrackQ]->Fill(d_Charge);
           TH1Histos[kGMTrackChi2]->Fill(trackChi2);
-          TH2Histos[kGMTrackDeltaXYVertex]->Fill(dx,dy);
+          TH2Histos[kGMTrackDeltaXYVertex]->Fill(10.*dx,10.*dy);
           TH2Histos[kGMTrackQPRec_MC]->Fill(P_MC*Q_MC,P_fit*Q_fit);
           TH2Histos[kGMTrackPtResolution]->Fill(Pt_MC,Pt_fit/Pt_MC);
           PtRes_Profile->Fill(Pt_MC,Pt_fit/Pt_MC);
@@ -620,7 +626,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
 
           // Differential histos
           if (Pt_MC <= 1.0) {
-            TH2Histos[kGMTrackDeltaXYVertex0_1]->Fill(dx,dy);
+            TH2Histos[kGMTrackDeltaXYVertex0_1]->Fill(10.*dx,10.*dy);
             TH1Histos[kGMTrackDeltaTanl0_1]->Fill(d_tanl);
             TH1Histos[kGMTrackDeltaPhi0_1]->Fill(d_Phi);
             TH1Histos[kGMTrackDeltaPhiDeg0_1]->Fill(TMath::RadToDeg()*d_Phi);
@@ -629,7 +635,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
             d_Charge ? nChargeMiss0_1++ : nChargeMatch0_1++;
           }
           if (Pt_MC > 1.0 and Pt_MC <= 4 ) {
-            TH2Histos[kGMTrackDeltaXYVertex1_4]->Fill(dx,dy);
+            TH2Histos[kGMTrackDeltaXYVertex1_4]->Fill(10.*dx,10.*dy);
             TH1Histos[kGMTrackDeltaTanl1_4]->Fill(d_tanl);
             TH1Histos[kGMTrackDeltaPhi1_4]->Fill(d_Phi);
             TH1Histos[kGMTrackDeltaPhiDeg1_4]->Fill(TMath::RadToDeg()*d_Phi);
@@ -638,7 +644,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
             d_Charge ? nChargeMiss1_4++ : nChargeMatch1_4++;
           }
           if (Pt_MC > 4.0) {
-            TH2Histos[kGMTrackDeltaXYVertex4plus]->Fill(dx,dy);
+            TH2Histos[kGMTrackDeltaXYVertex4plus]->Fill(10.*dx,10.*dy);
             TH1Histos[kGMTrackDeltaTanl4plus]->Fill(d_tanl);
             TH1Histos[kGMTrackDeltaPhi4plus]->Fill(d_Phi);
             TH1Histos[kGMTrackDeltaPhiDeg4plus]->Fill(TMath::RadToDeg()*d_Phi);
@@ -652,8 +658,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
         }
         else {
           if(bestMFTTrackMatchID>=0) {
-          trackMatchEff->Fill(0,gmTrack.getPt());
-          nInvalidGMTracks++;
+            nFakeGMTracks++;
         } else nNoMatchGMTracks++;
 
         }
@@ -666,6 +671,11 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
     totalTracks+=iTrack;
   } // Loop over events
 
+
+  Int_t totalRecoGMTracks = nCleanGMTracks + nFakeGMTracks;
+  Int_t nMCHTracks = totalRecoGMTracks + nNoMatchGMTracks;
+
+
   // Customize histograms
   TH1Histos[kGMTrackQ]->SetTitle(Form("nChargeMatch = %d (%.2f%%)", nChargeMatch, 100.*nChargeMatch/(nChargeMiss+nChargeMatch)));
   TH1Histos[kGMTrackQ0_1]->SetTitle(Form("nChargeMatch = %d (%.2f%%)", nChargeMatch0_1, 100.*nChargeMatch0_1/(nChargeMiss0_1+nChargeMatch0_1)));
@@ -673,7 +683,8 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   TH1Histos[kGMTrackQ4plus]->SetTitle(Form("nChargeMatch = %d (%.2f%%)", nChargeMatch4plus, 100.*nChargeMatch4plus/(nChargeMiss4plus+nChargeMatch4plus)));
 
   qMatchEff->SetTitle(Form("Charge match = %.2f%%", 100.*nChargeMatch/(nChargeMiss+nChargeMatch)));
-  trackMatchEff->SetTitle(Form("Track match = %.2f%%", 100.*nCleanGMTracks/(nInvalidGMTracks+nCleanGMTracks)));
+  pairedMCHTracksEff->SetTitle(Form("Paired MCH tracks = %.2f%%", 100.*totalRecoGMTracks/(nMCHTracks)));
+  globalMuonPurity->SetTitle(Form("GMTracks Purity = %.2f%%", 100.*nCleanGMTracks/(totalRecoGMTracks)));
 
 
   //Remove stat boxes
@@ -694,9 +705,28 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   // sigmaX resultion Profile
   TH1D* DeltaX_Error = new  TH1D();
   DeltaX_Error =  DeltaX_Profile->ProjectionX("DeltaX_Error", "C=E");
-  DeltaX_Error->Write();
 
   // Summary Canvases
+  // Matching summary
+  auto matching_summary = summary_report_3x2(
+    *TH2Histos[kGMTrackDeltaXYVertex],
+    *pairedMCHTracksEff,
+    *globalMuonPurity,
+    *DeltaX_Error,
+    *PtRes_Profile,
+    *goodCandidateEff,
+    "Matching Summary",
+    seed_cfg,
+    0, 0, 0, 0, 0, 0,
+    Form("%.2f%%", 100.0*TH2Histos[kGMTrackDeltaXYVertex]->Integral()/TH2Histos[kGMTrackDeltaXYVertex]->GetEntries()),
+    "-",
+    "-",
+    "-",
+    "-",
+    "-"
+  );
+
+  // Parameters resolution
   auto param_resolution = summary_report_3x2(*TH2Histos[kGMTrackDeltaXYVertex],
     *TH2Histos[kGMTrackPtResolution],
     *PtRes_Profile,
@@ -714,28 +744,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
     "-"
   );
 
-
-
-  //
-  auto matching_summary = summary_report_3x2(
-    *TH2Histos[kGMTrackDeltaXYVertex],
-    *trackMatchEff,
-    *PtRes_Profile,
-    *DeltaX_Error,
-    *TH2Histos[kGMTrackQPRec_MC],
-    *qMatchEff,
-    "Matching Summary",
-    seed_cfg,
-    0, 0, 0, 0, 0, 0,
-    Form("%.2f%%", 100.0*TH2Histos[kGMTrackDeltaXYVertex]->Integral()/TH2Histos[kGMTrackDeltaXYVertex]->GetEntries()),
-    "-",
-    "-",
-    "-",
-    Form("%.2f%%", 100.0*TH2Histos[kGMTrackQPRec_MC]->Integral()/TH2Histos[kGMTrackQPRec_MC]->GetEntries()),
-    "-"
-  );
-
-
+  // Covariances summary
   auto covariances_summary = summary_report_3x2(*TH1Histos[kGMTrackDeltaXErr],
     *TH1Histos[kGMTrackDeltaPhiErr],
     *TH1Histos[kGMTrackDeltainvQPtErr],
@@ -753,7 +762,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
     Form("%.2f%%", 100.0*TH2Histos[kGMTrackQPRec_MC]->Integral()/TH2Histos[kGMTrackQPRec_MC]->GetEntries())
   );
 
-
+  // Covariances summary 3x3
   auto par_cov_summary3x3 = summary_report_3x3(*TH2Histos[kGMTrackDeltaXYVertex],
     *TH1Histos[kGMTrackDeltaXErr],
     *TH1Histos[kGMTrackDeltaYErr],
@@ -892,6 +901,8 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
 
   // Write histograms to file and export images
 
+   outFile.mkdir("MoreHistos");
+   outFile.cd("MoreHistos");
 
   for (auto& h : TH2Histos) {
     h->Write();
@@ -908,26 +919,14 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
 
   PtRes_Profile->Write();
   DeltaX_Profile->Write();
+  DeltaX_Error->Write();
   qMatchEff->Write();
-  trackMatchEff->Write();
+  pairedMCHTracksEff->Write();
   outFile.Close();
 
 
-  Int_t totalRecoGMTracks = nCleanGMTracks + nInvalidGMTracks;
-  std::cout << std::endl;
   std::cout << "---------------------------------------------------" << std::endl;
-  std::cout << "-----------   Track matching Summary   -------------" << std::endl;
-  std::cout << "---------------------------------------------------" << std::endl;
-  std::cout << "Number of reconstructed Global Muon Tracks = " << totalRecoGMTracks << std::endl;
-  std::cout << "Number of clean Global Muon Tracks = " << nCleanGMTracks << std::endl;
-  std::cout << "Number of invalid Global Muon Tracks = " << nInvalidGMTracks << std::endl;
-  std::cout << "Number of non-MFT-Matched MCH Tracks = " << nNoMatchGMTracks << std::endl;
-
-  std::cout << "---------------------------------------------------" << std::endl;
-  std::cout << std::endl;
-
-  std::cout << "---------------------------------------------------" << std::endl;
-  std::cout << "-------------   Tracking Summary   ----------------" << std::endl;
+  std::cout << "-------------   Matching Summary   ----------------" << std::endl;
   std::cout << "---------------------------------------------------" << std::endl;
   std::cout << " P_mean = " << TH1Histos[kGMTracksP]->GetMean() << std::endl;
   std::cout << " P_StdDev = " << TH1Histos[kGMTracksP]->GetStdDev() << std::endl;
@@ -958,8 +957,19 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   std::cout << " Charge_mean = " << TH1Histos[kGMTrackDeltaY]->GetMean() << std::endl;
   std::cout << " nChargeMatch = " << nChargeMatch << " (" << 100.*nChargeMatch/(nChargeMiss+nChargeMatch) << "%)" << std::endl;
   std::cout << " nTrackMatch = " << nCleanGMTracks << " (" << 100.*nCleanGMTracks/(totalRecoGMTracks) << "%)" << std::endl;
+  std::cout << "----------------------------------------------------------------------" << std::endl;
 
-  std::cout << "---------------------------------------------------" << std::endl;
+  std::cout << std::endl;
+  std::cout << "----------------------------------------------------------------------" << std::endl;
+  std::cout << "---------------------   Track matching Summary   ---------------------" << std::endl;
+  std::cout << "----------------------------------------------------------------------" << std::endl;
+  std::cout << " ==> "<< nMCHTracks << " MCH Tracks"  << std::endl;
+  std::cout << " ==> "<< nNoMatchGMTracks << " non-MFT-Matched MCH Tracks" << " (" << 100.*nNoMatchGMTracks/(nMCHTracks) << "%)"  << std::endl;
+  std::cout << " ==> "<< totalRecoGMTracks  << " reconstructed Global Muon Tracks" << " (" << 100.*totalRecoGMTracks/(nMCHTracks) << "%)"<< std::endl;
+  std::cout << " ==> "<< nFakeGMTracks << " fake Global Muon Tracks" << " (contamination = " << 100.*nFakeGMTracks/(totalRecoGMTracks) << "%)" << std::endl;
+  std::cout << " ==> "<< nCleanGMTracks << " clean Global Muon Tracks" << " (purity = " << 100.*nCleanGMTracks/(totalRecoGMTracks) << "%)" << " (eff. = " << 100.*nCleanGMTracks/(nMCHTracks) << "%)"<< std::endl;
 
+  std::cout << "----------------------------------------------------------------------" << std::endl;
+  std::cout << std::endl;
   return 0;
 }

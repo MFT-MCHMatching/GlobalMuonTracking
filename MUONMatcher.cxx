@@ -302,15 +302,14 @@ else std::cout << "WARNING: mGlobalMuonTracks already initialized! Skipping init
 //_________________________________________________________________________________________________
 void MUONMatcher::runEventMatching() {
   // Runs matching over all tracks on a single event
-  std::cout << "Starting runEventMatching..." << std::endl;
+  std::cout << "Running runEventMatching for " << mNEvents << " events... " << std::endl;
   std::cout << " mGlobalMuonTracks.size() = " << mGlobalMuonTracks.size() << std::endl;
+  uint32_t GTrackID = 0;
 
   for (int event = 0 ; event < mNEvents ; event++) {
 
     //std::cout << "Matching event # " << event << std::endl;
-    uint32_t GTrackID = 0;
-    auto fakeMatch = 0;
-    auto goodMatch = 0;
+    GTrackID = 0;
 
     for (auto& gTrack: mGlobalMuonTracks) {
       auto MCHlabel = mchTrackLabels.getLabels(GTrackID);
@@ -323,6 +322,7 @@ void MUONMatcher::runEventMatching() {
             if(MFTlabel[0].getEventID()==event)
             if (matchingCut(gTrack, mftTrack)) {
               gTrack.countCandidate();
+              if(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) gTrack.setGoodMatchTested();
               auto chi2 = (*mCustomMatchFunc)(gTrack, mftTrack);
               if(chi2 < gTrack.getMatchingChi2()) {
                 gTrack.setBestMFTTrackMatchID(mftTrackID);
@@ -338,10 +338,12 @@ void MUONMatcher::runEventMatching() {
             if(mftTrack.getCharge()==gTrack.getCharge())
             if(MFTlabel[0].getEventID()==event)
             if (matchingCut(gTrack, mftTrack)) {
-              auto candidate = (this->*mMatchFunc)(gTrack, mftTrack);
-              if(candidate < gTrack.getMatchingChi2()) {
+              gTrack.countCandidate();
+              if(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) gTrack.setGoodMatchTested();
+              auto chi2 = (this->*mMatchFunc)(gTrack, mftTrack);
+              if(chi2 < gTrack.getMatchingChi2()) {
                 gTrack.setBestMFTTrackMatchID(mftTrackID);
-                gTrack.setMatchingChi2(candidate);
+                gTrack.setMatchingChi2(chi2);
               }
             }
             mftTrackID++;
@@ -353,7 +355,7 @@ void MUONMatcher::runEventMatching() {
   } // /loop over events
 
   ComputeLabels();
-  std::cout << "Finished runEventMatching" << std::endl;
+  std::cout << "Finished runEventMatching on " << GTrackID << " MCH Tracks." << std::endl;
 
 }
 
@@ -373,9 +375,21 @@ bool MUONMatcher::matchCutDistance(const GlobalMuonTrack& mchTrack, const MFTTra
 
   auto dx = mchTrack.getX() - mftTrack.getX();
   auto dy = mchTrack.getY() - mftTrack.getY();
-  auto distance = dx*dx + dy*dy;
-  return distance < mCutDistance;
+  auto distance = TMath::Sqrt(dx*dx + dy*dy);
+  return distance < mCutDistanceParam;
 }
+
+
+//_________________________________________________________________________________________________
+bool MUONMatcher::matchCutDistanceSigma(const GlobalMuonTrack& mchTrack, const MFTTrack& mftTrack) {
+
+  auto dx = mchTrack.getX() - mftTrack.getX();
+  auto dy = mchTrack.getY() - mftTrack.getY();
+  auto distance = TMath::Sqrt(dx*dx + dy*dy);
+  auto cutDistance = mCutDistanceParam*TMath::Sqrt(mchTrack.getSigma2X()+mchTrack.getSigma2Y());
+  return distance < cutDistance;
+}
+
 
 //_________________________________________________________________________________________________
 bool MUONMatcher::matchCutDisabled(const GlobalMuonTrack& mchTrack, const MFTTrack& mftTrack) {

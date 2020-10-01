@@ -34,6 +34,8 @@ class GlobalMuonTrack : public o2::track::TrackParCovFwd
 
   void setBestMFTTrackMatchID(int ID) { mBestMFTTrackMatchID = ID; }
   double getBestMFTTrackMatchID() { return mBestMFTTrackMatchID; }
+  void setGoodMatchTested() { mGoodMatchTested = true; }
+  bool goodMatchTested() { return mGoodMatchTested; }
 
   void print() const;
 
@@ -42,6 +44,7 @@ class GlobalMuonTrack : public o2::track::TrackParCovFwd
   double mMatchingChi2 = 1.0E308;
   int mBestMFTTrackMatchID = -1;
   int mNMFTCandidates = 0; // Number of candidates within search cut
+  bool mGoodMatchTested = false;
 
 
 };

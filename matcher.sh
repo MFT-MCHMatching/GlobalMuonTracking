@@ -3,32 +3,37 @@
 Usage()
 {
   cat <<-END
-  ${0##*/}: Tool to study MCH-MFT Track matching
+  ${0##*/}: a tool to study MCH-MFT Track matching
+
+  Aliroot and O2 environments are automatically loaded.
 
   Usage:
-  1) Generate common MCH & MFT Tracks:
+  1) Generate MCH Tracks:
 
-  ${0##*/} --gen -n <number_of_events> -o <outputdir> -j <jobs>
+  ${0##*/} --genMCH -n <number_of_events> -o <outputdir> --npions <number_of_pions> --nmuons <number_of_muons>
 
   Will create outputdir, include a copy of the macros and generate
-  MCH tracks with aliroot and MFT tracks with O2. Alienv is automatically loaded.
-  Do not run this script with a loaded environment.
+  MCH tracks with aliroot.
 
-  Option to further configure the generator:
+
+  Option to set number of pions and muons on each events:
   --npions <number_of_pions>
   --nmuons <number_of_muons>
 
-  -g <gen> # selects which generator to use (as defined by folder name in `dirname "$0"`)
-     default generator: gun
+  2) Generate MFT Tracks
+     ${0##*/} --genMFT -o <outputdir> -j <jobs>
 
-
-  2) Run track matching:
+  3) Run track matching:
 
   ${0##*/} --match -o <outputdir>
 
-  3) Run checks:
+  4) Run checks:
 
-  ${0##*/} --check -n <number_of_events> -o <outputdir> -j <jobs>
+  ${0##*/} --check -o <outputdir>
+
+  ======================================================================================
+  Macros on ${SCRIPTDIR} will copied to <outputdir> when --genMCH option is used.
+  To replace the macros on --genMFT, --match and --check steps, use option --updatecode
 
 END
   exit
@@ -150,6 +155,9 @@ runChecks()
 
 }
 
+SCRIPTDIR=`dirname "$0"`
+
+
 while [ $# -gt 0 ] ; do
   case $1 in
     -n)
@@ -233,11 +241,10 @@ NPIONS=${NPIONS:-"10"}
 NMUONS=${NMUONS:-"2"}
 
 export ALIROOT_OCDB_ROOT=~/alice/OCDB
-SCRIPTDIR=`dirname "$0"`
 
 #ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest-master-release"}
 #ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest-master-next-root6"}
-ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest"}
+ALIROOTENV=${ALIROOTENV:-"AliRoot/latest"}
 O2ENV=${O2ENV:-"O2/latest-dev-o2"}
 
 

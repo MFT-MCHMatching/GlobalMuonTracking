@@ -37,8 +37,14 @@ int runMatching()  {
 matcher.setMatchingFunction(&MUONMatcher::matchMFT_MCH_TracksFull);
 //matcher.SetMatchingPlaneZ(-45.3);
 //matcher.SetMatchingPlaneZ(0.);
-//matcher.setCutFunction(&MUONMatcher::matchCutDistance);
-//matcher.setCutDistance(0.1);
+//
+matcher.setCutFunction(&MUONMatcher::matchCutDistance);
+matcher.setCutDistanceParam(1.0);
+//
+//
+//matcher.setCutFunction(&MUONMatcher::matchCutDistanceSigma);
+//matcher.setCutDistanceParam(3.0);
+
 matcher.SetMatchingPlaneZ(-80.0);
 //matcher.SetVerbosity(true);
 

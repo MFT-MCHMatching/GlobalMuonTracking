@@ -108,7 +108,8 @@ public:
   //  Built-in cut functions
   bool matchCutDisabled(const GlobalMuonTrack&, const MFTTrack&);
   bool matchCutDistance(const GlobalMuonTrack&, const MFTTrack&);
-  void setCutDistance(double distance) { mCutDistance = distance; };
+  bool matchCutDistanceSigma(const GlobalMuonTrack&, const MFTTrack&);
+  void setCutDistanceParam(double distance) { mCutDistanceParam = distance; };
 
 
 
@@ -158,7 +159,7 @@ private:
   double mField_z;
   const double sLastMFTPlaneZ = -77.5;
   double mMatchingPlaneZ = sLastMFTPlaneZ;
-  double mCutDistance = 1.0;
+  double mCutDistanceParam = 1.0;
   bool mVerbose = false;
 
 };

@@ -66,10 +66,10 @@ h1_Fit2->SetTitle("Sigma");
 h1_Fit2->Draw();
 
 
-//h2_InvPtResolution_0->Write();
-h1_Fit1->Write();
-h1_Fit2->Write();
-c1->Write();
+////h2_InvPtResolution_0->Write();
+//h1_Fit1->Write();
+//h1_Fit2->Write();
+//c1->Write();
 }
 
 
