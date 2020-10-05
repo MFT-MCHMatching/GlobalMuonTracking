@@ -108,10 +108,7 @@ void Config()
 
 
     ofstream genMatcherLog ("MatcherGenConfig.txt");
-    //if (genMatcherLog.is_open())
-
-      genMatcherLog << MCHgen;
-
+    genMatcherLog << MCHgen;
 
     if (MCHgen.find("gun0_100GeV") < MCHgen.length()) {
       std::cout << " This is gun0_100GeV Generator! " << std::endl;
@@ -187,17 +184,6 @@ void Config()
     gener->Init();
 }
 
-      if (MCHgen.find("box") < MCHgen.length()) {
-        std::cout << " This is box Generator! " << std::endl;
-
-        AliGenBox * gener = new AliGenBox(1);
-        gener->SetMomentumRange(20.,20.1);
-        gener->SetPhiRange(0., 360.);
-        gener->SetThetaRange(171.000,178.001);
-        gener->SetPart(kMuonMinus);           // Muons
-        gener->SetOrigin(0.,0., 0.);  //vertex position
-        gener->SetSigma(0.0, 0.0, 0.0);         //Sigma in (X,Y,Z) (cm) on IP position
-      }
 
       if (MCHgen.find("paramJpsi") < MCHgen.length()) {
         AliGenParam *gener = new AliGenParam(1, AliGenMUONlib::kJpsi);

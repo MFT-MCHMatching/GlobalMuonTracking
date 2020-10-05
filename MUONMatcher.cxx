@@ -14,8 +14,8 @@ MUONMatcher::MUONMatcher() {
   printf("B field z = %f [kGauss]\n", mField_z);
 
   mMCHTrackExtrap.setField();
-  setCutFunction(&MUONMatcher::matchCutDisabled);
-  setMatchingFunction(&MUONMatcher::matchMFT_MCH_TracksXY);
+  mCutFunc = &MUONMatcher::matchCutDisabled;
+  mMatchFunc = &MUONMatcher::matchMFT_MCH_TracksAllParam;
 }
 
 
@@ -360,7 +360,7 @@ void MUONMatcher::runEventMatching() {
     } // /loop over global tracks
   } // /loop over events
 
-  ComputeLabels();
+  finalize();
   std::cout << "Finished runEventMatching on " << GTrackID << " MCH Tracks." << std::endl;
 
 }
@@ -382,7 +382,7 @@ bool MUONMatcher::matchCutDistance(const GlobalMuonTrack& mchTrack, const MFTTra
   auto dx = mchTrack.getX() - mftTrack.getX();
   auto dy = mchTrack.getY() - mftTrack.getY();
   auto distance = TMath::Sqrt(dx*dx + dy*dy);
-  return distance < mCutDistanceParam;
+  return distance < mCutParams[0];
 }
 
 
@@ -392,7 +392,7 @@ bool MUONMatcher::matchCutDistanceSigma(const GlobalMuonTrack& mchTrack, const M
   auto dx = mchTrack.getX() - mftTrack.getX();
   auto dy = mchTrack.getY() - mftTrack.getY();
   auto distance = TMath::Sqrt(dx*dx + dy*dy);
-  auto cutDistance = mCutDistanceParam*TMath::Sqrt(mchTrack.getSigma2X()+mchTrack.getSigma2Y());
+  auto cutDistance = mCutParams[0]*TMath::Sqrt(mchTrack.getSigma2X()+mchTrack.getSigma2Y());
   return distance < cutDistance;
 }
 
@@ -403,7 +403,7 @@ bool MUONMatcher::matchCutDisabled(const GlobalMuonTrack& mchTrack, const MFTTra
 }
 
 //_________________________________________________________________________________________________
-void MUONMatcher::ComputeLabels() {
+void MUONMatcher::finalize() { // compute labels and populates mMatchingHelper (partial)
   auto GTrackID = 0;
   auto nFakes = 0;
   auto nNoMatch = 0;
@@ -445,22 +445,38 @@ void MUONMatcher::ComputeLabels() {
 
     auto nGoodMatches = GTrackID - nFakes - nNoMatch;
     auto nTracks = mGlobalMuonTracks.size();
-    std::cout << " **************** Matching Summary ***************** " << std::endl;
-    std::cout << " Total = " << GTrackID << " global muon tracks." << std::endl;
-    std::cout << " Good Matches = " << nGoodMatches  << " tracks (" << 100.0*nGoodMatches/nTracks << "%)" << std::endl;
-    std::cout << " Fake Matches = " << nFakes << " tracks (" << 100.0*nFakes/nTracks << "%)" << std::endl;
-    std::cout << " No Match = " << nNoMatch << " tracks (" << 100.0*nNoMatch/nTracks << "%)" << std::endl;
-    std::cout << " *************************************************** " << std::endl;
 
 
-    mMatchingHelper.nMCHTracks = nTracks;
-    mMatchingHelper.nGoodMatches = nGoodMatches;
-    mMatchingHelper.nFakes = nFakes;
-    mMatchingHelper.nNoMatch = nNoMatch;
-    mMatchingHelper.matchingPlaneZ = mMatchingPlaneZ;
+    MatchingHelper& helper = mMatchingHelper;
+    helper.nMCHTracks = nTracks;
+    helper.nGoodMatches = nGoodMatches;
+    helper.nFakes = nFakes;
+    helper.nNoMatch = nNoMatch;
+    helper.matchingPlaneZ = mMatchingPlaneZ;
 
-    double GMTracksPurity = -1;
-    double GMTracksGoodMFTTested = -1;
+    // Populates mMatchingHelper.MatchingCutConfig with mCutParams
+    auto iparam = 0;
+    for ( auto param: mCutParams) {
+      mMatchingHelper.MatchingCutConfig = mMatchingHelper.MatchingCutConfig + "_CutP" + std::to_string(iparam) + "=" + std::to_string(param);
+      iparam++;
+    }
+
+    if (helper.MatchingCutFunc == "") {
+    if (mCutFunc == &MUONMatcher::matchCutDisabled) helper.MatchingCutFunc = "_cutDisabled";
+    if (mCutFunc == &MUONMatcher::matchCutDistance) helper.MatchingCutFunc = "_cutDistance";
+    if (mCutFunc == &MUONMatcher::matchCutDistanceSigma) helper.MatchingCutFunc = "_cutDistanceSigma";
+  }
+
+    std::cout << "********************************** Matching Summary ********************************** " << std::endl;
+    std::cout << helper.nMCHTracks << " MCH Tracks." << std::endl;
+    std::cout << helper.nNoMatch << " dangling MCH tracks (" << 100.0*nNoMatch/nTracks << "%)" << std::endl;
+    std::cout << helper.nGMTracks() << " global muon tracks (efficiency = " << 100.0*helper.getEfficiency() << "%)" << std::endl;
+    std::cout << helper.nGoodMatches  << " clean GM tracks (purity = " << 100.0*helper.getPurity() << "%)" << std::endl;
+    std::cout << helper.nFakes << " Fake GM tracks (contamination = " << 100.0*(1.0 - helper.getPurity()) << ")" << std::endl;
+    std::cout << "************************************************************************************** " << std::endl;
+    std::cout << " Annotation: " << helper.Annotation() << std::endl;
+    std::cout << "************************************************************************************** " << std::endl;
+
 
 }
 
@@ -673,8 +689,8 @@ if (track.update(pos, cov)) {
     // Outputs track covariance matrix:
     // param.getCovariances().Print();
   }
-  return true;
 }
+return true;
 
 }
 
@@ -851,7 +867,7 @@ double MUONMatcher::matchMFT_MCH_TracksXYPhiTanl(const GlobalMuonTrack& mchTrack
 
 
 //_________________________________________________________________________________________________
-double MUONMatcher::matchMFT_MCH_TracksFull(const GlobalMuonTrack& mchTrack, const MFTTrack& mftTrack) {
+double MUONMatcher::matchMFT_MCH_TracksAllParam(const GlobalMuonTrack& mchTrack, const MFTTrack& mftTrack) {
 // Match two tracks evaluating all parameters: X,Y, phi, tanl & q/pt
 
   SMatrix55Sym I = ROOT::Math::SMatrixIdentity(), H_k, V_k;

@@ -9,23 +9,57 @@ Usage()
 
   Usage:
   1) Generate MCH Tracks:
+     Will create outputdir, include a copy of the macros and generate MCH tracks with aliroot.
 
-  ${0##*/} --genMCH -n <number_of_events> -o <outputdir> --npions <number_of_pions> --nmuons <number_of_muons>
+  ${0##*/} --genMCH -n <number_of_events> -o <outputdir> -g <generator> <generator options>
 
-  Will create outputdir, include a copy of the macros and generate
-  MCH tracks with aliroot.
+    -g Sets the generator for MCH and MFT tracks. Options:
 
+      gun0_100GeV - Box generator for pions and muons with total momentun 0 to 100 GeV. (default)
+                    Set number of pions and muons on each events:
+          --npions <number_of_pions>
+          --nmuons <number_of_muons>
 
-  Option to set number of pions and muons on each events:
-  --npions <number_of_pions>
-  --nmuons <number_of_muons>
+      Other tentative generators added to Config.C (not validated)
+      paramJpsi - ?
+      hijing    - ?
+      muoncocktail - ?
+
+    Example:
+    ${0##*/} --match --matchFcn matchXYPhiTanl --cutFcn cutDistance --cutParam0 2.0  --updatecode -o sampletest
 
   2) Generate MFT Tracks
      ${0##*/} --genMFT -o <outputdir> -j <jobs>
 
   3) Run track matching:
+     ${0##*/} --match --matchFcn <matching_function> --cutFcn <cut_function> --cutParam0 <val0> -o <outputdir>
 
-  ${0##*/} --match -o <outputdir>
+     --matchFcn
+       Sets the function to calculate matching score for a MCH-MFT track pair.  Built-in options:
+
+         matchALL -  matching chi2 calculated by all 5 parameters: X, Y, Phi, Tanl, q/Pt; (default)
+
+         matchXYPhiTanl - matching chi2 calculated by position and angles: X, Y, Phi, Tanl
+
+         matchXY - matching chi2 calculated track positions: X, Y
+
+     --cutFcn
+       Sets the function that defines the search window for matching candidates. Built-in options:
+
+        cutDisabled - all MFT tracks tested for every MCH track; (default)
+
+        cutDistance - MFT candidates are limited by a distance on the XY plane as defined by cutParam0 in cm;
+
+        cutDistanceSigma - MFT candidates are limited by a distance on the XY plane as defined by
+                           mCutParams[0]*TMath::Sqrt(mchTrack.getSigma2X()+mchTrack.getSigma2Y());
+
+     --cutParam0 <val0>
+       Sets mCutParams[0]=val0; (double)
+
+     --cutParam1 <val1>  (so far unused)
+
+     Example:
+     ${0##*/} --match --matchFcn matchXYPhiTanl --cutFcn cutDistance --cutParam0 2.0 -o sampletest
 
   4) Run checks:
 
@@ -117,8 +151,20 @@ runMatching()
     echo "Matching MCH & MFT Tracks on `pwd` ..."
 
     ## MFT MCH track matching & global muon track fitting:
-    alienv setenv ${O2ENV} -c root.exe -l -q -b runMatching.C+ | tee matching.log
 
+    case "$OSTYPE" in
+
+      darwin*)
+      alienv setenv ${O2ENV} -c root.exe -e 'gSystem->Load("libO2MCHTracking.dylib")' -l -q -b runMatching.C+ | tee matching.log
+      ;;
+      linux*)
+      alienv setenv ${O2ENV} -c root.exe -e 'gSystem->Load("libO2MCHTracking")' -l -q -b runMatching.C+ | tee matching.log
+      ;;
+      *)
+       echo "unknown: $OSTYPE"
+       exit
+        ;;
+    esac
     echo " Finished matching on `realpath ${OUTDIR}`"
     popd
 
@@ -172,11 +218,11 @@ while [ $# -gt 0 ] ; do
     shift 2
     ;;
     --npions)
-    NPIONS_="$2";
+    export NPIONS="$2";
     shift 2
     ;;
     --nmuons)
-    NMUONS_="$2";
+    export NMUONS="$2";
     shift 2
     ;;
     -g)
@@ -194,6 +240,22 @@ while [ $# -gt 0 ] ; do
     --match)
     MATCHING="1";
     shift 1
+    ;;
+    --matchFcn)
+    export MATCHING_FCN="$2";
+    shift 2
+    ;;
+    --cutFcn)
+    export MATCHING_CUTFCN="$2";
+    shift 2
+    ;;
+    --cutParam0)
+    export MATCHING_CUTPARAM0="$2";
+    shift 2
+    ;;
+    --cutParam1)
+    export MATCHING_CUTPARAM1="$2";
+    shift 2
     ;;
     --convert)
     CONVERT="1";
@@ -233,14 +295,10 @@ fi
 
 
 if [ -z ${OUTDIR+x} ]; then echo "Missing output dir" ; Usage ; fi
-NEV_=${NEV_:-"10"}
+NEV_=${NEV_:-"4"}
 JOBS=${JOBS:-"4"}
 GENERATOR=${GENERATOR:-"gun0_100GeV"}
-NPIONS_=${NPIONS_:-"10"}
-NMUONS_=${NMUONS_:-"2"}
 
-export NPIONS=${NPIONS_}
-export NMUONS=${NMUONS_}
 export MCHGENERATOR=${GENERATOR}
 export ALIROOT_OCDB_ROOT=~/alice/OCDB
 

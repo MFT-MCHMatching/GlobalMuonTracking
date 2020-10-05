@@ -75,7 +75,7 @@ public:
   void saveGlobalMuonTracks();
   std::vector<GlobalMuonTrack> getGlobalMuonTracks() const { return mGlobalMuonTracks;}
   void printMFTLabels() {
-    for ( auto i = 0 ; i < mftTrackLabels.getNElements() ; i++) {
+    for ( auto i = 0 ; i < (int)mftTrackLabels.getNElements() ; i++) {
       for ( auto label : mftTrackLabels.getLabels(i) )
       {
         std::cout << " Track " << i << " label: "; label.print(); std::cout << std::endl;
@@ -94,12 +94,12 @@ public:
   //// Position & Angles
   double matchMFT_MCH_TracksXYPhiTanl(const GlobalMuonTrack& mchTrack, const MFTTrack& mftTrack);
   //// Position, Angles & Charged Momentum
-  double matchMFT_MCH_TracksFull(const GlobalMuonTrack& mchTrack, const MFTTrack& mftTrack);
+  double matchMFT_MCH_TracksAllParam(const GlobalMuonTrack& mchTrack, const MFTTrack& mftTrack);
   void setMatchingFunction(double (MUONMatcher::*func)(const GlobalMuonTrack&, const MFTTrack&)) {
     mMatchFunc = func;
     if (func == &MUONMatcher::matchMFT_MCH_TracksXY) mMatchingHelper.MatchingFunction = "_matchXY";
     if (func == &MUONMatcher::matchMFT_MCH_TracksXYPhiTanl) mMatchingHelper.MatchingFunction = "_matchXYPhiTanl";
-    if (func == &MUONMatcher::matchMFT_MCH_TracksFull) mMatchingHelper.MatchingFunction = "_matchAllParams";
+    if (func == &MUONMatcher::matchMFT_MCH_TracksAllParam) mMatchingHelper.MatchingFunction = "_matchAllParams";
     std::cout << " ** MUONMATCHER: Setting matching function => " << mMatchingHelper.MatchingFunction << std::endl;
    }
   void setCustomMatchingFunction(double (*func)(const GlobalMuonTrack&, const MFTTrack&), std::string nickname) {
@@ -113,10 +113,12 @@ public:
   bool matchingCut(const GlobalMuonTrack&, const MFTTrack&); // Calls configured cut function
   void setCutFunction(bool (MUONMatcher::*func)(const GlobalMuonTrack&, const MFTTrack&)) {
     mCutFunc = func;
-    if (func == &MUONMatcher::matchCutDisabled) mMatchingHelper.MatchingCutFunc = "_cutDisabled";
-    if (func == &MUONMatcher::matchCutDistance) mMatchingHelper.MatchingCutFunc = "_cutDistance";
-    if (func == &MUONMatcher::matchCutDistanceSigma) mMatchingHelper.MatchingCutFunc = "_cutDistanceSigma";
-    std::cout << " ** MUONMATCHER: Setting matching cut function => " << mMatchingHelper.MatchingCutFunc << std::endl;
+    std::string func_string;
+    if (func == &MUONMatcher::matchCutDisabled) func_string = "_cutDisabled";
+    if (func == &MUONMatcher::matchCutDistance) func_string = "_cutDistance";
+    if (func == &MUONMatcher::matchCutDistanceSigma) func_string = "_cutDistanceSigma";
+    std::cout << " ** MUONMATCHER: Setting matching cut function => " << func_string << std::endl;
+    if (mCutParams.empty()) mCutParams.emplace_back(1.0); // Default parameter
 
   }
   void setCustomCutFunction(bool (*func)(const GlobalMuonTrack&, const MFTTrack&)) { mCustomCutFunc = func; }
@@ -124,10 +126,10 @@ public:
   bool matchCutDisabled(const GlobalMuonTrack&, const MFTTrack&);
   bool matchCutDistance(const GlobalMuonTrack&, const MFTTrack&);
   bool matchCutDistanceSigma(const GlobalMuonTrack&, const MFTTrack&);
-  void setCutDistanceParam(double distance) {
-    mCutDistanceParam = distance;
-    mMatchingHelper.MatchingCutConfig = std::to_string(distance);
-    std::cout << " ** MUONMATCHER: Setting matching cut config => " << mMatchingHelper.MatchingCutConfig << std::endl;
+  void setCutParam(int index, double param) {
+    if( index > ((int)mCutParams.size()-1) ) mCutParams.resize(index+1);
+    mCutParams[index] = param;
+    std::cout << " ** MUONMATCHER: Setting matching cutParam[" << index << "] = " << param << std::endl;
    };
 
 
@@ -139,7 +141,7 @@ private:
 
   // Track methods
   GlobalMuonTrack MCHtoGlobal(MCHTrack&); // Convert MCH Track to GlobalMuonTrack;
-  void ComputeLabels();
+  void finalize();
 
 
   // Global Muon Track Methods
@@ -179,7 +181,7 @@ private:
   double mField_z;
   const double sLastMFTPlaneZ = -77.5;
   double mMatchingPlaneZ = sLastMFTPlaneZ;
-  double mCutDistanceParam = 1.0;
+  std::vector<double> mCutParams;
   bool mVerbose = false;
 
 };
