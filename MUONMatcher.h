@@ -105,6 +105,7 @@ public:
   void setCustomMatchingFunction(double (*func)(const GlobalMuonTrack&, const MFTTrack&), std::string nickname) {
     mCustomMatchFunc = func;
     mMatchingHelper.MatchingFunction = nickname;
+    std::cout << " ** MUONMATCHER: Setting custom matching function => " << mMatchingHelper.MatchingFunction << std::endl;
      }
   void runHeavyMatching(); // Finds best match (no search cut, no event separation)
   void runEventMatching(); // Finds best match event-per-event
