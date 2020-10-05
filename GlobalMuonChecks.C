@@ -3,6 +3,7 @@
 #ifdef __MAKECINT__
 #pragma link C++ class GlobalMuonTrack+;
 #pragma link C++ class std::vector<GlobalMuonTrack>+;
+#pragma link C++ class MatchingHelper+;
 #endif
 
 #include "TROOT.h"
@@ -44,8 +45,7 @@ bool EXPORT_HISTOS_IMAGES = false;
 
 //_________________________________________________________________________________________________
 int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
-const Char_t *o2sim_KineFile = "o2sim_Kine.root"
-)
+                      const std::string o2sim_KineFile = "o2sim_Kine.root")
 {
 
   // Histos parameters
@@ -59,16 +59,6 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   Double_t deltaphiMax = .2; //+3.15,
   Double_t deltatanlMin = -2.0;
   Double_t deltatanlMax = 2.0;
-
-  // Seed configuration
-  std::string seed_cfg{trkFile};
-  std::string trk_start{"GlobalMuonTracks_"};
-  std::string trk_ext{".root"};
-  std::string trk_trk{"GlobalMuonTracks"};
-  if (seed_cfg.find(trk_start) < seed_cfg.length()) seed_cfg.replace(seed_cfg.find(trk_start),trk_start.length(),"");
-  if (seed_cfg.find(trk_ext) < seed_cfg.length()) seed_cfg.replace(seed_cfg.find(trk_ext),trk_ext.length(),"");
-  if (seed_cfg.find(trk_trk) < seed_cfg.length()) seed_cfg.replace(seed_cfg.find(trk_trk),trk_trk.length(),"");
-  std::cout << seed_cfg << std::endl;
 
 
   // histos
@@ -96,7 +86,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   //gStyle->SetLabelColor(kBlue,"xy");
   gStyle->SetTitleSize(0.06,"xyz");
   gStyle->SetTitleSize(0.08,"o");
-  gStyle->SetTitleOffset(.95,"Y");
+  gStyle->SetTitleOffset(0.95,"Y");
   gStyle->SetTitleFillColor(10);
   //gStyle->SetTitleTextColor(kNlacBlue);
   gStyle->SetStatColor(10);
@@ -453,7 +443,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
 
   // Files & Trees
   // MC
-  TFile *o2sim_KineFileIn = new TFile(o2sim_KineFile);
+  TFile *o2sim_KineFileIn = new TFile(o2sim_KineFile.c_str());
   TTree *o2SimKineTree = (TTree*) o2sim_KineFileIn -> Get("o2sim");
 
   vector<MCTrackT<float>>* mcTr = nullptr;
@@ -472,6 +462,17 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   o2::dataformats::MCTruthContainer<o2::MCCompLabel>* mcLabels = nullptr;
   gmTrackTree -> SetBranchAddress("GlobalMuonTrackMCTruth",&mcLabels);
 
+  MatchingHelper *matching_helperPtr, matching_helper;
+  gDirectory->GetObject("Matching Helper", matching_helperPtr);
+  matching_helper = *matching_helperPtr;
+
+  std::string annotation = matching_helper.Annotation();
+  std::cout << "matching_helper.Generator = " << matching_helper.Generator << std::endl;
+  std::cout << "matching_helper.GeneratorConfig = " << matching_helper.GeneratorConfig << std::endl;
+  std::cout << "matching_helper.MatchingFunction = " << matching_helper.MatchingFunction << std::endl;
+  std::cout << "matching_helper.MatchingCutFunc = " << matching_helper.MatchingCutFunc << std::endl;
+  std::cout << "matching_helper.MatchingCutConfig = " << matching_helper.MatchingCutConfig << std::endl;
+  std::cout << "Annotation = " << annotation << std::endl;
 
   // MFT Tracks
   TFile *mfttrkFileIn = new TFile("mfttracks.root");
@@ -495,7 +496,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   // Reconstructed Global Muon Tracks
   std::cout << "Loop over events and reconstructed Global Muon Tracks!" << std::endl;
   // GMTracks - Identify reconstructed tracks
-  auto totalTracks = 0;
+  auto nGoodMatchTested = 0;
   for (int iEvent = 0 ; iEvent < numberOfEvents ; iEvent++ ) {
     auto  iTrack = 0;
     if(DEBUG_VERBOSE) {
@@ -526,14 +527,17 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
 
           //std::cout << "        bestMFTTrackMatchID = " << bestMFTTrackMatchID << " / labelMFTBestMatch = ";
           //labelMFTBestMatch[0].print();
-
         }
-        if(bestMFTTrackMatchID>=0) globalMuonPurity->Fill(0,gmTrack.getPt());
-        pairedMCHTracksEff->Fill(0,gmTrack.getPt());
-        goodCandidateEff->Fill(gmTrack.goodMatchTested(),gmTrack.getPt());
+        if (gmTrack.goodMatchTested()) nGoodMatchTested++;
+        pairedMCHTracksEff->Fill(bestMFTTrackMatchID >=0 ,gmTrack.getPt());
+
+        if(bestMFTTrackMatchID>=0) {
+          globalMuonPurity->Fill(0,gmTrack.getPt());
+          goodCandidateEff->Fill(gmTrack.goodMatchTested(),gmTrack.getPt());
+        }
         if(label[0].isCorrect()) { // Good track: add to histograms
           nCleanGMTracks++;
-          pairedMCHTracksEff->Fill(1,gmTrack.getPt());
+          //pairedMCHTracksEff->Fill(1,gmTrack.getPt());
           globalMuonPurity->Fill(1,gmTrack.getPt());
           auto thisTrkID = label[0].getTrackID();
           MCTrackT<float>* thisTrack =  &(*mcTr).at(thisTrkID);
@@ -667,14 +671,11 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
       iTrack++;
 
     } // Loop on GMTracks
-    std::cout << " Total tracks event # " << iEvent << " = " << iTrack << std::endl << std::endl;
-    totalTracks+=iTrack;
   } // Loop over events
 
 
-  Int_t totalRecoGMTracks = nCleanGMTracks + nFakeGMTracks;
-  Int_t nMCHTracks = totalRecoGMTracks + nNoMatchGMTracks;
-
+  Int_t nRecoGMTracks = nCleanGMTracks + nFakeGMTracks;
+  Int_t nMCHTracks = nRecoGMTracks + nNoMatchGMTracks;
 
   // Customize histograms
   TH1Histos[kGMTrackQ]->SetTitle(Form("nChargeMatch = %d (%.2f%%)", nChargeMatch, 100.*nChargeMatch/(nChargeMiss+nChargeMatch)));
@@ -683,8 +684,9 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   TH1Histos[kGMTrackQ4plus]->SetTitle(Form("nChargeMatch = %d (%.2f%%)", nChargeMatch4plus, 100.*nChargeMatch4plus/(nChargeMiss4plus+nChargeMatch4plus)));
 
   qMatchEff->SetTitle(Form("Charge match = %.2f%%", 100.*nChargeMatch/(nChargeMiss+nChargeMatch)));
-  pairedMCHTracksEff->SetTitle(Form("Paired MCH tracks = %.2f%%", 100.*totalRecoGMTracks/(nMCHTracks)));
-  globalMuonPurity->SetTitle(Form("GMTracks Purity = %.2f%%", 100.*nCleanGMTracks/(totalRecoGMTracks)));
+  pairedMCHTracksEff->SetTitle(Form("Paired MCH tracks = %.2f%%", 100.*nRecoGMTracks/(nMCHTracks)));
+  globalMuonPurity->SetTitle(Form("GMTracks Purity = %.2f%%", 100.*nCleanGMTracks/(nRecoGMTracks)));
+  goodCandidateEff->SetTitle(Form("Good MFT match tested = %.2f%%", 100.*nGoodMatchTested/(nRecoGMTracks)));
 
 
   //Remove stat boxes
@@ -703,25 +705,28 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
 
 
   // sigmaX resultion Profile
-  TH1D* DeltaX_Error = new  TH1D();
+  TH1D* DeltaX_Error;
   DeltaX_Error =  DeltaX_Profile->ProjectionX("DeltaX_Error", "C=E");
+  DeltaX_Error->GetYaxis()->SetTitleOffset(1.25);
+  DeltaX_Error->SetMaximum(500);
+  //DeltaX_Error->GetYaxis()->SetLimits(0,500.0);
 
   // Summary Canvases
   // Matching summary
   auto matching_summary = summary_report_3x2(
-    *TH2Histos[kGMTrackDeltaXYVertex],
     *pairedMCHTracksEff,
     *globalMuonPurity,
+    *goodCandidateEff,
+    *TH2Histos[kGMTrackDeltaXYVertex],
     *DeltaX_Error,
     *PtRes_Profile,
-    *goodCandidateEff,
     "Matching Summary",
-    seed_cfg,
+    annotation,
     0, 0, 0, 0, 0, 0,
+    "-",
+    "-",
+    "-",
     Form("%.2f%%", 100.0*TH2Histos[kGMTrackDeltaXYVertex]->Integral()/TH2Histos[kGMTrackDeltaXYVertex]->GetEntries()),
-    "-",
-    "-",
-    "-",
     "-",
     "-"
   );
@@ -734,7 +739,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
     *TH2Histos[kGMTrackQPRec_MC],
     *qMatchEff,
     "Param Summary",
-    seed_cfg,
+    annotation,
     0, 0, 0, 0, 0, 0,
     Form("%.2f%%", 100.0*TH2Histos[kGMTrackDeltaXYVertex]->Integral()/TH2Histos[kGMTrackDeltaXYVertex]->GetEntries()),
     Form("%.2f%%", 100.0*TH2Histos[kGMTrackPtResolution]->Integral()/TH2Histos[kGMTrackPtResolution]->GetEntries()),
@@ -752,7 +757,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
     *TH1Histos[kGMTrackDeltaTanLErr],
     *TH2Histos[kGMTrackQPRec_MC],
     "Covariances Summary",
-    seed_cfg,
+    annotation,
     1, 1, 1, 1, 1, 0,
     Form("%.2f%%", 100.0*TH1Histos[kGMTrackDeltaXErr]->Integral()/TH1Histos[kGMTrackDeltaXErr]->GetEntries()),
     Form("%.2f%%", 100.0*TH1Histos[kGMTrackDeltaPhiErr]->Integral()/TH1Histos[kGMTrackDeltaPhiErr]->GetEntries()),
@@ -773,7 +778,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
     *TH1Histos[kGMTrackDeltainvQPtErr],
     *TH1Histos[kGMTrackDeltaTanLErr],
     "par_cov_summary3x3",
-    seed_cfg,
+    annotation,
     0, 1, 1, 0, 0, 1, 0, 1, 1,
     Form("%.2f%%", 100.0*TH2Histos[kGMTrackDeltaXYVertex]->Integral()/TH2Histos[kGMTrackDeltaXYVertex]->GetEntries()),
     Form("%.2f%%", 100.0*TH1Histos[kGMTrackDeltaXErr]->Integral()/TH1Histos[kGMTrackDeltaXErr]->GetEntries()),
@@ -797,7 +802,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
     *TH1Histos[kGMTrackDeltaTanl4plus],
     *TH1Histos[kGMTrackDeltaPhiDeg4plus],
     "ParamSummaryVsPt",
-    seed_cfg,
+    annotation,
     1, 1, 1, 1, 1, 1, 1, 1, 1,
     Form("%.2f%%", 100.0*TH1Histos[kGMTrackDeltaX0_1]->Integral()/TH1Histos[kGMTrackDeltaX0_1]->GetEntries()),
     Form("%.2f%%", 100.0*TH1Histos[kGMTrackDeltaTanl0_1]->Integral()/TH1Histos[kGMTrackDeltaTanl0_1]->GetEntries()),
@@ -816,7 +821,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
     *PtRes_Profile,
     *qMatchEff,
     "Pt Summary",
-    seed_cfg,
+    annotation,
     0, 0, 0, 0,
     Form("%.2f%%", 100.0*TH2Histos[kGMTrackPtResolution]->Integral()/TH2Histos[kGMTrackPtResolution]->GetEntries()),
     Form("%.2f%%", 100.0*TH2Histos[kGMTrackQPRec_MC]->Integral()/TH2Histos[kGMTrackQPRec_MC]->GetEntries())
@@ -826,7 +831,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
     *TH2Histos[kGMTrackQPRec_MC],
     *(TH1F*)gDirectory->Get((std::string(TH2Histos[kGMTrackInvPtResolution]->GetName()) + std::string("_1")).c_str()),
     *(TH1F*)gDirectory->Get((std::string(TH2Histos[kGMTrackInvPtResolution]->GetName()) + std::string("_2")).c_str()),
-    "InvPt Summary", seed_cfg,
+    "InvPt Summary", annotation,
     0, 0, 0, 0,
     Form("%.2f%%", 100.0*TH2Histos[kGMTrackInvPtResolution]->Integral()/TH2Histos[kGMTrackInvPtResolution]->GetEntries()),
     Form("%.2f%%", 100.0*TH2Histos[kGMTrackQPRec_MC]->Integral()/TH2Histos[kGMTrackQPRec_MC]->GetEntries())
@@ -837,7 +842,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
     *DeltaX_Error,
     *TH1Histos[kGMTrackDeltaPhiDeg],
     "Vertexing Summary",
-    seed_cfg,
+    annotation,
     0, 1, 0, 1,
     Form("%.2f%%", 100.0*TH2Histos[kGMTrackDeltaXYVertex]->Integral()/TH2Histos[kGMTrackDeltaXYVertex]->GetEntries()),
     Form("%.2f%%", 100.0*TH1Histos[kGMTrackDeltaX]->Integral()/TH1Histos[kGMTrackDeltaX]->GetEntries()),
@@ -850,7 +855,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
     *TH1Histos[kGMTrackDeltaTanl0_1],
     *TH1Histos[kGMTrackDeltaPhiDeg0_1],
     "Vertexing Summary pt < 1",
-    seed_cfg,
+    annotation,
     0, 1, 1, 1,
     Form("%.2f%%", 100.0*TH2Histos[kGMTrackDeltaXYVertex0_1]->Integral()/TH2Histos[kGMTrackDeltaXYVertex0_1]->GetEntries()),
     Form("%.2f%%", 100.0*TH1Histos[kGMTrackDeltaX0_1]->Integral()/TH1Histos[kGMTrackDeltaX0_1]->GetEntries()),
@@ -863,7 +868,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
     *TH1Histos[kGMTrackDeltaTanl1_4],
     *TH1Histos[kGMTrackDeltaPhiDeg1_4],
     "Vertexing Summary 1 < p_t < 4",
-    seed_cfg,
+    annotation,
     0, 1, 1, 1,
     Form("%.2f%%", 100.0*TH2Histos[kGMTrackDeltaXYVertex1_4]->Integral()/TH2Histos[kGMTrackDeltaXYVertex1_4]->GetEntries()),
     Form("%.2f%%", 100.0*TH1Histos[kGMTrackDeltaX1_4]->Integral()/TH1Histos[kGMTrackDeltaX1_4]->GetEntries()),
@@ -876,7 +881,7 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
     *TH1Histos[kGMTrackDeltaTanl4plus],
     *TH1Histos[kGMTrackDeltaPhiDeg4plus],
     "Vertexing Summary p_t > 4",
-    seed_cfg,
+    annotation,
     0, 1, 1, 1,
     Form("%.2f%%", 100.0*TH2Histos[kGMTrackDeltaXYVertex4plus]->Integral()/TH2Histos[kGMTrackDeltaXYVertex4plus]->GetEntries()),
     Form("%.2f%%", 100.0*TH1Histos[kGMTrackDeltaX4plus]->Integral()/TH1Histos[kGMTrackDeltaX4plus]->GetEntries()),
@@ -884,19 +889,19 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
     Form("%.2f%%", 100.0*TH1Histos[kGMTrackDeltaPhiDeg4plus]->Integral()/TH1Histos[kGMTrackDeltaPhiDeg4plus]->GetEntries())
   );
 
-
   auto chi2_summary = summary_report(*TH1Histos[kGMTrackChi2],
     *TH1Histos[kGMTrackXChi2],
     *TH1Histos[kGMTrackTanlChi2],
     *TH1Histos[kGMTrackPhiChi2],
     "Chi2 Summary",
-    seed_cfg,
+    annotation,
     1, 1, 1, 1,
     Form("%.2f%%", 100.0*TH1Histos[kGMTrackChi2]->Integral()/TH1Histos[kGMTrackChi2]->GetEntries()),
     Form("%.2f%%", 100.0*TH1Histos[kGMTrackXChi2]->Integral()/TH1Histos[kGMTrackXChi2]->GetEntries()),
     Form("%.2f%%", 100.0*TH1Histos[kGMTrackTanlChi2]->Integral()/TH1Histos[kGMTrackTanlChi2]->GetEntries()),
     Form("%.2f%%", 100.0*TH1Histos[kGMTrackPhiChi2]->Integral()/TH1Histos[kGMTrackPhiChi2]->GetEntries())
   );
+
 
 
   // Write histograms to file and export images
@@ -922,6 +927,10 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   DeltaX_Error->Write();
   qMatchEff->Write();
   pairedMCHTracksEff->Write();
+  outFile.cd();
+  matching_helper.GMTracksGoodMFTTested = nGoodMatchTested;
+  outFile.WriteObjectAny(&matching_helper, "MatchingHelper","Matching Helper");
+
   outFile.Close();
 
 
@@ -956,20 +965,36 @@ const Char_t *o2sim_KineFile = "o2sim_Kine.root"
   std::cout << " R_StdDev = " << TH1Histos[kGMTrackR]->GetStdDev() << std::endl;
   std::cout << " Charge_mean = " << TH1Histos[kGMTrackDeltaY]->GetMean() << std::endl;
   std::cout << " nChargeMatch = " << nChargeMatch << " (" << 100.*nChargeMatch/(nChargeMiss+nChargeMatch) << "%)" << std::endl;
-  std::cout << " nTrackMatch = " << nCleanGMTracks << " (" << 100.*nCleanGMTracks/(totalRecoGMTracks) << "%)" << std::endl;
-  std::cout << "----------------------------------------------------------------------" << std::endl;
+  std::cout << " nTrackMatch = " << nCleanGMTracks << " (" << 100.*nCleanGMTracks/(nRecoGMTracks) << "%)" << std::endl;
+  std::cout << "---------------------------------------------------------------------------" << std::endl;
 
   std::cout << std::endl;
-  std::cout << "----------------------------------------------------------------------" << std::endl;
-  std::cout << "---------------------   Track matching Summary   ---------------------" << std::endl;
-  std::cout << "----------------------------------------------------------------------" << std::endl;
-  std::cout << " ==> "<< nMCHTracks << " MCH Tracks"  << std::endl;
-  std::cout << " ==> "<< nNoMatchGMTracks << " non-MFT-Matched MCH Tracks" << " (" << 100.*nNoMatchGMTracks/(nMCHTracks) << "%)"  << std::endl;
-  std::cout << " ==> "<< totalRecoGMTracks  << " reconstructed Global Muon Tracks" << " (" << 100.*totalRecoGMTracks/(nMCHTracks) << "%)"<< std::endl;
-  std::cout << " ==> "<< nFakeGMTracks << " fake Global Muon Tracks" << " (contamination = " << 100.*nFakeGMTracks/(totalRecoGMTracks) << "%)" << std::endl;
-  std::cout << " ==> "<< nCleanGMTracks << " clean Global Muon Tracks" << " (purity = " << 100.*nCleanGMTracks/(totalRecoGMTracks) << "%)" << " (eff. = " << 100.*nCleanGMTracks/(nMCHTracks) << "%)"<< std::endl;
+  std::cout << "---------------------------------------------------------------------------" << std::endl;
+  std::cout << "------------------------   Track matching Summary   -----------------------" << std::endl;
+  std::cout << "---------------------------------------------------------------------------" << std::endl;
+  std::cout << " ==> "<< nMCHTracks << " MCH Tracks in " << numberOfEvents << " events"  << std::endl;
+  std::cout << " ==> "<< nNoMatchGMTracks << " dangling MCH Tracks (no MFT track to match)" << " (" << 100.*nNoMatchGMTracks/(nMCHTracks) << "%)"  << std::endl;
+  std::cout << " ==> "<< nRecoGMTracks  << " reconstructed Global Muon Tracks" << " (" << 100.*nRecoGMTracks/(nMCHTracks) << "%)"<< std::endl;
+  std::cout << " ==> "<< nFakeGMTracks << " fake Global Muon Tracks" << " (contamination = " << 100.*nFakeGMTracks/(nRecoGMTracks) << "%)" << std::endl;
+  std::cout << " ==> "<< nGoodMatchTested  << " Global Muon Tracks with good MFT track in search window" << " (" << 100.*nGoodMatchTested/(nRecoGMTracks) << "%)"<< std::endl;
+  std::cout << " ==> "<< nCleanGMTracks << " clean Global Muon Tracks" << " (purity = " << 100.*nCleanGMTracks/(nRecoGMTracks) << "%)" << " (eff. = " << 100.*nCleanGMTracks/(nMCHTracks) << "%)"<< std::endl;
 
-  std::cout << "----------------------------------------------------------------------" << std::endl;
+  std::cout << "--------------------------------------------------------------------------" << std::endl;
+  std::cout << " Annotation: " << annotation << std::endl;
+  std::cout << "--------------------------------------------------------------------------" << std::endl;
   std::cout << std::endl;
+
+  /*
+  std::cout << "matching_helper.nMCHTracks = " << matching_helper.nMCHTracks << std::endl;
+  std::cout << "matching_helper.nNoMatch = " << matching_helper.nNoMatch << std::endl;
+  std::cout << "matching_helper.nGMTracks() = " << matching_helper.nGMTracks() << std::endl;
+  std::cout << "matching_helper.nFakes = " << matching_helper.nFakes << std::endl;
+  std::cout << "matching_helper.nGoodMatches = " << matching_helper.nGoodMatches << std::endl;
+  std::cout << "matching_helper.GMTracksGoodMFTTested = " << matching_helper.GMTracksGoodMFTTested << std::endl;
+  std::cout << "matching_helper.getPurity() = " << matching_helper.getPurity() << std::endl;
+  std::cout << "matching_helper.getEfficiency() = " << matching_helper.getEfficiency() << std::endl;
+  */
+
+
   return 0;
 }

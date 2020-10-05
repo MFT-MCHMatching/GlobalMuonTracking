@@ -40,7 +40,7 @@ END
 }
 
 updatecode() {
-  cp -r ${SCRIPTDIR}/${GENERATOR}/* ${SCRIPTDIR}/*.bin ${SCRIPTDIR}/include ${SCRIPTDIR}/*.C ${SCRIPTDIR}/*.h ${SCRIPTDIR}/*.cxx ${SCRIPTDIR}/macrohelpers ${OUTDIR}
+  cp -r ${SCRIPTDIR}/generators/* ${SCRIPTDIR}/*.bin ${SCRIPTDIR}/include ${SCRIPTDIR}/*.C ${SCRIPTDIR}/*.h ${SCRIPTDIR}/*.cxx ${SCRIPTDIR}/macrohelpers ${OUTDIR}
 }
 
 generateMCHTracks()
@@ -50,19 +50,20 @@ generateMCHTracks()
   updatecode
   pushd ${OUTDIR}
 
-  sed -i -e s/NPIONS/${NPIONS}/g Config.C
-  sed -i -e s/NMUONS/${NMUONS}/g Config.C
+  #sed -i -e s/NPIONS/${NPIONS}/g Config.C
+  #sed -i -e s/NMUONS/${NMUONS}/g Config.C
 
   echo "Generating MCH tracks on `pwd` ..."
-
+  #echo ${MCHGENERATOR}_${NPIONS}pi_${NMUONS}mu_${NEV_}evts  > GENCFG
 
   ## 1) aliroot generation of MCH Tracks
-  echo ${NEV} > nMCHEvents
-  alienv setenv ${ALIROOTENV} -c bash ./runtest.sh -n ${NEV} | tee aliroot_MCHgen.log
+  echo ${NEV_} > nMCHEvents
+  export NEV=${NEV_}
+  alienv setenv ${ALIROOTENV} -c bash ./runtest.sh -n ${NEV_} | tee aliroot_MCHgen.log
 
   ## 2) aliroot conversion of MCH tracks to temporary format
   echo " Converting MCH Tracks to O2-compatible format"
-  alienv setenv ${ALIROOTENV} -c aliroot -q -l "ConvertMCHESDTracks.C+(\".\")" | tee MCH-O2Conversion.log
+  alienv setenv ${ALIROOTENV} -c aliroot -b -q -l "ConvertMCHESDTracks.C+(\".\")" | tee MCH-O2Conversion.log
 
   echo " Finished MCH track generation `realpath ${OUTDIR}`"
   popd
@@ -83,9 +84,9 @@ generateMFTTracks()
 
   echo "Generating MFT Tracks `pwd` ..."
 
-  NEV=`cat nMCHEvents`
+  NEV_=`cat nMCHEvents`
   ## O2 simulation and generation of MFT tracks using same Kinematics.root
-  alienv setenv ${O2ENV} -c o2-sim -g extkin --extKinFile Kinematics.root -m PIPE ITS MFT ABS SHIL -e TGeant3 -n ${NEV} -j $JOBS | tee O2Sim.log
+  alienv setenv ${O2ENV} -c o2-sim -g extkin --extKinFile Kinematics.root -m PIPE ITS MFT ABS SHIL -e TGeant3 -n ${NEV_} -j $JOBS | tee O2Sim.log
   alienv setenv ${O2ENV} -c o2-sim-digitizer-workflow -b --skipDet TPC,ITS,TOF,FT0,EMC,HMP,ZDC,TRD,MCH,MID,FDD,PHS,FV0,CPV >  O2Digitizer.log
   alienv setenv ${O2ENV} -c o2-mft-reco-workflow -b > O2Reco.log
 
@@ -114,7 +115,6 @@ runMatching()
 
     pushd ${OUTDIR}
     echo "Matching MCH & MFT Tracks on `pwd` ..."
-
 
     ## MFT MCH track matching & global muon track fitting:
     alienv setenv ${O2ENV} -c root.exe -l -q -b runMatching.C+ | tee matching.log
@@ -148,7 +148,6 @@ runChecks()
 
   ## Check global muon Tracks
   alienv setenv ${O2ENV} -c root.exe -l -q -b GlobalMuonChecks.C+ | tee checks.log
-
   echo " Finished checking Global muon tracks on `realpath ${OUTDIR}`"
   popd
 
@@ -161,7 +160,7 @@ SCRIPTDIR=`dirname "$0"`
 while [ $# -gt 0 ] ; do
   case $1 in
     -n)
-    NEV="$2";
+    NEV_="$2";
     shift 2
     ;;
     -j)
@@ -173,11 +172,11 @@ while [ $# -gt 0 ] ; do
     shift 2
     ;;
     --npions)
-    NPIONS="$2";
+    NPIONS_="$2";
     shift 2
     ;;
     --nmuons)
-    NMUONS="$2";
+    NMUONS_="$2";
     shift 2
     ;;
     -g)
@@ -234,17 +233,20 @@ fi
 
 
 if [ -z ${OUTDIR+x} ]; then echo "Missing output dir" ; Usage ; fi
-NEV=${NEV:-"10"}
+NEV_=${NEV_:-"10"}
 JOBS=${JOBS:-"4"}
-GENERATOR=${GENERATOR:-"gun"}
-NPIONS=${NPIONS:-"10"}
-NMUONS=${NMUONS:-"2"}
+GENERATOR=${GENERATOR:-"gun0_100GeV"}
+NPIONS_=${NPIONS_:-"10"}
+NMUONS_=${NMUONS_:-"2"}
 
+export NPIONS=${NPIONS_}
+export NMUONS=${NMUONS_}
+export MCHGENERATOR=${GENERATOR}
 export ALIROOT_OCDB_ROOT=~/alice/OCDB
 
 #ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest-master-release"}
 #ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest-master-next-root6"}
-ALIROOTENV=${ALIROOTENV:-"AliRoot/latest"}
+ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest"}
 O2ENV=${O2ENV:-"O2/latest-dev-o2"}
 
 

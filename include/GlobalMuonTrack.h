@@ -45,10 +45,31 @@ class GlobalMuonTrack : public o2::track::TrackParCovFwd
   int mBestMFTTrackMatchID = -1;
   int mNMFTCandidates = 0; // Number of candidates within search cut
   bool mGoodMatchTested = false;
+};
+}
 
+//_________________________________________________________________________________________________
+struct MatchingHelper {
+   std::string Generator;
+   std::string GeneratorConfig;
+   std::string MatchingFunction;
+   std::string MatchingCutFunc;
+   std::string MatchingCutConfig;
+   int nMCHTracks = -1;
+   int nGoodMatches = -1;
+   int nFakes = -1;
+   int nNoMatch = -1;
+   int GMTracksGoodMFTTested = -1;
+   double matchingPlaneZ;
+
+   int nGMTracks() { return nMCHTracks - nNoMatch; }
+   double getPurity() { return 1.f*nGoodMatches/nGMTracks(); }
+   double getEfficiency() { return 1.f*nGMTracks()/nMCHTracks; }
+   std::string Annotation() {
+     return Generator + GeneratorConfig + MatchingFunction + MatchingCutFunc + MatchingCutConfig;
+   }
 
 };
 
-}
 
 #endif // ALICEO2_GLOBALMUONTRACK_H

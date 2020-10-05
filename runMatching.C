@@ -16,7 +16,7 @@ MUONMatcher matcher;
 
 //_________________________________________________________________________________________________
 // Sample custom matching function that can be passed to MUONMatcher
-double MyMatchingFunc (GlobalMuonTrack& mchTrack, MFTTrack& mftTrack) {
+double MyMatchingFunc (const GlobalMuonTrack& mchTrack, const MFTTrack& mftTrack) {
     auto dx = mchTrack.getX() - mftTrack.getX();
     auto dy = mchTrack.getY() - mftTrack.getY();
     auto score = dx*dx + dy*dy;
@@ -24,12 +24,22 @@ double MyMatchingFunc (GlobalMuonTrack& mchTrack, MFTTrack& mftTrack) {
  };
 
 
+ //_________________________________________________________________________________________________
+ // Sample custom cut criteria that can be passed to MUONMatcher
+bool MyMatchingCut (GlobalMuonTrack& mchTrack, MFTTrack& mftTrack) {
+   auto cutDistance = 1.0;
+   auto dx = mchTrack.getX() - mftTrack.getX();
+   auto dy = mchTrack.getY() - mftTrack.getY();
+   auto distance = TMath::Sqrt(dx*dx + dy*dy);
+   return distance < cutDistance;
+  };
+
 //_________________________________________________________________________________________________
 int runMatching()  {
 
-
+gSystem->Load("libO2MCHTracking");
 //Custom matching function
-//matcher.setCustomMatchingFunction(&MyMatchingFunc);
+//matcher.setCustomMatchingFunction(&MyMatchingFunc, "_aliasForMyMatchingFunction");
 
 // Built-in matching functions
 //matcher.setMatchingFunction(&MUONMatcher::matchMFT_MCH_TracksXY);
@@ -38,8 +48,8 @@ matcher.setMatchingFunction(&MUONMatcher::matchMFT_MCH_TracksFull);
 //matcher.SetMatchingPlaneZ(-45.3);
 //matcher.SetMatchingPlaneZ(0.);
 //
-matcher.setCutFunction(&MUONMatcher::matchCutDistance);
-matcher.setCutDistanceParam(1.0);
+//matcher.setCutFunction(&MUONMatcher::matchCutDistance);
+//matcher.setCutDistanceParam(1.0);
 //
 //
 //matcher.setCutFunction(&MUONMatcher::matchCutDistanceSigma);

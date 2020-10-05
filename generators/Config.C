@@ -96,9 +96,52 @@ void Config()
     // Each detector is fired by few particles selected
     // to cover specific cases
 
+   std::string MCHgen;
+   if (gSystem->Getenv("MCHGENERATOR")) {
+         MCHgen = gSystem->Getenv("MCHGENERATOR");
+         std::cout << " Using MCHGENERATOR: " << MCHgen << std::endl;
+   } else
+   {
+      MCHgen = "gun0_100GeV";
+      std::cout << " No MCHGENERATOR defined. Using default: " << MCHgen << std::endl;
+    }
 
-    // The cocktail itself
 
+    ofstream genMatcherLog ("MatcherGenConfig.txt");
+    //if (genMatcherLog.is_open())
+
+      genMatcherLog << MCHgen;
+
+
+    if (MCHgen.find("gun0_100GeV") < MCHgen.length()) {
+      std::cout << " This is gun0_100GeV Generator! " << std::endl;
+
+      Int_t nPions;
+      if (gSystem->Getenv("NPIONS")) {
+            nPions = atoi(gSystem->Getenv("NPIONS"));
+            nPions /= 2;
+            std::cout << " Defined nPions =  " << 2 * nPions << std::endl;
+
+      }
+      else {
+        std::cout << " Default nPions = 20 " << std::endl;
+        nPions = 10;
+      }
+
+      Int_t nMuons;
+      if (gSystem->Getenv("NMUONS")) {
+            nMuons = atoi(gSystem->Getenv("NMUONS"));
+            nMuons /= 2;
+            std::cout << " Defined nMuons =  " << 2 * nMuons << std::endl;
+
+
+      }
+      else {
+        std::cout << " Default nMuons = 2 " << std::endl;
+
+        nMuons = 1;
+      }
+    genMatcherLog << "_" << nPions*2 << "pi_" << nMuons*2 << "mu_";
     AliGenCocktail *gener = new AliGenCocktail();
     gener->SetEnergyCMS(beamEnergy); // Needed by ZDC
     gener->SetPhiRange(0, 360);
@@ -111,7 +154,6 @@ void Config()
 
 
     // Pions
-    int nPions = NPIONS / 2;
     AliGenBox * gPPions = new AliGenBox(nPions);
     gPPions->SetMomentumRange(0.1,100.1);
     gPPions->SetPhiRange(0., 360.);
@@ -126,9 +168,7 @@ void Config()
     gNPions->SetPart(kPiMinus);           // Positive pions
     gener->AddGenerator(gNPions,"NEG PIONS",1);
 
-    // MUON
-    int nMuons = NMUONS / 2;
-
+    // MUONS
     AliGenBox * gmuon1 = new AliGenBox(nMuons);
     gmuon1->SetMomentumRange(0.1,100);
     gmuon1->SetPhiRange(0., 360.);
@@ -145,7 +185,80 @@ void Config()
 
 
     gener->Init();
+}
 
+      if (MCHgen.find("box") < MCHgen.length()) {
+        std::cout << " This is box Generator! " << std::endl;
+
+        AliGenBox * gener = new AliGenBox(1);
+        gener->SetMomentumRange(20.,20.1);
+        gener->SetPhiRange(0., 360.);
+        gener->SetThetaRange(171.000,178.001);
+        gener->SetPart(kMuonMinus);           // Muons
+        gener->SetOrigin(0.,0., 0.);  //vertex position
+        gener->SetSigma(0.0, 0.0, 0.0);         //Sigma in (X,Y,Z) (cm) on IP position
+      }
+
+      if (MCHgen.find("paramJpsi") < MCHgen.length()) {
+        AliGenParam *gener = new AliGenParam(1, AliGenMUONlib::kJpsi);
+        gener->SetMomentumRange(0,999);
+        gener->SetPtRange(0,100.);
+        gener->SetPhiRange(0., 360.);
+        gener->SetCutOnChild(1);
+        gener->SetChildPhiRange(0.,360.);
+        gener->SetChildThetaRange(171.0,178.0);
+        gener->SetOrigin(0,0,0);
+        gener->SetForceDecay(kDiMuon);
+        gener->SetTrackingFlag(1);
+        gener->Init();
+      }
+
+      if (MCHgen.find("hijing") < MCHgen.length()) { //Hijing generator
+        AliGenHijing *gener = new AliGenHijing(-1);
+        // centre of mass energy
+        gener->SetEnergyCMS(5500.);
+        // reference frame
+        gener->SetReferenceFrame("CMS");
+        // projectile
+        gener->SetProjectile("A", 208, 82);
+        gener->SetTarget    ("A", 208, 82);
+        // tell hijing to keep the full parent child chain
+        gener->KeepFullEvent();
+        // enable jet quenching
+        gener->SetJetQuenching(1);
+        // enable shadowing
+        gener->SetShadowing(1);
+        // neutral pion and heavy particle decays switched off
+        gener->SetDecaysOff(1);
+        // Don't track spectators
+        gener->SetSpectators(0);
+        // kinematic selection
+        gener->SetSelectAll(0);
+        // impact parameter range
+        gener->SetImpactParameterRange(0., 5.); // 0. - 5. fm corresponds to ~10% most central
+        gener->Init();
+      }
+      if (MCHgen.find("muoncocktail") < MCHgen.length()) { // Muon cocktail for PbPb
+        AliGenMUONCocktail * gener = new AliGenMUONCocktail();
+        gener->SetPtRange(1.,100.);       // Transverse momentum range
+        gener->SetPhiRange(0.,360.);    // Azimuthal angle range
+        gener->SetYRange(-4.0,-2.5);
+        gener->SetMuonPtCut(0.5);
+        gener->SetMuonThetaCut(171.,178.);
+        gener->SetMuonMultiplicity(2);
+        gener->SetImpactParameterRange(0.,5.); // 10% most centra PbPb collisions
+        gener->SetVertexSmear(kPerTrack);
+        gener->SetOrigin(0,0,0);        // Vertex position
+        gener->SetSigma(0,0,0.0);       // Sigma in (X,Y,Z) (cm) on IP position
+        gener->Init();
+      }
+
+      Int_t nEvts;
+      if (gSystem->Getenv("NEV")) {
+            nEvts = atoi(gSystem->Getenv("NEV"));
+      }
+      genMatcherLog << nEvts << "evts" << std::endl;
+      genMatcherLog.close();
 
     //
     // Activate this line if you want the vertex smearing to happen
@@ -160,7 +273,7 @@ void Config()
     Int_t   iFMD   =  0;
     Int_t   iFRAME =  1;
     Int_t   iHALL  =  1;
-    Int_t   iITS   =  1;
+    Int_t   iITS   =  0;
     Int_t   iMAG   =  1;
     Int_t   iMUON  =  1;
     Int_t   iPHOS  =  0;

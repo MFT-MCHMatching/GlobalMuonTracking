@@ -23,6 +23,7 @@ TTree* treeMCH = new TTree("treeMCH","treeMCH");
 
 
 void ConvertMCHESDTracks(string in_dir=""){
+  //gSystem->Load("libpythia6_4_25");
 
   string out_dir = in_dir;
   if(!TFile::Open(Form("%s/AliESDs.root",in_dir.c_str()))) return;

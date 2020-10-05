@@ -14,8 +14,8 @@ MUONMatcher::MUONMatcher() {
   printf("B field z = %f [kGauss]\n", mField_z);
 
   mMCHTrackExtrap.setField();
-  mMatchFunc = &MUONMatcher::matchMFT_MCH_TracksXY;
-  mCutFunc = &MUONMatcher::matchCutDisabled;
+  setCutFunction(&MUONMatcher::matchCutDisabled);
+  setMatchingFunction(&MUONMatcher::matchMFT_MCH_TracksXY);
 }
 
 
@@ -39,8 +39,8 @@ void MUONMatcher::loadMCHTracks() {
 //
 
 // For now loading MCH Tracks
-Char_t *trkFile = "tempMCHTracks.root";
-TFile *trkFileIn = new TFile(trkFile);
+std::string trkFile = "tempMCHTracks.root";
+TFile *trkFileIn = new TFile(trkFile.c_str());
 TTree *mchTrackTree = (TTree*) trkFileIn -> Get("treeMCH");
 std::vector<tempMCHTrack> trackMCHVec, *trackMCHVecP = &trackMCHVec;
 mchTrackTree->SetBranchAddress("tempMCHTracks", &trackMCHVecP);
@@ -111,14 +111,20 @@ for (int event = 0 ; event < mNEvents ; event++) {
 
 std::cout << "Loaded " <<  mMCHTracks.size() << " MCH Tracks in " << mNEvents << " events" << std::endl;
 
+std::ifstream genConfigFile("MatcherGenConfig.txt");
+if( genConfigFile ) {
+  std::getline(genConfigFile, mMatchingHelper.Generator);
+  std::cout << "Generator: " << mMatchingHelper.Generator << std::endl;
+}
+
 }
 
 //_________________________________________________________________________________________________
 void MUONMatcher::loadDummyMCHTracks() {
 
 // For now loading MFT Tracks as Dummy MCH tracks
-Char_t *trkFile = "mfttracks.root";
-TFile *trkFileIn = new TFile(trkFile);
+std::string trkFile = "mfttracks.root";
+TFile *trkFileIn = new TFile(trkFile.c_str());
 TTree *mftTrackTree = (TTree*) trkFileIn -> Get("o2sim");
 std::vector<o2::mft::TrackMFT> trackMFTVec, *trackMFTVecP = &trackMFTVec;
 mftTrackTree->SetBranchAddress("MFTTrack", &trackMFTVecP);
@@ -139,8 +145,8 @@ std::cout << "Loaded " <<  mMCHTracksDummy.size() << " Fake MCH Tracks" << std::
 void MUONMatcher::loadMFTTracksOut() {
   // Load all MFTTracks and propagate to last MFT Layer;
 
-  Char_t *trkFile = "mfttracks.root";
-  TFile *trkFileIn = new TFile(trkFile);
+  std::string trkFile = "mfttracks.root";
+  TFile *trkFileIn = new TFile(trkFile.c_str());
   TTree *mftTrackTree = (TTree*) trkFileIn -> Get("o2sim");
   std::vector<o2::mft::TrackMFT> trackMFTVec, *trackMFTVecP = &trackMFTVec;
   mftTrackTree->SetBranchAddress("MFTTrack", &trackMFTVecP);
@@ -447,6 +453,14 @@ void MUONMatcher::ComputeLabels() {
     std::cout << " *************************************************** " << std::endl;
 
 
+    mMatchingHelper.nMCHTracks = nTracks;
+    mMatchingHelper.nGoodMatches = nGoodMatches;
+    mMatchingHelper.nFakes = nFakes;
+    mMatchingHelper.nNoMatch = nNoMatch;
+    mMatchingHelper.matchingPlaneZ = mMatchingPlaneZ;
+
+    double GMTracksPurity = -1;
+    double GMTracksGoodMFTTested = -1;
 
 }
 
@@ -460,8 +474,8 @@ TTree outTree("o2sim", "Global Muon Tracks");
   outTree.Branch("GlobalMuonTrack", &tracks);
   outTree.Branch("GlobalMuonTrackMCTruth", &trackLabels);
   outTree.Fill();
-  outFile.cd();
   outTree.Write();
+  outFile.WriteObjectAny(&mMatchingHelper, "MatchingHelper","Matching Helper");
   outFile.Close();
   std::cout << "Global Muon Tracks saved to GlobalMuonTracks.root" << std::endl;
 

@@ -3,7 +3,7 @@ void sim(Int_t nev=4) {
   // libraries required by geant321
   gSystem->Load("liblhapdf");
   gSystem->Load("libEGPythia6");
-  gSystem->Load("libpythia6");
+  gSystem->Load("libpythia6_4_25");
   gSystem->Load("libAliPythia6");
   gSystem->Load("libgeant321");
 
