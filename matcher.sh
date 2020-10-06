@@ -98,9 +98,8 @@ generateMCHTracks()
   ## 2) aliroot conversion of MCH tracks to temporary format
   echo " Converting MCH Tracks to O2-compatible format"
   alienv setenv ${ALIROOTENV} -c aliroot -b -q -l "ConvertMCHESDTracks.C+(\".\")" | tee MCH-O2Conversion.log
-
-  echo " Finished MCH track generation `realpath ${OUTDIR}`"
   popd
+  echo " Finished MCH track generation `realpath ${OUTDIR}`"
 
 }
 
@@ -123,9 +122,8 @@ generateMFTTracks()
   alienv setenv ${O2ENV} -c o2-sim -g extkin --extKinFile Kinematics.root -m PIPE ITS MFT ABS SHIL -e TGeant3 -n ${NEV_} -j $JOBS | tee O2Sim.log
   alienv setenv ${O2ENV} -c o2-sim-digitizer-workflow -b --skipDet TPC,ITS,TOF,FT0,EMC,HMP,ZDC,TRD,MCH,MID,FDD,PHS,FV0,CPV >  O2Digitizer.log
   alienv setenv ${O2ENV} -c o2-mft-reco-workflow -b > O2Reco.log
-
-  echo " Leaving MFT Track generation on `realpath ${OUTDIR}`"
   popd
+  echo " Finished MFT Track generation on `realpath ${OUTDIR}`"
 
 }
 
@@ -165,8 +163,8 @@ runMatching()
        exit
         ;;
     esac
-    echo " Finished matching on `realpath ${OUTDIR}`"
     popd
+    echo " Finished matching on `realpath ${OUTDIR}`"
 
   fi
 
@@ -194,8 +192,8 @@ runChecks()
 
   ## Check global muon Tracks
   alienv setenv ${O2ENV} -c root.exe -l -q -b GlobalMuonChecks.C+ | tee checks.log
-  echo " Finished checking Global muon tracks on `realpath ${OUTDIR}`"
   popd
+  echo " Finished checking Global muon tracks on `realpath ${OUTDIR}`"
 
 
 }
@@ -240,6 +238,10 @@ while [ $# -gt 0 ] ; do
     --match)
     MATCHING="1";
     shift 1
+    ;;
+    --matchPlaneZ)
+    export MATCHING_PLANEZ="$2";
+    shift 2
     ;;
     --matchFcn)
     export MATCHING_FCN="$2";

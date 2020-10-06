@@ -460,11 +460,16 @@ void MUONMatcher::finalize() { // compute labels and populates mMatchingHelper (
       mMatchingHelper.MatchingCutConfig = mMatchingHelper.MatchingCutConfig + "_CutP" + std::to_string(iparam) + "=" + std::to_string(param);
       iparam++;
     }
+    if (mMatchingHelper.MatchingFunction == "") {
+      if (mMatchFunc == &MUONMatcher::matchMFT_MCH_TracksXY) mMatchingHelper.MatchingFunction = "_matchXY";
+      if (mMatchFunc == &MUONMatcher::matchMFT_MCH_TracksXYPhiTanl) mMatchingHelper.MatchingFunction = "_matchXYPhiTanl";
+      if (mMatchFunc == &MUONMatcher::matchMFT_MCH_TracksAllParam) mMatchingHelper.MatchingFunction = "_matchAllParams";
+  }
 
     if (helper.MatchingCutFunc == "") {
-    if (mCutFunc == &MUONMatcher::matchCutDisabled) helper.MatchingCutFunc = "_cutDisabled";
-    if (mCutFunc == &MUONMatcher::matchCutDistance) helper.MatchingCutFunc = "_cutDistance";
-    if (mCutFunc == &MUONMatcher::matchCutDistanceSigma) helper.MatchingCutFunc = "_cutDistanceSigma";
+      if (mCutFunc == &MUONMatcher::matchCutDisabled) helper.MatchingCutFunc = "_cutDisabled";
+      if (mCutFunc == &MUONMatcher::matchCutDistance) helper.MatchingCutFunc = "_cutDistance";
+      if (mCutFunc == &MUONMatcher::matchCutDistanceSigma) helper.MatchingCutFunc = "_cutDistanceSigma";
   }
 
     std::cout << "********************************** Matching Summary ********************************** " << std::endl;

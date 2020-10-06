@@ -66,9 +66,8 @@ struct MatchingHelper {
    double getPurity() { return 1.f*nGoodMatches/nGMTracks(); }
    double getEfficiency() { return 1.f*nGMTracks()/nMCHTracks; }
    std::string Annotation() {
-     return Generator + GeneratorConfig + MatchingFunction + MatchingCutFunc + MatchingCutConfig;
+     return Generator + GeneratorConfig + MatchingFunction + "_Z" + std::to_string(matchingPlaneZ) + MatchingCutFunc + MatchingCutConfig;
    }
-
 };
 
 

@@ -40,6 +40,8 @@ Macro `GlobalMuonChecks.C` can be used to check tracking. Histograms saved to `G
 
 If all steps completed sucessfully, you may find some histograms on `GlobalMuonChecks.root`.
 
+For more usage options see `matcher.sh --help`.
+
 
 ## Basic Configuration
 
