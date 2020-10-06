@@ -1,4 +1,9 @@
-// Configuration of simulation
+#if !defined(__CINT__) || defined(__MAKECINT__)
+#include <Riostream.h>
+#include "TRandom.h"
+#include "AliGenerator.h"
+#include "AliGenParam.h"
+#if !defined(__CINT__) || defined(__MAKECINT__)
 
 enum PprTrigConf_t
 {
@@ -10,6 +15,16 @@ const char * pprTrigConfName[] = {
 };
 
 Float_t EtaToTheta(Float_t arg);
+
+Int_t IpMuon(TRandom *ran);
+Double_t PtMuon(const Double_t *px, const Double_t */*dummy*/);
+Double_t YMuon(const Double_t *py, const Double_t */*dummy*/);
+Double_t V2Muon(const Double_t */*dummy*/, const Double_t */*dummy*/);
+
+Int_t IpPion(TRandom *ran);
+Double_t PtPion(const Double_t *px, const Double_t */*dummy*/);
+Double_t YPion(const Double_t *py, const Double_t */*dummy*/);
+Double_t V2Pion(const Double_t */*dummy*/, const Double_t */*dummy*/);
 
 static AliMagF::BeamType_t beamType = AliMagF::kBeamTypepp;
 static Double_t            beamEnergy = 7000;//.*82./208;
@@ -109,7 +124,7 @@ void Config()
 
     ofstream genMatcherLog ("MatcherGenConfig.txt");
     genMatcherLog << MCHgen;
-
+// Generators
     if (MCHgen.find("gun0_100GeV") < MCHgen.length()) {
       std::cout << " This is gun0_100GeV Generator! " << std::endl;
 
@@ -180,6 +195,62 @@ void Config()
     gmuon2->SetPart(kMuonPlus);           // Positive muons
     gener->AddGenerator(gmuon2,"GENBOX MUON2",1);
 
+
+    gener->Init();
+}
+
+    if (MCHgen.find("betterPiMu") < MCHgen.length()) {
+      std::cout << " This is betterPiMu generator! " << std::endl;
+
+      Int_t nPions;
+      if (gSystem->Getenv("NPIONS")) {
+            nPions = atoi(gSystem->Getenv("NPIONS"));
+            std::cout << " Defined nPions =  " << nPions << std::endl;
+
+      }
+      else {
+        std::cout << " Default nPions = 20 " << std::endl;
+        nPions = 20;
+      }
+
+      Int_t nMuons;
+      if (gSystem->Getenv("NMUONS")) {
+            nMuons = atoi(gSystem->Getenv("NMUONS"));
+            std::cout << " Defined nMuons =  " << nMuons << std::endl;
+      }
+      else {
+        std::cout << " Default nMuons = 2 " << std::endl;
+        nMuons = 2;
+      }
+    genMatcherLog << "_" << nPions << "pi_" << nMuons << "mu_";
+    AliGenCocktail *gener = new AliGenCocktail();
+    gener->SetEnergyCMS(beamEnergy); // Needed by ZDC
+    gener->SetPhiRange(0, 360);
+    // Set pseudorapidity range from -8 to 8.
+    Float_t thmin = EtaToTheta(-1);   // theta min. <---> eta max
+    Float_t thmax = EtaToTheta(-5);  // theta max. <---> eta min
+    gener->SetThetaRange(thmin,thmax);
+    gener->SetOrigin(0, 0, 0);  //vertex position
+    gener->SetSigma(0, 0, 0);   //Sigma in (X,Y,Z) (cm) on IP position
+
+    // Pions
+    AliGenParam *gPions = new AliGenParam(nPions,-1,PtPion,YPion,V2Pion,IpPion);
+    gPions->SetMomentumRange(0., 1.e6);
+    gPions->SetPtRange(0.1, 999.);
+    gPions->SetYRange(-4.3, -2.3);
+    gPions->SetPhiRange(0., 360.);
+    gPions->SetTrackingFlag(1);
+    gener->AddGenerator(gPions,"PIONS",1);
+
+    // Muons
+    AliGenParam *gMuons = new AliGenParam(nMuons,-1,PtMuon,YMuon,V2Muon,IpMuon);
+    gMuons->SetMomentumRange(4., 1.e6);
+    gMuons->SetPtRange(0.0, 999.);
+    gMuons->SetYRange(-4.3, -2.3);
+    gMuons->SetPhiRange(0., 360.);
+    gMuons->SetForceDecay(kNoDecay);
+    gMuons->SetTrackingFlag(1);
+    gener->AddGenerator(gMuons,"MUONS",1);
 
     gener->Init();
 }
@@ -443,4 +514,113 @@ void Config()
 
 Float_t EtaToTheta(Float_t arg){
   return (180./TMath::Pi())*2.*atan(exp(-arg));
+}
+
+Int_t IpMuon(TRandom *ran)
+{
+  // muon composition
+
+  if (ran->Rndm() < 0.5 )
+  {
+    return 13;
+  }
+  else
+  {
+    return -13;
+  }
+}
+
+//-------------------------------------------------------------------------
+Double_t PtMuon(const Double_t *px, const Double_t */*dummy*/)
+{
+  // muon pT
+
+  Double_t x=*px;
+
+  Double_t p0 = 797.446;
+  Double_t p1 = 0.830278;
+  Double_t p2 = 0.632177;
+  Double_t p3 = 10.2202;
+  Double_t p4 = -0.000614809;
+  Double_t p5 = -1.70993;
+
+  return p0 * (1. / TMath::Power(p1 + TMath::Power(x,p2), p3) + p4 * TMath::Exp(p5*x));
+}
+
+//-------------------------------------------------------------------------
+Double_t YMuon(const Double_t *py, const Double_t */*dummy*/)
+{
+  // muon y
+
+  Double_t y = *py;
+
+  Double_t p0 = 1.87732;
+  Double_t p1 = 0.00658212;
+  Double_t p2 = -0.0988071;
+  Double_t p3 = -0.000452746;
+  Double_t p4 = 0.00269782;
+
+  return p0 * (1. + p1*y + p2*y*y + p3*y*y*y + p4*y*y*y*y);
+}
+
+//-------------------------------------------------------------------------
+Double_t V2Muon(const Double_t */*dummy*/, const Double_t */*dummy*/)
+{
+  // muon v2
+  return 0.;
+}
+
+//-------------------------------------------------------------------------
+Int_t IpPion(TRandom *ran)
+{
+  // Pion composition
+
+  if (ran->Rndm() < 0.5 )
+  {
+    return 211;
+  }
+  else
+  {
+    return -211;
+  }
+}
+
+//-------------------------------------------------------------------------
+Double_t PtPion(const Double_t *px, const Double_t */*dummy*/)
+{
+  // Pion pT
+
+  Double_t x=*px;
+
+  Double_t p0 = 797.446;
+  Double_t p1 = 0.830278;
+  Double_t p2 = 0.632177;
+  Double_t p3 = 10.2202;
+  Double_t p4 = -0.000614809;
+  Double_t p5 = -1.70993;
+
+  return p0 * (1. / TMath::Power(p1 + TMath::Power(x,p2), p3) + p4 * TMath::Exp(p5*x));
+}
+
+//-------------------------------------------------------------------------
+Double_t YPion(const Double_t *py, const Double_t */*dummy*/)
+{
+  // Pion y
+
+  Double_t y = *py;
+
+  Double_t p0 = 1.87732;
+  Double_t p1 = 0.00658212;
+  Double_t p2 = -0.0988071;
+  Double_t p3 = -0.000452746;
+  Double_t p4 = 0.00269782;
+
+  return p0 * (1. + p1*y + p2*y*y + p3*y*y*y + p4*y*y*y*y);
+}
+
+//-------------------------------------------------------------------------
+Double_t V2Pion(const Double_t */*dummy*/, const Double_t */*dummy*/)
+{
+  // Pion v2
+  return 0.;
 }
