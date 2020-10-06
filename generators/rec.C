@@ -1,4 +1,6 @@
 void rec() {
+  gSystem->Load("libpythia6_4_25"); // Why is this needed here? To remove
+                                    // libAliPythia6 errors
   AliReconstruction reco;
 
   reco.SetWriteESDfriend();

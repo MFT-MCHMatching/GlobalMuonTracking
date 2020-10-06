@@ -26,7 +26,7 @@ Usage()
       muoncocktail - ?
 
     Example:
-    ${0##*/} --match --matchFcn matchXYPhiTanl --cutFcn cutDistance --cutParam0 2.0  --updatecode -o sampletest
+    ${0##*/} --genMCH -g gun0_100GeV -n 20 --nmuons 4 --npions 20 -o sampletest
 
   2) Generate MFT Tracks
      ${0##*/} --genMFT -o <outputdir> -j <jobs>
@@ -97,7 +97,7 @@ generateMCHTracks()
 
   ## 2) aliroot conversion of MCH tracks to temporary format
   echo " Converting MCH Tracks to O2-compatible format"
-  alienv setenv ${ALIROOTENV} -c aliroot -b -q -l "ConvertMCHESDTracks.C+(\".\")" | tee MCH-O2Conversion.log
+  alienv setenv ${ALIROOTENV} -c aliroot -e 'gSystem->Load("libpythia6_4_25")' -b -q -l "ConvertMCHESDTracks.C+(\".\")" | tee MCH-O2Conversion.log
   popd
   echo " Finished MCH track generation `realpath ${OUTDIR}`"
 
@@ -149,20 +149,8 @@ runMatching()
     echo "Matching MCH & MFT Tracks on `pwd` ..."
 
     ## MFT MCH track matching & global muon track fitting:
+    alienv setenv ${O2ENV} -c root.exe -e 'gSystem->Load("libO2MCHTracking")' -l -q -b runMatching.C+ | tee matching.log
 
-    case "$OSTYPE" in
-
-      darwin*)
-      alienv setenv ${O2ENV} -c root.exe -e 'gSystem->Load("libO2MCHTracking.dylib")' -l -q -b runMatching.C+ | tee matching.log
-      ;;
-      linux*)
-      alienv setenv ${O2ENV} -c root.exe -e 'gSystem->Load("libO2MCHTracking")' -l -q -b runMatching.C+ | tee matching.log
-      ;;
-      *)
-       echo "unknown: $OSTYPE"
-       exit
-        ;;
-    esac
     popd
     echo " Finished matching on `realpath ${OUTDIR}`"
 
