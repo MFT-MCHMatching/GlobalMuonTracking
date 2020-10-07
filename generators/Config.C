@@ -1,9 +1,7 @@
-#if !defined(__CINT__) || defined(__MAKECINT__)
 #include <Riostream.h>
 #include "TRandom.h"
 #include "AliGenerator.h"
 #include "AliGenParam.h"
-#if !defined(__CINT__) || defined(__MAKECINT__)
 
 enum PprTrigConf_t
 {
@@ -15,7 +13,6 @@ const char * pprTrigConfName[] = {
 };
 
 Float_t EtaToTheta(Float_t arg);
-
 Int_t IpMuon(TRandom *ran);
 Double_t PtMuon(const Double_t *px, const Double_t */*dummy*/);
 Double_t YMuon(const Double_t *py, const Double_t */*dummy*/);
@@ -195,12 +192,11 @@ void Config()
     gmuon2->SetPart(kMuonPlus);           // Positive muons
     gener->AddGenerator(gmuon2,"GENBOX MUON2",1);
 
-
     gener->Init();
 }
-
-    if (MCHgen.find("betterPiMu") < MCHgen.length()) {
-      std::cout << " This is betterPiMu generator! " << std::endl;
+//
+    if (MCHgen.find("PiMuParam") < MCHgen.length()) {
+      std::cout << " This is PiMuParam generator! " << std::endl;
 
       Int_t nPions;
       if (gSystem->Getenv("NPIONS")) {
@@ -257,6 +253,7 @@ void Config()
 
 
       if (MCHgen.find("paramJpsi") < MCHgen.length()) {
+        std::cout << " This is paramJpsi generator! " << std::endl;
         AliGenParam *gener = new AliGenParam(1, AliGenMUONlib::kJpsi);
         gener->SetMomentumRange(0,999);
         gener->SetPtRange(0,100.);
@@ -271,6 +268,7 @@ void Config()
       }
 
       if (MCHgen.find("hijing") < MCHgen.length()) { //Hijing generator
+        std::cout << " This is hijing generator! " << std::endl;
         AliGenHijing *gener = new AliGenHijing(-1);
         // centre of mass energy
         gener->SetEnergyCMS(5500.);
@@ -296,6 +294,7 @@ void Config()
         gener->Init();
       }
       if (MCHgen.find("muoncocktail") < MCHgen.length()) { // Muon cocktail for PbPb
+        std::cout << " This is muoncocktail generator! " << std::endl;
         AliGenMUONCocktail * gener = new AliGenMUONCocktail();
         gener->SetPtRange(1.,100.);       // Transverse momentum range
         gener->SetPhiRange(0.,360.);    // Azimuthal angle range

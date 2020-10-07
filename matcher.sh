@@ -15,12 +15,18 @@ Usage()
 
     -g Sets the generator for MCH and MFT tracks. Options:
 
-      gun0_100GeV - Box generator for pions and muons with total momentun 0 to 100 GeV. (default)
+      gun0_100GeV - Box generator for pions and muons with total momentum 0 to 100 GeV. (default)
                     Set number of pions and muons on each events:
           --npions <number_of_pions>
           --nmuons <number_of_muons>
 
-      Other tentative generators added to Config.C (not validated)
+      Other tentative generators added to Config.C (not validated):
+
+      PiMuParam - AliGenParam pions and muons generator with realistic parametrized distributions.
+                  Set number of pions and muons on each events:
+          --npions <number_of_pions>
+          --nmuons <number_of_muons>
+
       paramJpsi - ?
       hijing    - ?
       muoncocktail - ?
@@ -66,7 +72,7 @@ Usage()
   ${0##*/} --check -o <outputdir>
 
   ======================================================================================
-  Macros on ${SCRIPTDIR} will copied to <outputdir> when --genMCH option is used.
+  Contents of ${SCRIPTDIR} are copied to <outputdir> when --genMCH option is used.
   To replace the macros on --genMFT, --match and --check steps, use option --updatecode
 
 END
@@ -212,7 +218,12 @@ while [ $# -gt 0 ] ; do
     shift 2
     ;;
     -g)
-    GENERATOR="$2";
+    if [ -z ${GENERATOR+x} ]
+    then
+      GENERATOR="$2";
+    else
+      GENERATOR="${GENERATOR}.$2";
+    fi
     shift 2
     ;;
     --genMCH)
@@ -293,8 +304,8 @@ export MCHGENERATOR=${GENERATOR}
 export ALIROOT_OCDB_ROOT=~/alice/OCDB
 
 #ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest-master-release"}
-#ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest-master-next-root6"}
-ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest"}
+ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest-master-next-root6"}
+#ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest"}
 O2ENV=${O2ENV:-"O2/latest-dev-o2"}
 
 
