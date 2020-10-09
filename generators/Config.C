@@ -108,6 +108,18 @@ void Config()
     // Each detector is fired by few particles selected
     // to cover specific cases
 
+
+    AliGenCocktail *gener = new AliGenCocktail();
+    gener->SetEnergyCMS(beamEnergy); // Needed by ZDC
+    gener->SetPhiRange(0, 360);
+    // Set pseudorapidity range from -8 to 8.
+    Float_t thmin = EtaToTheta(-1);   // theta min. <---> eta max
+    Float_t thmax = EtaToTheta(-5);  // theta max. <---> eta min
+    gener->SetThetaRange(thmin,thmax);
+    gener->SetOrigin(0, 0, 0);  //vertex position
+    gener->SetSigma(0, 0, 0);   //Sigma in (X,Y,Z) (cm) on IP position
+
+
    std::string MCHgen;
    if (gSystem->Getenv("MCHGENERATOR")) {
          MCHgen = gSystem->Getenv("MCHGENERATOR");
@@ -151,16 +163,6 @@ void Config()
         nMuons = 1;
       }
     genMatcherLog << "_" << nPions*2 << "pi_" << nMuons*2 << "mu_";
-    AliGenCocktail *gener = new AliGenCocktail();
-    gener->SetEnergyCMS(beamEnergy); // Needed by ZDC
-    gener->SetPhiRange(0, 360);
-    // Set pseudorapidity range from -8 to 8.
-    Float_t thmin = EtaToTheta(-1);   // theta min. <---> eta max
-    Float_t thmax = EtaToTheta(-5);  // theta max. <---> eta min
-    gener->SetThetaRange(thmin,thmax);
-    gener->SetOrigin(0, 0, 0);  //vertex position
-    gener->SetSigma(0, 0, 0);   //Sigma in (X,Y,Z) (cm) on IP position
-
 
     // Pions
     AliGenBox * gPPions = new AliGenBox(nPions);
@@ -191,8 +193,6 @@ void Config()
     gmuon2->SetThetaRange(171.000,178.001);
     gmuon2->SetPart(kMuonPlus);           // Positive muons
     gener->AddGenerator(gmuon2,"GENBOX MUON2",1);
-
-    gener->Init();
 }
 //
     if (MCHgen.find("PiMuParam") < MCHgen.length()) {
@@ -219,15 +219,6 @@ void Config()
         nMuons = 2;
       }
     genMatcherLog << "_" << nPions << "pi_" << nMuons << "mu_";
-    AliGenCocktail *gener = new AliGenCocktail();
-    gener->SetEnergyCMS(beamEnergy); // Needed by ZDC
-    gener->SetPhiRange(0, 360);
-    // Set pseudorapidity range from -8 to 8.
-    Float_t thmin = EtaToTheta(-1);   // theta min. <---> eta max
-    Float_t thmax = EtaToTheta(-5);  // theta max. <---> eta min
-    gener->SetThetaRange(thmin,thmax);
-    gener->SetOrigin(0, 0, 0);  //vertex position
-    gener->SetSigma(0, 0, 0);   //Sigma in (X,Y,Z) (cm) on IP position
 
     // Pions
     AliGenParam *gPions = new AliGenParam(nPions,-1,PtPion,YPion,V2Pion,IpPion);
@@ -235,6 +226,7 @@ void Config()
     gPions->SetPtRange(0.1, 999.);
     gPions->SetYRange(-4.3, -2.3);
     gPions->SetPhiRange(0., 360.);
+    gPions->SetForceDecay(kNoDecay);  // Why is this needed to generate MFT tracks in O2?
     gPions->SetTrackingFlag(1);
     gener->AddGenerator(gPions,"PIONS",1);
 
@@ -248,23 +240,65 @@ void Config()
     gMuons->SetTrackingFlag(1);
     gener->AddGenerator(gMuons,"MUONS",1);
 
-    gener->Init();
+}
+
+//
+    if (MCHgen.find("PiParam") < MCHgen.length()) {
+      std::cout << " This is PiParam generator! " << std::endl;
+
+      Int_t nPions;
+      if (gSystem->Getenv("NPIONS")) {
+            nPions = atoi(gSystem->Getenv("NPIONS"));
+            std::cout << " Defined nPions =  " << nPions << std::endl;
+
+      }
+      else {
+        std::cout << " Default nPions = 20 " << std::endl;
+        nPions = 20;
+      }
+
+    genMatcherLog << "_" << nPions << "pi";
+
+    // Pions
+    AliGenParam *gPions = new AliGenParam(nPions,-1,PtPion,YPion,V2Pion,IpPion);
+    gPions->SetMomentumRange(0., 1.e6);
+    gPions->SetPtRange(0.1, 999.);
+    gPions->SetYRange(-4.3, -2.3);
+    gPions->SetPhiRange(0., 360.);
+    gPions->SetForceDecay(kNoDecay); // Why is this needed to generate MFT tracks in O2?
+    gPions->SetTrackingFlag(1);
+    gener->AddGenerator(gPions,"PIONS",1);
+
 }
 
 
-      if (MCHgen.find("paramJpsi") < MCHgen.length()) {
-        std::cout << " This is paramJpsi generator! " << std::endl;
-        AliGenParam *gener = new AliGenParam(1, AliGenMUONlib::kJpsi);
-        gener->SetMomentumRange(0,999);
-        gener->SetPtRange(0,100.);
-        gener->SetPhiRange(0., 360.);
-        gener->SetCutOnChild(1);
-        gener->SetChildPhiRange(0.,360.);
-        gener->SetChildThetaRange(171.0,178.0);
-        gener->SetOrigin(0,0,0);
-        gener->SetForceDecay(kDiMuon);
-        gener->SetTrackingFlag(1);
-        gener->Init();
+      if (MCHgen.find("JPsiParam") < MCHgen.length()) {
+        std::cout << " This is JPsiParam generator! " << std::endl;
+
+        Int_t nJPsi;
+        if (gSystem->Getenv("NJPSI")) {
+              nJPsi = atoi(gSystem->Getenv("NJPSI"));
+              std::cout << " Defined nJPsi =  " << nJPsi << std::endl;
+
+        }
+        else {
+          std::cout << " Default nJPsi = 1 " << std::endl;
+          nJPsi = 1;
+        }
+
+      genMatcherLog << "_" << nJPsi << "jpsi";
+
+        AliGenParam *gJPsi = new AliGenParam(nJPsi, AliGenMUONlib::kJpsi);
+        gJPsi->SetMomentumRange(0,999);
+        gJPsi->SetPtRange(0,100.);
+        gJPsi->SetPhiRange(0., 360.);
+        gJPsi->SetCutOnChild(1);
+        gJPsi->SetChildPhiRange(0.,360.);
+        gJPsi->SetChildThetaRange(171.0,178.0);
+        gJPsi->SetOrigin(0,0,0);
+        gJPsi->SetForceDecay(kDiMuon);
+        gJPsi->SetTrackingFlag(1);
+        gener->AddGenerator(gJPsi,"JPSI",1);
       }
 
       if (MCHgen.find("hijing") < MCHgen.length()) { //Hijing generator
@@ -295,26 +329,29 @@ void Config()
       }
       if (MCHgen.find("muoncocktail") < MCHgen.length()) { // Muon cocktail for PbPb
         std::cout << " This is muoncocktail generator! " << std::endl;
-        AliGenMUONCocktail * gener = new AliGenMUONCocktail();
-        gener->SetPtRange(1.,100.);       // Transverse momentum range
-        gener->SetPhiRange(0.,360.);    // Azimuthal angle range
-        gener->SetYRange(-4.0,-2.5);
-        gener->SetMuonPtCut(0.5);
-        gener->SetMuonThetaCut(171.,178.);
-        gener->SetMuonMultiplicity(2);
-        gener->SetImpactParameterRange(0.,5.); // 10% most centra PbPb collisions
-        gener->SetVertexSmear(kPerTrack);
-        gener->SetOrigin(0,0,0);        // Vertex position
-        gener->SetSigma(0,0,0.0);       // Sigma in (X,Y,Z) (cm) on IP position
-        gener->Init();
+        AliGenMUONCocktail * generMUONCocktail = new AliGenMUONCocktail();
+        generMUONCocktail->SetPtRange(1.,100.);       // Transverse momentum range
+        generMUONCocktail->SetPhiRange(0.,360.);    // Azimuthal angle range
+        generMUONCocktail->SetYRange(-4.0,-2.5);
+        generMUONCocktail->SetMuonPtCut(0.5);
+        generMUONCocktail->SetMuonThetaCut(171.,178.);
+        generMUONCocktail->SetMuonMultiplicity(2);
+        generMUONCocktail->SetImpactParameterRange(0.,5.); // 10% most centra PbPb collisions
+        generMUONCocktail->SetVertexSmear(kPerTrack);
+        generMUONCocktail->SetOrigin(0,0,0);        // Vertex position
+        generMUONCocktail->SetSigma(0,0,0.0);       // Sigma in (X,Y,Z) (cm) on IP position
+        gener->AddGenerator(generMUONCocktail,"MUONCocktail",1);
       }
 
       Int_t nEvts;
       if (gSystem->Getenv("NEV")) {
             nEvts = atoi(gSystem->Getenv("NEV"));
       }
-      genMatcherLog << nEvts << "evts" << std::endl;
+      genMatcherLog << "_" << nEvts << "evts" << std::endl;
       genMatcherLog.close();
+
+      gener->Init();
+
 
     //
     // Activate this line if you want the vertex smearing to happen

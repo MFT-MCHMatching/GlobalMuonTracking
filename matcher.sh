@@ -27,7 +27,16 @@ Usage()
           --npions <number_of_pions>
           --nmuons <number_of_muons>
 
-      paramJpsi - ?
+      PiParam - AliGenParam pions generator with realistic parametrized distributions.
+                  Set number of pions and muons on each events:
+          --npions <number_of_pions>
+
+
+     JPsiParam - add J/Psi's to the cocktail
+                 Set number of J/Psi's on each event:
+         --njpsis <number_of_njpsis>
+
+
       hijing    - ?
       muoncocktail - ?
 
@@ -215,6 +224,10 @@ while [ $# -gt 0 ] ; do
     ;;
     --nmuons)
     export NMUONS="$2";
+    shift 2
+    ;;
+    --njpsis)
+    export NJPSI="$2";
     shift 2
     ;;
     -g)
