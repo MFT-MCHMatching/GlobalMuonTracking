@@ -112,7 +112,7 @@ void Config()
     AliGenCocktail *gener = new AliGenCocktail();
     gener->SetEnergyCMS(beamEnergy); // Needed by ZDC
     gener->SetPhiRange(0, 360);
-    // Set pseudorapidity range from -8 to 8.
+    // Set pseudorapidity range from -1 to -5.
     Float_t thmin = EtaToTheta(-1);   // theta min. <---> eta max
     Float_t thmax = EtaToTheta(-5);  // theta max. <---> eta min
     gener->SetThetaRange(thmin,thmax);
@@ -137,42 +137,32 @@ void Config()
     if (MCHgen.find("gun0_100GeV") < MCHgen.length()) {
       std::cout << " This is gun0_100GeV Generator! " << std::endl;
 
-      Int_t nPions;
+      Int_t nPions = 10;
       if (gSystem->Getenv("NPIONS")) {
             nPions = atoi(gSystem->Getenv("NPIONS"));
-            nPions /= 2;
-            std::cout << " Defined nPions =  " << 2 * nPions << std::endl;
-
-      }
-      else {
-        std::cout << " Default nPions = 20 " << std::endl;
-        nPions = 10;
+            nPions = 2*(nPions/2);
       }
 
-      Int_t nMuons;
+      Int_t nMuons = 2;
       if (gSystem->Getenv("NMUONS")) {
             nMuons = atoi(gSystem->Getenv("NMUONS"));
-            nMuons /= 2;
-            std::cout << " Defined nMuons =  " << 2 * nMuons << std::endl;
-
-
+            nMuons = 2*(nMuons/2);
       }
-      else {
-        std::cout << " Default nMuons = 2 " << std::endl;
 
-        nMuons = 1;
-      }
-    genMatcherLog << "_" << nPions*2 << "pi_" << nMuons*2 << "mu_";
+    std::cout << " nPions =  " << nPions << std::endl;
+    std::cout << " nMuons =  " << nMuons << std::endl;
+
+    genMatcherLog << "_" << nPions << "pi_" << nMuons << "mu_";
 
     // Pions
-    AliGenBox * gPPions = new AliGenBox(nPions);
+    AliGenBox * gPPions = new AliGenBox(nPions/2);
     gPPions->SetMomentumRange(0.1,100.1);
     gPPions->SetPhiRange(0., 360.);
     gPPions->SetThetaRange(171.000,178.001);
     gPPions->SetPart(kPiPlus);           // Positive pions
     gener->AddGenerator(gPPions,"POS PIONS",1);
 
-    AliGenBox * gNPions = new AliGenBox(nPions);
+    AliGenBox * gNPions = new AliGenBox(nPions/2);
     gNPions->SetMomentumRange(0.1,100.1);
     gNPions->SetPhiRange(0., 360.);
     gNPions->SetThetaRange(171.000,178.001);
@@ -180,14 +170,14 @@ void Config()
     gener->AddGenerator(gNPions,"NEG PIONS",1);
 
     // MUONS
-    AliGenBox * gmuon1 = new AliGenBox(nMuons);
+    AliGenBox * gmuon1 = new AliGenBox(nMuons/2);
     gmuon1->SetMomentumRange(0.1,100);
     gmuon1->SetPhiRange(0., 360.);
     gmuon1->SetThetaRange(171.000,178.001);
     gmuon1->SetPart(kMuonMinus);           // Negative muons
     gener->AddGenerator(gmuon1,"GENBOX MUON1",1);
 
-    AliGenBox * gmuon2 = new AliGenBox(nMuons);
+    AliGenBox * gmuon2 = new AliGenBox(nMuons/2);
     gmuon2->SetMomentumRange(0.1,100);
     gmuon2->SetPhiRange(0., 360.);
     gmuon2->SetThetaRange(171.000,178.001);
@@ -195,29 +185,54 @@ void Config()
     gener->AddGenerator(gmuon2,"GENBOX MUON2",1);
 }
 //
+    // Muon Box Gun
+    if (MCHgen.find("MuBoxGun") < MCHgen.length()) {
+      std::cout << " This is Mu_gun0_100GeV Generator! " << std::endl;
+
+    Int_t nMuons = 2;
+      if (gSystem->Getenv("NMUONS")) {
+            nMuons = atoi(gSystem->Getenv("NMUONS"));
+            nMuons = 2*(nMuons/2);
+      }
+
+    std::cout << " nMuons =  " << nMuons << std::endl;
+
+    genMatcherLog << "_" << nMuons << "mu_";
+
+    // MUONS
+    AliGenBox * gmuon1 = new AliGenBox(nMuons/2);
+    gmuon1->SetMomentumRange(0.1,100);
+    gmuon1->SetPhiRange(0., 360.);
+    gmuon1->SetThetaRange(171.000,178.001);
+    gmuon1->SetPart(kMuonMinus);           // Negative muons
+    gener->AddGenerator(gmuon1,"GENBOX NMUONS",1);
+
+    AliGenBox * gmuon2 = new AliGenBox(nMuons/2);
+    gmuon2->SetMomentumRange(0.1,100);
+    gmuon2->SetPhiRange(0., 360.);
+    gmuon2->SetThetaRange(171.000,178.001);
+    gmuon2->SetPart(kMuonPlus);           // Positive muons
+    gener->AddGenerator(gmuon2,"GENBOX PMUONS",1);
+}
+
+
+
     if (MCHgen.find("PiMuParam") < MCHgen.length()) {
       std::cout << " This is PiMuParam generator! " << std::endl;
 
-      Int_t nPions;
+      Int_t nPions = 20;
       if (gSystem->Getenv("NPIONS")) {
             nPions = atoi(gSystem->Getenv("NPIONS"));
-            std::cout << " Defined nPions =  " << nPions << std::endl;
 
       }
-      else {
-        std::cout << " Default nPions = 20 " << std::endl;
-        nPions = 20;
-      }
-
-      Int_t nMuons;
+      std::cout << " nPions = " << nPions << std::endl;
+      Int_t nMuons = 2;
       if (gSystem->Getenv("NMUONS")) {
             nMuons = atoi(gSystem->Getenv("NMUONS"));
-            std::cout << " Defined nMuons =  " << nMuons << std::endl;
       }
-      else {
-        std::cout << " Default nMuons = 2 " << std::endl;
-        nMuons = 2;
-      }
+    std::cout << " nMuons = " << nMuons << std::endl;
+    std::cout << " nPions = " << nPions << std::endl;
+
     genMatcherLog << "_" << nPions << "pi_" << nMuons << "mu_";
 
     // Pions
@@ -246,17 +261,13 @@ void Config()
     if (MCHgen.find("PiParam") < MCHgen.length()) {
       std::cout << " This is PiParam generator! " << std::endl;
 
-      Int_t nPions;
+      Int_t nPions = 20;
       if (gSystem->Getenv("NPIONS")) {
             nPions = atoi(gSystem->Getenv("NPIONS"));
             std::cout << " Defined nPions =  " << nPions << std::endl;
 
       }
-      else {
-        std::cout << " Default nPions = 20 " << std::endl;
-        nPions = 20;
-      }
-
+    std::cout << " nPions = " << nPions << std::endl;
     genMatcherLog << "_" << nPions << "pi";
 
     // Pions

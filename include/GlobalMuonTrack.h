@@ -68,6 +68,9 @@ struct MatchingHelper {
    std::string Annotation() {
      return Generator + GeneratorConfig + MatchingFunction + "_Z" + std::to_string(matchingPlaneZ) + MatchingCutFunc + MatchingCutConfig;
    }
+   std::string MatchingConfig() {
+     return MatchingFunction + "_Z" + std::to_string(matchingPlaneZ) + MatchingCutFunc + MatchingCutConfig;
+   }
 };
 
 

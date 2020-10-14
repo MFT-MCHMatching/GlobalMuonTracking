@@ -1,5 +1,8 @@
 #!/bin/bash
 
+MATCHINGRESULTS="GlobalMuonTracks.root matching.log"
+CHECKRESULTS="GlobalMuonChecks.root checks.log"
+
 Usage()
 {
   cat <<-END
@@ -13,26 +16,34 @@ Usage()
 
   ${0##*/} --genMCH -n <number_of_events> -o <outputdir> -g <generator> <generator options>
 
-    -g Sets the generator for MCH and MFT tracks. Options:
+    --verbose
+      Enable verbose matching output
+    -g
+     Sets the generator for MCH and MFT tracks. Options:
 
       gun0_100GeV - Box generator for pions and muons with total momentum 0 to 100 GeV. (default)
-                    Set number of pions and muons on each events:
+                    Set number of pions and muons on each event:
           --npions <number_of_pions>
           --nmuons <number_of_muons>
 
+      MuBoxGun - Box generator for muons with total momentum 0 to 100 GeV.
+                       Set number of muons on each event:
+           --nmuons <number_of_muons>
+
       Other tentative generators added to Config.C (not validated):
 
+
       PiMuParam - AliGenParam pions and muons generator with realistic parametrized distributions.
-                  Set number of pions and muons on each events:
+                  Set number of pions and muons on each event:
           --npions <number_of_pions>
           --nmuons <number_of_muons>
 
       PiParam - AliGenParam pions generator with realistic parametrized distributions.
-                  Set number of pions and muons on each events:
+                  Set number of pions and muons on each event:
           --npions <number_of_pions>
 
 
-     JPsiParam - add J/Psi's to the cocktail
+     JPsiParam - add J/Psi's to the cocktail (WARNING: current approach does not handle decays correctly in O2)
                  Set number of J/Psi's on each event:
          --njpsis <number_of_njpsis>
 
@@ -81,6 +92,13 @@ Usage()
   ${0##*/} --check -o <outputdir>
 
   ======================================================================================
+  The following output files are copied to a results subdirectory:
+   Step 3) Matching:
+   $MATCHINGRESULTS
+
+   Step 4) Checking:
+   $CHECKRESULTS
+  ======================================================================================
   Contents of ${SCRIPTDIR} are copied to <outputdir> when --genMCH option is used.
   To replace the macros on --genMFT, --match and --check steps, use option --updatecode
 
@@ -108,6 +126,7 @@ generateMCHTracks()
   ## 1) aliroot generation of MCH Tracks
   echo ${NEV_} > nMCHEvents
   export NEV=${NEV_}
+  rm -rf MatcherGenConfig.txt
   alienv setenv ${ALIROOTENV} -c bash ./runtest.sh -n ${NEV_} | tee aliroot_MCHgen.log
 
   ## 2) aliroot conversion of MCH tracks to temporary format
@@ -162,9 +181,11 @@ runMatching()
 
     pushd ${OUTDIR}
     echo "Matching MCH & MFT Tracks on `pwd` ..."
-
     ## MFT MCH track matching & global muon track fitting:
     alienv setenv ${O2ENV} -c root.exe -e 'gSystem->Load("libO2MCHTracking")' -l -q -b runMatching.C+ | tee matching.log
+    RESULTSDIR="Results`cat MatchingConfig.txt`"
+    mkdir ${RESULTSDIR}
+    cp ${MATCHINGRESULTS} ${RESULTSDIR}
 
     popd
     echo " Finished matching on `realpath ${OUTDIR}`"
@@ -195,9 +216,11 @@ runChecks()
 
   ## Check global muon Tracks
   alienv setenv ${O2ENV} -c root.exe -l -q -b GlobalMuonChecks.C+ | tee checks.log
+  RESULTSDIR="Results`cat MatchingConfig.txt`"
+  cp ${CHECKRESULTS} ${RESULTSDIR}
+  echo " Results copied to `realpath ${RESULTSDIR}`"
   popd
   echo " Finished checking Global muon tracks on `realpath ${OUTDIR}`"
-
 
 }
 
@@ -283,6 +306,10 @@ while [ $# -gt 0 ] ; do
     UPDATECODE="1";
     shift 1
     ;;
+    --verbose)
+    export VERBOSEMATCHING="1";
+    shift 1
+    ;;
     -h|--help)
     Usage
     ;;
@@ -320,8 +347,6 @@ export ALIROOT_OCDB_ROOT=~/alice/OCDB
 ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest-master-next-root6"}
 #ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest"}
 O2ENV=${O2ENV:-"O2/latest-dev-o2"}
-
-
 
 if ! [ -z ${GENERATEMCH+x} ]; then
   if [ -d "${OUTDIR}" ]; then

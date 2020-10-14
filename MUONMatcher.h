@@ -31,7 +31,7 @@
 #include "MFTBase/Constants.h"
 #include "MFTTracking/IndexTableUtils.h"
 
-
+#include <iostream>
 
 using MCHTrack = o2::mch::TrackParam;
 using MFTTrack = o2::mft::TrackMFT;

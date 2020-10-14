@@ -96,6 +96,11 @@ if (gSystem->Getenv("MATCHING_CUTPARAM1")) {
   matcher.setCutParam(1 , matching_cutparam1);
 }
 
+if (gSystem->Getenv("VERBOSEMATCHING")) {
+  std::cout << " Vebose matching enabled." << std::endl;
+  matcher.SetVerbosity(true);
+}
+
 
 }
 

@@ -500,6 +500,10 @@ TTree outTree("o2sim", "Global Muon Tracks");
   outFile.Close();
   std::cout << "Global Muon Tracks saved to GlobalMuonTracks.root" << std::endl;
 
+  std::ofstream matcherConfig ("MatchingConfig.txt");
+  matcherConfig << mMatchingHelper.MatchingConfig() << std::endl;
+  matcherConfig.close();
+
 }
 
 

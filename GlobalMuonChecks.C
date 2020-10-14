@@ -48,6 +48,11 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
                       const std::string o2sim_KineFile = "o2sim_Kine.root")
 {
 
+  if (gSystem->Getenv("VERBOSEMATCHING")) {
+    std::cout << " Vebose checking enabled." << std::endl;
+    DEBUG_VERBOSE = true;
+  }
+
   // Histos parameters
   Double_t pMin = 0.0;
   Double_t pMax = 100.0;
@@ -500,7 +505,7 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
   for (int iEvent = 0 ; iEvent < numberOfEvents ; iEvent++ ) {
     auto  iTrack = 0;
     if(DEBUG_VERBOSE) {
-      std::cout << "Event = " << iEvent << " with " << trackGMVec.size() << " tracks " << std::endl;
+      std::cout << "Event = " << iEvent << " with " << trackGMVec.size() << " MCH tracks " << std::endl;
     }
     o2SimKineTree -> GetEntry(iEvent);
 
@@ -933,7 +938,7 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
 
   outFile.Close();
 
-
+  std::cout << std::endl;
   std::cout << "---------------------------------------------------" << std::endl;
   std::cout << "-------------   Matching Summary   ----------------" << std::endl;
   std::cout << "---------------------------------------------------" << std::endl;
