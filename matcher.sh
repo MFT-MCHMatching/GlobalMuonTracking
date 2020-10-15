@@ -185,7 +185,7 @@ runMatching()
     alienv setenv ${O2ENV} -c root.exe -e 'gSystem->Load("libO2MCHTracking")' -l -q -b runMatching.C+ | tee matching.log
     RESULTSDIR="Results`cat MatchingConfig.txt`"
     mkdir ${RESULTSDIR}
-    cp ${MATCHINGRESULTS} ${RESULTSDIR}
+    cp ${MATCHINGRESULTS} "${RESULTSDIR}"
 
     popd
     echo " Finished matching on `realpath ${OUTDIR}`"
@@ -217,7 +217,7 @@ runChecks()
   ## Check global muon Tracks
   alienv setenv ${O2ENV} -c root.exe -l -q -b GlobalMuonChecks.C+ | tee checks.log
   RESULTSDIR="Results`cat MatchingConfig.txt`"
-  cp ${CHECKRESULTS} ${RESULTSDIR}
+  cp ${CHECKRESULTS} "${RESULTSDIR}"
   echo " Results copied to `realpath ${RESULTSDIR}`"
   popd
   echo " Finished checking Global muon tracks on `realpath ${OUTDIR}`"
@@ -367,5 +367,4 @@ if ! [ -z ${GENERATEMFT+x} ]; then
 fi
 
 if ! [ -z ${MATCHING+x} ]; then runMatching ; fi
-
 if ! [ -z ${CHECKS+x} ]; then runChecks ; fi

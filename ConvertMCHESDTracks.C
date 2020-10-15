@@ -19,7 +19,6 @@ std::vector<tempMCHTrack> tempMCHTracks;
 
 Int_t fNMCH;
 
-TTree* treeMCH = new TTree("treeMCH","treeMCH");
 
 
 void ConvertMCHESDTracks(string in_dir=""){
@@ -41,9 +40,10 @@ void ConvertMCHESDTracks(string in_dir=""){
   rl->LoadKinematics();
   rl->LoadHeader();
 
-  treeMCH->Branch("tempMCHTracks",&tempMCHTracks);
 
   TFile* output  = new TFile(Form("%s/tempMCHTracks.root",out_dir.c_str()),"recreate");
+  TTree* treeMCH = new TTree("treeMCH","treeMCH");
+  treeMCH->Branch("tempMCHTracks",&tempMCHTracks);
 
   Long64_t nEvents = rl->GetNumberOfEvents();
 
