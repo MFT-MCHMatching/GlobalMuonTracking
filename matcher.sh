@@ -16,8 +16,6 @@ Usage()
 
   ${0##*/} --genMCH -n <number_of_events> -o <outputdir> -g <generator> <generator options>
 
-    --verbose
-      Enable verbose matching output
     -g
      Sets the generator for MCH and MFT tracks. Options:
 
@@ -57,6 +55,10 @@ Usage()
   2) Generate MFT Tracks
      ${0##*/} --genMFT -o <outputdir> -j <jobs>
 
+      Options:
+       --shm-segment-size  <size_in_bytes> (default 5000000000)
+         sets shm-segment-size for o2 digitizer and reconstruction workflows. Default O2 value of 1GB breaks at ~2e6 MFT tracks. 5GB for 3e6 MFT tracks.
+
   3) Run track matching:
      ${0##*/} --match --matchFcn <matching_function> --cutFcn <cut_function> --cutParam0 <val0> -o <outputdir>
 
@@ -90,6 +92,10 @@ Usage()
   4) Run checks:
 
   ${0##*/} --check -o <outputdir>
+
+  Other options:
+     --verbose
+       Enable verbose matching and checking output
 
   ======================================================================================
   The following output files are copied to a results subdirectory:
@@ -154,8 +160,8 @@ generateMFTTracks()
   NEV_=`cat nMCHEvents`
   ## O2 simulation and generation of MFT tracks using same Kinematics.root
   alienv setenv ${O2ENV} -c o2-sim -g extkin --extKinFile Kinematics.root -m PIPE ITS MFT ABS SHIL -e TGeant3 -n ${NEV_} -j $JOBS | tee O2Sim.log
-  alienv setenv ${O2ENV} -c o2-sim-digitizer-workflow -b --skipDet TPC,ITS,TOF,FT0,EMC,HMP,ZDC,TRD,MCH,MID,FDD,PHS,FV0,CPV >  O2Digitizer.log
-  alienv setenv ${O2ENV} -c o2-mft-reco-workflow -b > O2Reco.log
+  alienv setenv ${O2ENV} -c o2-sim-digitizer-workflow ${CUSTOM_SHM} -b --skipDet TPC,ITS,TOF,FT0,EMC,HMP,ZDC,TRD,MCH,MID,FDD,PHS,FV0,CPV >  O2Digitizer.log
+  alienv setenv ${O2ENV} -c o2-mft-reco-workflow ${CUSTOM_SHM} -b > O2Reco.log
   popd
   echo " Finished MFT Track generation on `realpath ${OUTDIR}`"
 
@@ -270,6 +276,10 @@ while [ $# -gt 0 ] ; do
     GENERATEMFT="1";
     shift 1
     ;;
+    --shm-segment-size)
+    CUSTOM_SHM="--shm-segment-size $2";
+    shift 1
+    ;;
     --match)
     MATCHING="1";
     shift 1
@@ -339,6 +349,7 @@ if [ -z ${OUTDIR+x} ]; then echo "Missing output dir" ; Usage ; fi
 NEV_=${NEV_:-"4"}
 JOBS=${JOBS:-"4"}
 GENERATOR=${GENERATOR:-"gun0_100GeV"}
+CUSTOM_SHM="--shm-segment-size 5000000000"
 
 export MCHGENERATOR=${GENERATOR}
 export ALIROOT_OCDB_ROOT=~/alice/OCDB

@@ -58,7 +58,7 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
   Double_t pMax = 100.0;
   Double_t deltaetaMin = -.1;
   Double_t deltaetaMax = +.1;
-  Double_t etaMin = -3.4;
+  Double_t etaMin = -3.5;
   Double_t etaMax = -2.4;
   Double_t deltaphiMin = -.2; //-3.15,
   Double_t deltaphiMax = .2; //+3.15,
@@ -428,8 +428,9 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
   //qMatchEff->GetPaintedHistogram()->GetXaxis()->SetTitleSize(0.06);
   //qMatchEff->GetPaintedHistogram()->GetYaxis()->SetTitleSize(0.06);
 
-  TEfficiency* pairedMCHTracksEff = new TEfficiency("PairedMCHTracksEff","Paired MCH tracks;p_t [GeV];#epsilon",10,0,10);
-  TEfficiency* globalMuonPurity = new TEfficiency("GMTracks Purity"," Purity (NGoodTracks/NGlobalMuonTracks);p_t [GeV];#epsilon",10,0,10);
+  TEfficiency* pairedMCHTracksEff = new TEfficiency("PairingEff","Paired_tracks;p_t [GeV];#epsilon",10,0,10);
+  TEfficiency* globalMuonMatchingFidelity = new TEfficiency("Matching_Fidelity"," MatchingFidelity (NGoodTracks/NGlobalMuonTracks);p_t [GeV];#epsilon",10,0,10);
+  TEfficiency* globalMuonCombinedEff = new TEfficiency("Global_Matching_Efficiency","Global_Matching_Efficiency (NGoodTracks/NMCHTracks);p_t [GeV];#epsilon",10,0,10);
   TEfficiency* goodCandidateEff = new TEfficiency("GoodMFTTrackTested","Good MFT match tested;p_t [GeV];#epsilon",10,0,10);
 
 
@@ -535,15 +536,15 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
         }
         if (gmTrack.goodMatchTested()) nGoodMatchTested++;
         pairedMCHTracksEff->Fill(bestMFTTrackMatchID >=0 ,gmTrack.getPt());
+        globalMuonCombinedEff->Fill(label[0].isCorrect(),gmTrack.getPt());
 
         if(bestMFTTrackMatchID>=0) {
-          globalMuonPurity->Fill(0,gmTrack.getPt());
+          globalMuonMatchingFidelity->Fill(label[0].isCorrect(),gmTrack.getPt());
           goodCandidateEff->Fill(gmTrack.goodMatchTested(),gmTrack.getPt());
         }
         if(label[0].isCorrect()) { // Good track: add to histograms
           nCleanGMTracks++;
           //pairedMCHTracksEff->Fill(1,gmTrack.getPt());
-          globalMuonPurity->Fill(1,gmTrack.getPt());
           auto thisTrkID = label[0].getTrackID();
           MCTrackT<float>* thisTrack =  &(*mcTr).at(thisTrkID);
           auto vx_MC = thisTrack->GetStartVertexCoordinatesX();
@@ -689,9 +690,9 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
   TH1Histos[kGMTrackQ4plus]->SetTitle(Form("nChargeMatch = %d (%.2f%%)", nChargeMatch4plus, 100.*nChargeMatch4plus/(nChargeMiss4plus+nChargeMatch4plus)));
 
   qMatchEff->SetTitle(Form("Charge match = %.2f%%", 100.*nChargeMatch/(nChargeMiss+nChargeMatch)));
-  pairedMCHTracksEff->SetTitle(Form("Paired MCH tracks = %.2f%%", 100.*nRecoGMTracks/(nMCHTracks)));
-  globalMuonPurity->SetTitle(Form("GMTracks Purity = %.2f%%", 100.*nCleanGMTracks/(nRecoGMTracks)));
-  goodCandidateEff->SetTitle(Form("Good MFT match tested = %.2f%%", 100.*nGoodMatchTested/(nRecoGMTracks)));
+  pairedMCHTracksEff->SetTitle(Form("Paired_MCH_tracks_=_%.2f%%", 100.*nRecoGMTracks/(nMCHTracks)));
+  globalMuonMatchingFidelity->SetTitle(Form("Matching_Fidelity = %.2f%%", 100.*nCleanGMTracks/(nRecoGMTracks)));
+  goodCandidateEff->SetTitle(Form("Good_MFT_match_tested_=_%.2f%%", 100.*nGoodMatchTested/(nRecoGMTracks)));
 
 
   //Remove stat boxes
@@ -720,7 +721,7 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
   // Matching summary
   auto matching_summary = summary_report_3x2(
     *pairedMCHTracksEff,
-    *globalMuonPurity,
+    *globalMuonMatchingFidelity,
     *goodCandidateEff,
     *TH2Histos[kGMTrackDeltaXYVertex],
     *DeltaX_Error,
@@ -932,6 +933,9 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
   DeltaX_Error->Write();
   qMatchEff->Write();
   pairedMCHTracksEff->Write();
+  globalMuonMatchingFidelity->Write();
+  goodCandidateEff->Write();
+  globalMuonCombinedEff->Write();
   outFile.cd();
   matching_helper.GMTracksGoodMFTTested = nGoodMatchTested;
   outFile.WriteObjectAny(&matching_helper, "MatchingHelper","Matching Helper");
@@ -982,7 +986,7 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
   std::cout << " ==> "<< nRecoGMTracks  << " reconstructed Global Muon Tracks" << " (" << 100.*nRecoGMTracks/(nMCHTracks) << "%)"<< std::endl;
   std::cout << " ==> "<< nFakeGMTracks << " fake Global Muon Tracks" << " (contamination = " << 100.*nFakeGMTracks/(nRecoGMTracks) << "%)" << std::endl;
   std::cout << " ==> "<< nGoodMatchTested  << " Global Muon Tracks with good MFT track in search window" << " (" << 100.*nGoodMatchTested/(nRecoGMTracks) << "%)"<< std::endl;
-  std::cout << " ==> "<< nCleanGMTracks << " clean Global Muon Tracks" << " (purity = " << 100.*nCleanGMTracks/(nRecoGMTracks) << "%)" << " (eff. = " << 100.*nCleanGMTracks/(nMCHTracks) << "%)"<< std::endl;
+  std::cout << " ==> "<< nCleanGMTracks << " clean Global Muon Tracks" << " (matchingFidelity = " << 100.*nCleanGMTracks/(nRecoGMTracks) << "%)" << " (eff. = " << 100.*nCleanGMTracks/(nMCHTracks) << "%)"<< std::endl;
 
   std::cout << "--------------------------------------------------------------------------" << std::endl;
   std::cout << " Annotation: " << annotation << std::endl;
@@ -996,8 +1000,8 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
   std::cout << "matching_helper.nFakes = " << matching_helper.nFakes << std::endl;
   std::cout << "matching_helper.nGoodMatches = " << matching_helper.nGoodMatches << std::endl;
   std::cout << "matching_helper.GMTracksGoodMFTTested = " << matching_helper.GMTracksGoodMFTTested << std::endl;
-  std::cout << "matching_helper.getPurity() = " << matching_helper.getPurity() << std::endl;
-  std::cout << "matching_helper.getEfficiency() = " << matching_helper.getEfficiency() << std::endl;
+  std::cout << "matching_helper.getMatchingFidelity() = " << matching_helper.getMatchingFidelity() << std::endl;
+  std::cout << "matching_helper.getPairingEfficiency() = " << matching_helper.getPairingEfficiency() << std::endl;
   */
 
 

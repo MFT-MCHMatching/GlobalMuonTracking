@@ -475,9 +475,9 @@ void MUONMatcher::finalize() { // compute labels and populates mMatchingHelper (
     std::cout << "********************************** Matching Summary ********************************** " << std::endl;
     std::cout << helper.nMCHTracks << " MCH Tracks." << std::endl;
     std::cout << helper.nNoMatch << " dangling MCH tracks (" << 100.0*nNoMatch/nTracks << "%)" << std::endl;
-    std::cout << helper.nGMTracks() << " global muon tracks (efficiency = " << 100.0*helper.getEfficiency() << "%)" << std::endl;
-    std::cout << helper.nGoodMatches  << " clean GM tracks (purity = " << 100.0*helper.getPurity() << "%)" << std::endl;
-    std::cout << helper.nFakes << " Fake GM tracks (contamination = " << 100.0*(1.0 - helper.getPurity()) << ")" << std::endl;
+    std::cout << helper.nGMTracks() << " global muon tracks (efficiency = " << 100.0*helper.getPairingEfficiency() << "%)" << std::endl;
+    std::cout << helper.nGoodMatches  << " clean GM tracks (matchingFidelity = " << 100.0*helper.getMatchingFidelity() << "%)" << std::endl;
+    std::cout << helper.nFakes << " Fake GM tracks (contamination = " << 100.0*(1.0 - helper.getMatchingFidelity()) << ")" << std::endl;
     std::cout << "************************************************************************************** " << std::endl;
     std::cout << " Annotation: " << helper.Annotation() << std::endl;
     std::cout << "************************************************************************************** " << std::endl;

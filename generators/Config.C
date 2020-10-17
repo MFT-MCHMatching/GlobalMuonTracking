@@ -112,9 +112,9 @@ void Config()
     AliGenCocktail *gener = new AliGenCocktail();
     gener->SetEnergyCMS(beamEnergy); // Needed by ZDC
     gener->SetPhiRange(0, 360);
-    // Set pseudorapidity range from -1 to -5.
-    Float_t thmin = EtaToTheta(-1);   // theta min. <---> eta max
-    Float_t thmax = EtaToTheta(-5);  // theta max. <---> eta min
+    // Set pseudorapidity range from -2.2 to -3.7
+    Float_t thmin = EtaToTheta(-2.2);   // theta min. <---> eta max
+    Float_t thmax = EtaToTheta(-3.7);   // theta max. <---> eta min
     gener->SetThetaRange(thmin,thmax);
     gener->SetOrigin(0, 0, 0);  //vertex position
     gener->SetSigma(0, 0, 0);   //Sigma in (X,Y,Z) (cm) on IP position
@@ -158,14 +158,14 @@ void Config()
     AliGenBox * gPPions = new AliGenBox(nPions/2);
     gPPions->SetMomentumRange(0.1,100.1);
     gPPions->SetPhiRange(0., 360.);
-    gPPions->SetThetaRange(171.000,178.001);
+    gPPions->SetThetaRange(thmin,thmax);
     gPPions->SetPart(kPiPlus);           // Positive pions
     gener->AddGenerator(gPPions,"POS PIONS",1);
 
     AliGenBox * gNPions = new AliGenBox(nPions/2);
     gNPions->SetMomentumRange(0.1,100.1);
     gNPions->SetPhiRange(0., 360.);
-    gNPions->SetThetaRange(171.000,178.001);
+    gNPions->SetThetaRange(thmin,thmax);
     gNPions->SetPart(kPiMinus);           // Positive pions
     gener->AddGenerator(gNPions,"NEG PIONS",1);
 
@@ -173,14 +173,14 @@ void Config()
     AliGenBox * gmuon1 = new AliGenBox(nMuons/2);
     gmuon1->SetMomentumRange(0.1,100);
     gmuon1->SetPhiRange(0., 360.);
-    gmuon1->SetThetaRange(171.000,178.001);
+    gmuon1->SetThetaRange(thmin,thmax);
     gmuon1->SetPart(kMuonMinus);           // Negative muons
     gener->AddGenerator(gmuon1,"GENBOX MUON1",1);
 
     AliGenBox * gmuon2 = new AliGenBox(nMuons/2);
     gmuon2->SetMomentumRange(0.1,100);
     gmuon2->SetPhiRange(0., 360.);
-    gmuon2->SetThetaRange(171.000,178.001);
+    gmuon2->SetThetaRange(thmin,thmax);
     gmuon2->SetPart(kMuonPlus);           // Positive muons
     gener->AddGenerator(gmuon2,"GENBOX MUON2",1);
 }
@@ -203,14 +203,14 @@ void Config()
     AliGenBox * gmuon1 = new AliGenBox(nMuons/2);
     gmuon1->SetMomentumRange(0.1,100);
     gmuon1->SetPhiRange(0., 360.);
-    gmuon1->SetThetaRange(171.000,178.001);
+    gmuon1->SetThetaRange(thmin,thmax);
     gmuon1->SetPart(kMuonMinus);           // Negative muons
     gener->AddGenerator(gmuon1,"GENBOX NMUONS",1);
 
     AliGenBox * gmuon2 = new AliGenBox(nMuons/2);
     gmuon2->SetMomentumRange(0.1,100);
     gmuon2->SetPhiRange(0., 360.);
-    gmuon2->SetThetaRange(171.000,178.001);
+    gmuon2->SetThetaRange(thmin,thmax);
     gmuon2->SetPart(kMuonPlus);           // Positive muons
     gener->AddGenerator(gmuon2,"GENBOX PMUONS",1);
 }
