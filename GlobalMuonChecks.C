@@ -429,7 +429,7 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
   //qMatchEff->GetPaintedHistogram()->GetYaxis()->SetTitleSize(0.06);
 
   TEfficiency* pairedMCHTracksEff = new TEfficiency("PairingEff","Paired_tracks;p_t [GeV];#epsilon",10,0,10);
-  TEfficiency* globalMuonMatchingFidelity = new TEfficiency("Matching_Fidelity"," MatchingFidelity (NGoodTracks/NGlobalMuonTracks);p_t [GeV];#epsilon",10,0,10);
+  TEfficiency* globalMuonCorrectMatchRatio = new TEfficiency("Correct_Match_Ratio"," CorrectMatchRatio (NGoodTracks/NGlobalMuonTracks);p_t [GeV];#epsilon",10,0,10);
   TEfficiency* globalMuonCombinedEff = new TEfficiency("Global_Matching_Efficiency","Global_Matching_Efficiency (NGoodTracks/NMCHTracks);p_t [GeV];#epsilon",10,0,10);
   TEfficiency* goodCandidateEff = new TEfficiency("GoodMFTTrackTested","Good MFT match tested;p_t [GeV];#epsilon",10,0,10);
 
@@ -539,7 +539,7 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
         globalMuonCombinedEff->Fill(label[0].isCorrect(),gmTrack.getPt());
 
         if(bestMFTTrackMatchID>=0) {
-          globalMuonMatchingFidelity->Fill(label[0].isCorrect(),gmTrack.getPt());
+          globalMuonCorrectMatchRatio->Fill(label[0].isCorrect(),gmTrack.getPt());
           goodCandidateEff->Fill(gmTrack.goodMatchTested(),gmTrack.getPt());
         }
         if(label[0].isCorrect()) { // Good track: add to histograms
@@ -691,7 +691,7 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
 
   qMatchEff->SetTitle(Form("Charge match = %.2f%%", 100.*nChargeMatch/(nChargeMiss+nChargeMatch)));
   pairedMCHTracksEff->SetTitle(Form("Paired_MCH_tracks_=_%.2f%%", 100.*nRecoGMTracks/(nMCHTracks)));
-  globalMuonMatchingFidelity->SetTitle(Form("Matching_Fidelity = %.2f%%", 100.*nCleanGMTracks/(nRecoGMTracks)));
+  globalMuonCorrectMatchRatio->SetTitle(Form("Correct_Match_Ratio = %.2f%%", 100.*nCleanGMTracks/(nRecoGMTracks)));
   goodCandidateEff->SetTitle(Form("Good_MFT_match_tested_=_%.2f%%", 100.*nGoodMatchTested/(nRecoGMTracks)));
 
 
@@ -721,7 +721,7 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
   // Matching summary
   auto matching_summary = summary_report_3x2(
     *pairedMCHTracksEff,
-    *globalMuonMatchingFidelity,
+    *globalMuonCorrectMatchRatio,
     *goodCandidateEff,
     *TH2Histos[kGMTrackDeltaXYVertex],
     *DeltaX_Error,
@@ -933,11 +933,10 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
   DeltaX_Error->Write();
   qMatchEff->Write();
   pairedMCHTracksEff->Write();
-  globalMuonMatchingFidelity->Write();
+  globalMuonCorrectMatchRatio->Write();
   goodCandidateEff->Write();
   globalMuonCombinedEff->Write();
   outFile.cd();
-  matching_helper.GMTracksGoodMFTTested = nGoodMatchTested;
   outFile.WriteObjectAny(&matching_helper, "MatchingHelper","Matching Helper");
 
   outFile.Close();
@@ -986,7 +985,7 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
   std::cout << " ==> "<< nRecoGMTracks  << " reconstructed Global Muon Tracks" << " (" << 100.*nRecoGMTracks/(nMCHTracks) << "%)"<< std::endl;
   std::cout << " ==> "<< nFakeGMTracks << " fake Global Muon Tracks" << " (contamination = " << 100.*nFakeGMTracks/(nRecoGMTracks) << "%)" << std::endl;
   std::cout << " ==> "<< nGoodMatchTested  << " Global Muon Tracks with good MFT track in search window" << " (" << 100.*nGoodMatchTested/(nRecoGMTracks) << "%)"<< std::endl;
-  std::cout << " ==> "<< nCleanGMTracks << " clean Global Muon Tracks" << " (matchingFidelity = " << 100.*nCleanGMTracks/(nRecoGMTracks) << "%)" << " (eff. = " << 100.*nCleanGMTracks/(nMCHTracks) << "%)"<< std::endl;
+  std::cout << " ==> "<< nCleanGMTracks << " clean Global Muon Tracks" << " (Correct_Match_Ratio = " << 100.*nCleanGMTracks/(nRecoGMTracks) << "%)" << " (eff. = " << 100.*nCleanGMTracks/(nMCHTracks) << "%)"<< std::endl;
 
   std::cout << "--------------------------------------------------------------------------" << std::endl;
   std::cout << " Annotation: " << annotation << std::endl;
@@ -1000,7 +999,7 @@ int GlobalMuonChecks( const std::string trkFile = "GlobalMuonTracks.root",
   std::cout << "matching_helper.nFakes = " << matching_helper.nFakes << std::endl;
   std::cout << "matching_helper.nGoodMatches = " << matching_helper.nGoodMatches << std::endl;
   std::cout << "matching_helper.GMTracksGoodMFTTested = " << matching_helper.GMTracksGoodMFTTested << std::endl;
-  std::cout << "matching_helper.getMatchingFidelity() = " << matching_helper.getMatchingFidelity() << std::endl;
+  std::cout << "matching_helper.getCorrectMatchRatio() = " << matching_helper.getCorrectMatchRatio() << std::endl;
   std::cout << "matching_helper.getPairingEfficiency() = " << matching_helper.getPairingEfficiency() << std::endl;
   */
 

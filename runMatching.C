@@ -43,15 +43,15 @@ if (gSystem->Getenv("MATCHING_FCN")) {
   matching_fcn = gSystem->Getenv("MATCHING_FCN");
   std::cout << " MATCHING_FCN: " << matching_fcn << std::endl;
 
-  if (matching_fcn.find("matchXY") < matching_fcn.length()) {
+  if (matching_fcn.find("matchXY_") < matching_fcn.length()) {
     std::cout << " Setting " << matching_fcn << std::endl;
     matcher.setMatchingFunction(&MUONMatcher::matchMFT_MCH_TracksXY);
   }
-  if (matching_fcn.find("matchXYPhiTanl") < matching_fcn.length()) {
+  if (matching_fcn.find("matchXYPhiTanl_") < matching_fcn.length()) {
     std::cout << " Setting " << matching_fcn << std::endl;
     matcher.setMatchingFunction(&MUONMatcher::matchMFT_MCH_TracksXYPhiTanl);
   }
-  if (matching_fcn.find("matchALL") < matching_fcn.length()) {
+  if (matching_fcn.find("matchALL_") < matching_fcn.length()) {
     std::cout << " Setting " << matching_fcn << std::endl;
     matcher.setMatchingFunction(&MUONMatcher::matchMFT_MCH_TracksAllParam);
   }
@@ -69,17 +69,25 @@ if (gSystem->Getenv("MATCHING_CUTFCN")) {
         matching_cutfcn = gSystem->Getenv("MATCHING_CUTFCN");
         std::cout << " MATCHING_CUTFCN: " << matching_cutfcn << std::endl;
 
-        if (matching_cutfcn.find("cutDisabled") < matching_cutfcn.length()) {
+        if (matching_cutfcn.find("cutDisabled_") < matching_cutfcn.length()) {
           std::cout << " Setting " << matching_cutfcn << std::endl;
           matcher.setCutFunction(&MUONMatcher::matchCutDisabled);
         }
-        if (matching_cutfcn.find("cutDistance") < matching_cutfcn.length()) {
+        if (matching_cutfcn.find("cutDistance_") < matching_cutfcn.length()) {
           std::cout << " Setting " << matching_cutfcn << std::endl;
           matcher.setCutFunction(&MUONMatcher::matchCutDistance);
         }
-        if (matching_cutfcn.find("cutDistanceSigma") < matching_cutfcn.length()) {
+        if (matching_cutfcn.find("cutDistanceSigma_") < matching_cutfcn.length()) {
           std::cout << " Setting " << matching_cutfcn << std::endl;
           matcher.setCutFunction(&MUONMatcher::matchCutDistanceSigma);
+        }
+        if (matching_cutfcn.find("cutDistanceAndAngles_") < matching_cutfcn.length()) {
+          std::cout << " Setting " << matching_cutfcn << std::endl;
+          matcher.setCutFunction(&MUONMatcher::matchCutDistanceAndAngles);
+        }
+        if (matching_cutfcn.find("cutDistanceAndAngles3Sigma_") < matching_cutfcn.length()) {
+          std::cout << " Setting " << matching_cutfcn << std::endl;
+          matcher.setCutFunction(&MUONMatcher::matchCut3SigmaXYAngles);
         }
 }
 
@@ -94,6 +102,12 @@ if (gSystem->Getenv("MATCHING_CUTPARAM1")) {
   double matching_cutparam1 = atof(gSystem->Getenv("MATCHING_CUTPARAM1"));
   std::cout << " MATCHING_CUTPARAM1: " << matching_cutparam1 << std::endl;
   matcher.setCutParam(1 , matching_cutparam1);
+}
+
+if (gSystem->Getenv("MATCHING_CUTPARAM2")) {
+  double matching_cutparam2 = atof(gSystem->Getenv("MATCHING_CUTPARAM2"));
+  std::cout << " MATCHING_CUTPARAM2: " << matching_cutparam2 << std::endl;
+  matcher.setCutParam(2 , matching_cutparam2);
 }
 
 if (gSystem->Getenv("VERBOSEMATCHING")) {

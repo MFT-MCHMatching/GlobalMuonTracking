@@ -81,10 +81,22 @@ Usage()
         cutDistanceSigma - MFT candidates are limited by a distance on the XY plane as defined by
                            mCutParams[0]*TMath::Sqrt(mchTrack.getSigma2X()+mchTrack.getSigma2Y());
 
+        cutDistanceAndAngles - MFT candidates are cut by
+                                1) distance on the XY plane as defined by cutParam0 in cm;
+                                2) Delta Phi (direction of p_t) by cutParam1 in radians;
+                                3) Delta Theta (track polar angle) by cutParam2 in radians;
+                                ** Use --cutParamN (see bellow)
+
+        cutDistanceAndAngles3Sigma - MFT TDR cut (Section 6.5)
+
      --cutParam0 <val0>
        Sets mCutParams[0]=val0; (double)
 
-     --cutParam1 <val1>  (so far unused)
+     --cutParam1 <val1>
+       Sets mCutParams[1]=val1; (double)
+
+     --cutParam2 <val2>
+       Sets mCutParams[2]=val2; (double)
 
      Example:
      ${0##*/} --match --matchFcn matchXYPhiTanl --cutFcn cutDistance --cutParam0 2.0 -o sampletest
@@ -223,8 +235,8 @@ runChecks()
   ## Check global muon Tracks
   alienv setenv ${O2ENV} -c root.exe -l -q -b GlobalMuonChecks.C+ | tee checks.log
   RESULTSDIR="Results`cat MatchingConfig.txt`"
-  cp ${CHECKRESULTS} "${RESULTSDIR}"
-  echo " Results copied to `realpath ${RESULTSDIR}`"
+  mv ${MATCHINGRESULTS} ${CHECKRESULTS} "${RESULTSDIR}"
+  echo " Results moved to `realpath ${RESULTSDIR}`"
   popd
   echo " Finished checking Global muon tracks on `realpath ${OUTDIR}`"
 
@@ -289,11 +301,11 @@ while [ $# -gt 0 ] ; do
     shift 2
     ;;
     --matchFcn)
-    export MATCHING_FCN="$2";
+    export MATCHING_FCN="${2}_";
     shift 2
     ;;
     --cutFcn)
-    export MATCHING_CUTFCN="$2";
+    export MATCHING_CUTFCN="${2}_";
     shift 2
     ;;
     --cutParam0)
@@ -302,6 +314,10 @@ while [ $# -gt 0 ] ; do
     ;;
     --cutParam1)
     export MATCHING_CUTPARAM1="$2";
+    shift 2
+    ;;
+    --cutParam2)
+    export MATCHING_CUTPARAM2="$2";
     shift 2
     ;;
     --convert)

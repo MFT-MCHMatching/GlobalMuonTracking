@@ -2,7 +2,8 @@
 MATCHERCRIPT=$HOME/tools/MCHMFTMatching/matcher.sh
 
 NEV=5000
-CUTFCNLIST="cutDisabled cutDistance"
+MATCHFCNLIST="matchXYPhiTanl"
+CUTFCNLIST="cutDisabled cutDistance cutDistanceAndAngles3Sigma"
 NPIONLIST="2 5 10 15 20 50 100 150 200 400" # 800 1200"
 NMUONS=2
 OUTPUTDIR=MUGun_PiBackground_{1}Pi_${NMUONS}Mu_${NEV}Ev
@@ -22,8 +23,8 @@ parallel -j 1 -u ${MATCHERCRIPT} --genMFT -j ${NJOBS} -o $OUTPUTDIR ::: ${NPIONL
 
 matchandcheck () {
 # Using -j 1 here because match and check need exclusive access to outputdir.
-parallel -j 1 -u ${MATCHERCRIPT}  --match --cutFcn {2} --check --updatecode \
-                  -o $OUTPUTDIR ::: ${NPIONLIST} ::: ${CUTFCNLIST}
+parallel -j 1 -u ${MATCHERCRIPT}  --match --matchFcn {2} --cutFcn {3} --check --updatecode \
+                  -o $OUTPUTDIR ::: ${NPIONLIST} ::: ${MATCHFCNLIST} ::: ${CUTFCNLIST}
 }
 
 generateMCH

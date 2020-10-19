@@ -1,5 +1,7 @@
 #include "MUONMatcher.h"
 
+Float_t EtaToTheta(Float_t arg);
+
 //_________________________________________________________________________________________________
 MUONMatcher::MUONMatcher() {
 
@@ -387,6 +389,17 @@ bool MUONMatcher::matchCutDistance(const GlobalMuonTrack& mchTrack, const MFTTra
 
 
 //_________________________________________________________________________________________________
+bool MUONMatcher::matchCutDistanceAndAngles(const GlobalMuonTrack& mchTrack, const MFTTrack& mftTrack) {
+
+  auto dx = mchTrack.getX() - mftTrack.getX();
+  auto dy = mchTrack.getY() - mftTrack.getY();
+  auto dPhi = TMath::Abs(mchTrack.getPhi() - mftTrack.getPhi());
+  auto dTheta = TMath::Abs(EtaToTheta(mchTrack.getEta()) - EtaToTheta(mftTrack.getEta()));
+  auto distance = TMath::Sqrt(dx*dx + dy*dy);
+  return (distance < mCutParams[0]) and (dPhi < mCutParams[1]) and (dTheta < mCutParams[2]);
+}
+
+//_________________________________________________________________________________________________
 bool MUONMatcher::matchCutDistanceSigma(const GlobalMuonTrack& mchTrack, const MFTTrack& mftTrack) {
 
   auto dx = mchTrack.getX() - mftTrack.getX();
@@ -396,6 +409,20 @@ bool MUONMatcher::matchCutDistanceSigma(const GlobalMuonTrack& mchTrack, const M
   return distance < cutDistance;
 }
 
+//_________________________________________________________________________________________________
+bool MUONMatcher::matchCut3SigmaXYAngles(const GlobalMuonTrack& mchTrack, const MFTTrack& mftTrack) {
+
+  auto dx = mchTrack.getX() - mftTrack.getX();
+  auto dy = mchTrack.getY() - mftTrack.getY();
+  auto dPhi = mchTrack.getPhi() - mftTrack.getPhi();
+  auto dTheta = TMath::Abs(EtaToTheta(mchTrack.getEta()) - EtaToTheta(mftTrack.getEta()));
+  auto distance = TMath::Sqrt(dx*dx + dy*dy);
+  auto cutDistance = 3*TMath::Sqrt(mchTrack.getSigma2X()+mchTrack.getSigma2Y());
+  auto cutPhi = 3*TMath::Sqrt(mchTrack.getSigma2Phi());
+  auto cutTanl = 3*TMath::Sqrt(mchTrack.getSigma2Tanl());
+  return (distance < cutDistance) and (dPhi < cutPhi) and (dTheta < cutTanl);
+}
+
 
 //_________________________________________________________________________________________________
 bool MUONMatcher::matchCutDisabled(const GlobalMuonTrack& mchTrack, const MFTTrack& mftTrack) {
@@ -403,13 +430,27 @@ bool MUONMatcher::matchCutDisabled(const GlobalMuonTrack& mchTrack, const MFTTra
 }
 
 //_________________________________________________________________________________________________
-void MUONMatcher::finalize() { // compute labels and populates mMatchingHelper (partial)
+void MUONMatcher::setCutFunction(bool (MUONMatcher::*func)(const GlobalMuonTrack&, const MFTTrack&)) {
+  mCutFunc = func;
+  auto npars=0;
+  // Setting default parameters
+  if (func == &MUONMatcher::matchCutDistance) npars = 1;
+  if (func == &MUONMatcher::matchCutDistanceSigma) npars = 1;
+  if (func == &MUONMatcher::matchCutDistanceAndAngles) npars = 3;
+  for ( auto par = mCutParams.size(); par < npars ; par++ ) setCutParam(par, 1.0);
+}
+
+//_________________________________________________________________________________________________
+void MUONMatcher::finalize() { // compute labels and populates mMatchingHelper
   auto GTrackID = 0;
   auto nFakes = 0;
   auto nNoMatch = 0;
+  auto nGoodMatchTested = 0;
+
   std::cout << "Computing Track Labels..." << std::endl;
 
   for (auto& gTrack: mGlobalMuonTracks) {
+      if (gTrack.goodMatchTested()) nGoodMatchTested++;
       auto bestMFTTrackMatchID = gTrack.getBestMFTTrackMatchID();
       if (mVerbose) {
         std::cout << " GlobalTrack # " << GTrackID << " chi^2 = " << gTrack.getMatchingChi2() << std::endl;
@@ -449,6 +490,7 @@ void MUONMatcher::finalize() { // compute labels and populates mMatchingHelper (
 
     MatchingHelper& helper = mMatchingHelper;
     helper.nMCHTracks = nTracks;
+    helper.GMTracksGoodMFTTested = nGoodMatchTested;
     helper.nGoodMatches = nGoodMatches;
     helper.nFakes = nFakes;
     helper.nNoMatch = nNoMatch;
@@ -470,14 +512,17 @@ void MUONMatcher::finalize() { // compute labels and populates mMatchingHelper (
       if (mCutFunc == &MUONMatcher::matchCutDisabled) helper.MatchingCutFunc = "_cutDisabled";
       if (mCutFunc == &MUONMatcher::matchCutDistance) helper.MatchingCutFunc = "_cutDistance";
       if (mCutFunc == &MUONMatcher::matchCutDistanceSigma) helper.MatchingCutFunc = "_cutDistanceSigma";
+      if (mCutFunc == &MUONMatcher::matchCutDistanceAndAngles) helper.MatchingCutFunc = "_cutDistanceAndAngles";
+      if (mCutFunc == &MUONMatcher::matchCut3SigmaXYAngles) helper.MatchingCutFunc = "_cutDistanceAndAngles3Sigma";
   }
 
     std::cout << "********************************** Matching Summary ********************************** " << std::endl;
     std::cout << helper.nMCHTracks << " MCH Tracks." << std::endl;
     std::cout << helper.nNoMatch << " dangling MCH tracks (" << 100.0*nNoMatch/nTracks << "%)" << std::endl;
     std::cout << helper.nGMTracks() << " global muon tracks (efficiency = " << 100.0*helper.getPairingEfficiency() << "%)" << std::endl;
-    std::cout << helper.nGoodMatches  << " clean GM tracks (matchingFidelity = " << 100.0*helper.getMatchingFidelity() << "%)" << std::endl;
-    std::cout << helper.nFakes << " Fake GM tracks (contamination = " << 100.0*(1.0 - helper.getMatchingFidelity()) << ")" << std::endl;
+    std::cout << helper.nGoodMatches  << " clean GM tracks (Correct Match Ratio = " << 100.0*helper.getCorrectMatchRatio() << "%)" << std::endl;
+    std::cout << nGoodMatchTested  << " Global Muon Tracks with good MFT track in search window" << " (" << 100.*nGoodMatchTested/(helper.nGMTracks()) << "%)"<< std::endl;
+    std::cout << helper.nFakes << " Fake GM tracks (contamination = " << 100.0*(1.0 - helper.getCorrectMatchRatio()) << ")" << std::endl;
     std::cout << "************************************************************************************** " << std::endl;
     std::cout << " Annotation: " << helper.Annotation() << std::endl;
     std::cout << "************************************************************************************** " << std::endl;
@@ -918,4 +963,9 @@ double MUONMatcher::matchMFT_MCH_TracksAllParam(const GlobalMuonTrack& mchTrack,
   //matchTrack.setMatchingChi2(matchChi2Track);
   return matchChi2Track;
 
+}
+
+
+Float_t EtaToTheta(Float_t arg){
+  return (180./TMath::Pi())*2.*atan(exp(-arg));
 }

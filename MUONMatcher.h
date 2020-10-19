@@ -112,27 +112,19 @@ public:
 
   // Matching cuts
   bool matchingCut(const GlobalMuonTrack&, const MFTTrack&); // Calls configured cut function
-  void setCutFunction(bool (MUONMatcher::*func)(const GlobalMuonTrack&, const MFTTrack&)) {
-    mCutFunc = func;
-    std::string func_string;
-    if (func == &MUONMatcher::matchCutDisabled) func_string = "_cutDisabled";
-    if (func == &MUONMatcher::matchCutDistance) func_string = "_cutDistance";
-    if (func == &MUONMatcher::matchCutDistanceSigma) func_string = "_cutDistanceSigma";
-    std::cout << " ** MUONMATCHER: Setting matching cut function => " << func_string << std::endl;
-    if (mCutParams.empty()) mCutParams.emplace_back(1.0); // Default parameter
-
-  }
+  void setCutFunction(bool (MUONMatcher::*func)(const GlobalMuonTrack&, const MFTTrack&));
   void setCustomCutFunction(bool (*func)(const GlobalMuonTrack&, const MFTTrack&)) { mCustomCutFunc = func; }
   //  Built-in cut functions
   bool matchCutDisabled(const GlobalMuonTrack&, const MFTTrack&);
   bool matchCutDistance(const GlobalMuonTrack&, const MFTTrack&);
+  bool matchCutDistanceAndAngles(const GlobalMuonTrack&, const MFTTrack&);
   bool matchCutDistanceSigma(const GlobalMuonTrack&, const MFTTrack&);
+  bool matchCut3SigmaXYAngles(const GlobalMuonTrack&, const MFTTrack&);
   void setCutParam(int index, double param) {
     if( index > ((int)mCutParams.size()-1) ) mCutParams.resize(index+1);
     mCutParams[index] = param;
     std::cout << " ** MUONMATCHER: Setting matching cutParam[" << index << "] = " << param << std::endl;
    };
-
 
 
 private:
