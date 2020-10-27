@@ -368,11 +368,9 @@ GENERATOR=${GENERATOR:-"gun0_100GeV"}
 CUSTOM_SHM="--shm-segment-size 5000000000"
 
 export MCHGENERATOR=${GENERATOR}
-export ALIROOT_OCDB_ROOT=~/alice/OCDB
 
-#ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest-master-release"}
+ALIROOT_OCDB_ROOT=${ALIROOT_OCDB_ROOT:-"~/alice/OCDB"}
 ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest-master-next-root6"}
-#ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest"}
 O2ENV=${O2ENV:-"O2/latest-dev-o2"}
 
 if ! [ -z ${GENERATEMCH+x} ]; then
