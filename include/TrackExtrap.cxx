@@ -247,6 +247,84 @@ bool TrackExtrap::extrapToZCov(TrackParam* trackParam, double zEnd, bool updateP
   return true;
 }
 
+
+//__________________________________________________________________________
+bool TrackExtrap::extrapToMatchingPlane(TrackParam* trackParam, double zMatchingPlane)
+{
+  /// MCH track extrapolation to the matching plane.
+  /// Returns the track parameters and covariances resulting from the extrapolation of the current trackParam
+  /// Changes parameters and covariances
+  ///   - add parameter dispersion due to MCS in parameter covariances
+  ///   - correct parameters for energy loss and add energy loss fluctuation to covariances
+
+  if (trackParam->getZ() == zMatchingPlane) {
+    return true; // nothing to be done if already at matching plane
+  }
+
+  // Check the matching plane position with respect to the absorber (spectro z<0)
+  if (zMatchingPlane < SAbsZBeg) {
+    if (zMatchingPlane < SAbsZEnd) {
+      LOG(WARNING) << "Ending Z (" << zMatchingPlane << ") downstream the front absorber (zAbsorberEnd = " << SAbsZEnd << ")";
+      return false;
+    } else {
+      LOG(WARNING) << "Ending Z (" << zMatchingPlane << ") inside the front absorber (" << SAbsZBeg << ", " << SAbsZEnd << ")";
+      return false;
+    }
+  }
+
+  // Check the track position with respect to the matching plane and the absorber (spectro z<0)
+  if (trackParam->getZ() > SAbsZEnd) {
+    if (trackParam->getZ() > zMatchingPlane) {
+      LOG(WARNING) << "Starting Z (" << trackParam->getZ() << ") upstream the matching plane (zMatchingPlane = " << zMatchingPlane << ")";
+      return false;
+    } else if (trackParam->getZ() > SAbsZBeg) {
+      LOG(WARNING) << "Starting Z (" << trackParam->getZ() << ") upstream the front absorber (zAbsorberBegin = " << SAbsZBeg << ")";
+      return false;
+    } else {
+      LOG(WARNING) << "Starting Z (" << trackParam->getZ() << ") inside the front absorber (" << SAbsZBeg << ", " << SAbsZEnd << ")";
+      return false;
+    }
+  }
+
+  // Extrapolate track parameters (and covariances if any) to the end of the absorber
+  if ((trackParam->hasCovariances() && !extrapToZCov(trackParam, SAbsZEnd)) ||
+      (!trackParam->hasCovariances() && !extrapToZ(trackParam, SAbsZEnd))) {
+    return false;
+  }
+
+  // Get absorber correction parameters assuming linear propagation in absorber
+  double trackXYZOut[3] = {trackParam->getNonBendingCoor(), trackParam->getBendingCoor(), trackParam->getZ()};
+  double trackXYZIn[3] = {0., 0., 0.};
+
+    TrackParam trackParamIn(*trackParam);
+    if (!extrapToZ(&trackParamIn, SAbsZBeg)) {
+      return false;
+    }
+    trackXYZIn[0] = trackParamIn.getNonBendingCoor();
+    trackXYZIn[1] = trackParamIn.getBendingCoor();
+    trackXYZIn[2] = trackParamIn.getZ();
+
+  double pTot = trackParam->p();
+  double pathLength(0.), f0(0.), f1(0.), f2(0.), meanRho(0.), totalELoss(0.), sigmaELoss2(0.);
+  if (!getAbsorberCorrectionParam(trackXYZIn, trackXYZOut, pTot, pathLength, f0, f1, f2, meanRho, totalELoss, sigmaELoss2)) {
+    return false;
+  }
+
+  // Compute track parameters and covariances with MCS and energy loss corrections
+  correctELossEffectInAbsorber(trackParam, 0.5 * totalELoss, 0.5 * sigmaELoss2);
+  addMCSEffectInAbsorber(trackParam, -pathLength, f0, f1, f2); // (spectro. (z<0))
+  if (!extrapToZCov(trackParam, trackXYZIn[2])) {
+    return false;
+  }
+  correctELossEffectInAbsorber(trackParam, 0.5 * totalELoss, 0.5 * sigmaELoss2);
+  if (!extrapToZCov(trackParam, zMatchingPlane)) {
+    return false;
+  }
+
+  return true;
+}
+
+
 //__________________________________________________________________________
 bool TrackExtrap::extrapToVertex(TrackParam* trackParam, double xVtx, double yVtx, double zVtx,
                                  double errXVtx, double errYVtx, bool correctForMCS, bool correctForEnergyLoss)

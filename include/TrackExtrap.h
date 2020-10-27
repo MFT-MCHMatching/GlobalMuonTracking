@@ -55,6 +55,9 @@ class TrackExtrap
   static bool extrapToZ(TrackParam* trackParam, double zEnd);
   static bool extrapToZCov(TrackParam* trackParam, double zEnd, bool updatePropagator = false);
 
+  static bool extrapToMatchingPlane(TrackParam* trackParam, double zMatchingPlane);
+
+
   static bool extrapToVertex(TrackParam* trackParam, double xVtx, double yVtx, double zVtx, double errXVtx, double errYVtx)
   {
     /// Extrapolate track parameters to vertex, corrected for multiple scattering and energy loss effects
@@ -135,5 +138,8 @@ class TrackExtrap
 
 } // namespace mch
 } // namespace o2
+
+#include "TrackExtrap.cxx"
+
 
 #endif // ALICEO2_MCH_TRACKEXTRAP_H_
