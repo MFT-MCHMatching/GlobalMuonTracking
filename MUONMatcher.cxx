@@ -196,7 +196,7 @@ void MUONMatcher::loadMFTClusters() {
   std::string inputGeom = "o2sim_geometry.root";
   o2::base::GeometryManager::loadGeometry(inputGeom);
   auto gman = o2::mft::GeometryTGeo::Instance();
-  gman->fillMatrixCache(o2::utils::bit2Mask(o2::TransformType::L2G));
+  gman->fillMatrixCache(o2::math_utils::bit2Mask(o2::math_utils::TransformType::L2G));
 
   // Cluster pattern dictionary
   std::string dictfile = "MFTdictionary.bin";
@@ -236,7 +236,7 @@ void MUONMatcher::loadMFTClusters() {
  for (auto& c : clsVec) {
      auto chipID = c.getChipID();
      auto pattID = c.getPatternID();
-     Point3D<float> locC;
+     o2::math_utils::Point3D<float> locC;
      float sigmaX2 = DefClusError2Row, sigmaY2 = DefClusError2Col;
 
      if (pattID != o2::itsmft::CompCluster::InvalidPatternID) {
@@ -258,10 +258,10 @@ void MUONMatcher::loadMFTClusters() {
   auto gloC = gman->getMatrixL2G(chipID) * locC;
  // printf("Cluster %5d   chip ID %03d   evn %2d   mctrk %4d   x,y,z  %7.3f  %7.3f  %7.3f \n", icls, cluster.getChipID(), evnID, trkID, gloC.X(), gloC.Y(), gloC.Z());
 
-  auto clsPoint2D = Point2D<Float_t>(gloC.x(), gloC.y());
+  auto clsPoint2D = o2::math_utils::Point2D<Float_t>(gloC.x(), gloC.y());
   Float_t rCoord = clsPoint2D.R();
   Float_t phiCoord = clsPoint2D.Phi();
-  o2::utils::BringTo02PiGen(phiCoord);
+  o2::math_utils::bringTo02PiGen(phiCoord);
   int rBinIndex = 0;//constants::index_table::getRBinIndex(rCoord);
   int phiBinIndex = 0;//constants::index_table::getPhiBinIndex(phiCoord);
   int binIndex = 0;//constants::index_table::getBinIndex(rBinIndex, phiBinIndex);
