@@ -45,12 +45,15 @@ For more usage options see `matcher.sh --help`.
 
 ## Basic Configuration
 
-* OCDBs from https://gitlab.cern.ch/alisw/AliRootOCDB.git at `~/alice/OCDB`
+* Install the OCDB from https://gitlab.cern.ch/alisw/AliRootOCDB.git at `~/alice/OCDB`
   * `git clone https://gitlab.cern.ch/alisw/AliRootOCDB.git $HOME/alice/OCDB`
-* Build aliroot & O2:
+* Build AliRoot & O2:
+* AliRoot
   * `cd ~/alice` # or your alice software folder
-  * `aliBuild init AliPhysics@master`
-  * `aliBuild build AliPhysics --defaults user-next-root6`
+  * `aliBuild init AliRoot@master`
+  * `aliBuild build AliRoot --defaults next-root6`
+  * `alienv enter AliRoot/latest-master-next-root6` to check the installation
+* O2
   * `aliBuild init O2@dev --defaults o2`
   * `aliBuild build O2 --defaults o2`
 
