@@ -36,6 +36,7 @@ void Read_Kine_AR() {
     AliStack * stack = runLoader->Stack();
     Int_t npart = stack->GetNtrack();
     printf("Events %d particles in stack %d \n", iev, npart);
+    Int_t nt = 0;
     for (Int_t ipart = 0; ipart < npart; ipart++) {
       TParticle * part = stack->Particle(ipart);
       Int_t pdgcode = part->GetPdgCode();
@@ -43,7 +44,13 @@ void Read_Kine_AR() {
       Int_t mumid = part->GetFirstMother();
       if (mumid < 0) {
 	//pdgpart->Print();
-	printf("Particle %d code %d name %s \n", ipart, pdgcode, part->GetName());
+	printf("MCTrack ID %4d   PDG %4d   name %s   isSec %d   E %7.3f \n",
+	       nt,
+	       part->GetPdgCode(),
+	       part->GetName(),
+	       (mumid < 0) ? 0 : 1,
+	       part->Energy());
+	++nt;
       }
     }
 
