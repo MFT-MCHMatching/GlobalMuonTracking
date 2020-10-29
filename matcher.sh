@@ -363,13 +363,13 @@ fi
 
 if [ -z ${OUTDIR+x} ]; then echo "Missing output dir" ; Usage ; fi
 NEV_=${NEV_:-"4"}
-JOBS=${JOBS:-"4"}
+JOBS="1" # ${JOBS:-"1"} # Forcing O2 simulation with one worker: necessary to keep event ordering
 GENERATOR=${GENERATOR:-"gun0_100GeV"}
 CUSTOM_SHM="--shm-segment-size 5000000000"
 
 export MCHGENERATOR=${GENERATOR}
+export ALIROOT_OCDB_ROOT=~/alice/OCDB
 
-ALIROOT_OCDB_ROOT=${ALIROOT_OCDB_ROOT:-"~/alice/OCDB"}
 ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest-master-next-root6"}
 O2ENV=${O2ENV:-"O2/latest-dev-o2"}
 

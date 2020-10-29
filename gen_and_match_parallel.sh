@@ -16,8 +16,8 @@ parallel --delay 10 ${MATCHERCRIPT} --genMCH -g PiParam --npions {1} \
 }
 
 generateMFT () {
-# Using -j 1 here because o2-sim runs simulation on parallel
-parallel -j 1 -u ${MATCHERCRIPT} --genMFT -j ${NJOBS} -o $OUTPUTDIR ::: ${NPIONLIST}
+parallel --delay 15 ${MATCHERCRIPT} --genMFT -j 1 -o $OUTPUTDIR ::: ${NPIONLIST}
+#parallel -j 1 -u ${MATCHERCRIPT} --genMFT -j ${NJOBS} -o $OUTPUTDIR ::: ${NPIONLIST}
 
 }
 
