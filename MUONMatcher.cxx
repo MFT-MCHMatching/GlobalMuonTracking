@@ -282,7 +282,7 @@ void MUONMatcher::initGlobalTracks() {
 mGlobalMuonTracks.clear();
 for (auto& track: mMCHTracks) {
     //mMCHTrackExtrap.extrapToVertex(&track,mMatchingPlaneZ); // No corrections
-    mMCHTrackExtrap.extrapToVertexWithoutBranson(&track,mMatchingPlaneZ);
+    mMCHTrackExtrap.extrapToMatchingPlane(&track,mMatchingPlaneZ);
     mGlobalMuonTracks.push_back(MCHtoGlobal(track));
 }
 mMCHTracks.clear();
