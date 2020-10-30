@@ -1,7 +1,8 @@
 void rec() {
 
-  AliEMCALGeometry::GetInstance("EMCAL_COMPLETEV1"); // Do nkt forget to keep consistency with Config.C
-  
+  AliEMCALGeometry::GetInstance(
+      "EMCAL_COMPLETEV1"); // Do nkt forget to keep consistency with Config.C
+
   AliReconstruction reco;
 
   reco.SetWriteESDfriend();
@@ -9,7 +10,7 @@ void rec() {
 
   reco.SetDefaultStorage("local://$ALIROOT_OCDB_ROOT/OCDB");
   reco.SetSpecificStorage("GRP/GRP/Data",
-			  Form("local://%s/..",gSystem->pwd()));
+                          Form("local://%s/..", gSystem->pwd()));
   reco.SetRunPlaneEff(kTRUE);
 
   reco.SetInput("raw.root");
