@@ -13,7 +13,7 @@ generate () {
     do
       matcher.sh --genMCH --genMFT \
 							  -g PiParam --npions ${NPIONS} -g MuBoxGun --nmuons ${NMUONS} \
-							  -n ${NEV} -j 24 -o MUGun_PiBackground_${NPIONS}Pi_${NMUONS}Mu_${NEV}
+							  -n ${NEV} -j 1 -o MUGun_PiBackground_${NPIONS}Pi_${NMUONS}Mu_${NEV}
     done
 }
 

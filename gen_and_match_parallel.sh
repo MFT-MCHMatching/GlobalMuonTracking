@@ -1,23 +1,24 @@
 #!/bin/bash
 MATCHERCRIPT=$HOME/tools/MCHMFTMatching/matcher.sh
 
-NEV=5000
-MATCHFCNLIST="matchXYPhiTanl"
+NEV=500
+MATCHFCNLIST="matchXY matchXYPhiTanl matchALL"
 CUTFCNLIST="cutDisabled cutDistance cutDistanceAndAngles3Sigma"
-NPIONLIST="2 5 10 15 20 50 100 150 200 400" # 800 1200"
+#MATCHFCNLIST="matchALL"
+#CUTFCNLIST="cutDistance_"
+NPIONLIST="2 10 20 100 200"
 NMUONS=2
 OUTPUTDIR=MUGun_PiBackground_{1}Pi_${NMUONS}Mu_${NEV}Ev
-NJOBS=24
+NJOBS=1 # Must set -j 1 to keep event ordering in O2 kinematics
 
 generateMCH () {
 parallel --delay 10 ${MATCHERCRIPT} --genMCH -g PiParam --npions {1} \
                           -g MuBoxGun --nmuons ${NMUONS} \
-		          					  -n ${NEV} -o $OUTPUTDIR ::: ${NPIONLIST}
+                                                                  -n ${NEV} -o $OUTPUTDIR ::: ${NPIONLIST}
 }
 
 generateMFT () {
-parallel --delay 15 ${MATCHERCRIPT} --genMFT -j 1 -o $OUTPUTDIR ::: ${NPIONLIST}
-#parallel -j 1 -u ${MATCHERCRIPT} --genMFT -j ${NJOBS} -o $OUTPUTDIR ::: ${NPIONLIST}
+parallel --delay 15 ${MATCHERCRIPT} --genMFT -j ${NJOBS} -o $OUTPUTDIR ::: ${NPIONLIST}
 
 }
 

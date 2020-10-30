@@ -442,21 +442,20 @@ void MUONMatcher::printMatchingPlaneView(int MCHTrackID) {
       xPositions.emplace_back(mftTrack.getX());
       yPositions.emplace_back(mftTrack.getY());
       pointsColors.emplace_back("black");
-      if (mftTrack.getCharge() == MCHTrack.getCharge()) {
-        if (matchingCut(MCHTrack, mftTrack)) {
-          pointsColors.back() = "blue";
-          MCHTrack.countCandidate();
-          if (MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) {
-            MCHTrack.setCloseMatch();
-            pointsColors.back() = "magenta";
-            localCorrectMFTMatch = pointsColors.size();
-          }
-          auto chi2 = (this->*mMatchFunc)(MCHTrack, mftTrack);
-          if (chi2 < MCHTrack.getMatchingChi2()) {
-            MCHTrack.setBestMFTTrackMatchID(mftTrackID);
-            MCHTrack.setMatchingChi2(chi2);
-            localBestMFTTrack = pointsColors.size();
-          }
+      if ((mftTrack.getCharge() == MCHTrack.getCharge()) and
+          matchingCut(MCHTrack, mftTrack)) {
+        pointsColors.back() = "blue";
+        MCHTrack.countCandidate();
+        if (MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) {
+          MCHTrack.setCloseMatch();
+          pointsColors.back() = "magenta";
+          localCorrectMFTMatch = pointsColors.size();
+        }
+        auto chi2 = (this->*mMatchFunc)(MCHTrack, mftTrack);
+        if (chi2 < MCHTrack.getMatchingChi2()) {
+          MCHTrack.setBestMFTTrackMatchID(mftTrackID);
+          MCHTrack.setMatchingChi2(chi2);
+          localBestMFTTrack = pointsColors.size();
         }
       } else {
         if (MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) {

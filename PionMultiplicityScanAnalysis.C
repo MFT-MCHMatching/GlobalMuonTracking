@@ -104,8 +104,6 @@ int PionMultiplicityScanAnalysis(
   TMultiGraph *MultiGraph_Mult_Scan = new TMultiGraph();
   MultiGraph_Mult_Scan->SetName("PiMultScanSummaryMultiGraphs");
   MultiGraph_Mult_Scan->SetTitle(matchingConfig.c_str());
-  MultiGraph_Mult_Scan->SetMinimum(0.);
-  MultiGraph_Mult_Scan->SetMaximum(1.);
 
   TGraph *gEff = new TGraph(nPionsVec.size(), &nPionsVec[0], &effVec[0]);
   gEff->SetTitle("Pairing_Efficiency");
@@ -154,8 +152,9 @@ int PionMultiplicityScanAnalysis(
   gPad->Modified();
   MultiGraph_Mult_Scan->Draw("LP same");
   MultiGraph_Mult_Scan->GetYaxis()->SetLimits(0., 1.0);
+  MultiGraph_Mult_Scan->SetMinimum(0.);
+  MultiGraph_Mult_Scan->SetMaximum(1.);
 
-  canvasMult_Scan->BuildLegend();
   canvasMult_Scan->Update();
   pt = new TPaveText(0.1, 0.918, 0.9, 0.995, "NDC");
   pt->SetBorderSize(0);
@@ -167,6 +166,8 @@ int PionMultiplicityScanAnalysis(
   resultsFile->cd();
 
   canvasMult_Scan->Draw();
+  canvasMult_Scan->BuildLegend();
+
   canvasMult_Scan->SaveAs(
       ("PiMultScanSummary" + matchingConfig + ".png").c_str());
   canvasMult_Scan->Write();
@@ -279,7 +280,7 @@ void buildEffCanvas(std::vector<std::string> fileList, std::string effName,
   pt->AddText(matchingConfig.c_str());
   pt->Draw();
   canvas.Draw();
-  gPad->BuildLegend();
+  canvas.BuildLegend();
   canvas.SaveAs((title + matchingConfig + ".png").c_str());
   resultsFile.cd();
   canvas.Write();
