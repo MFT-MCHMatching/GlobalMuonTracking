@@ -34,8 +34,8 @@ class GlobalMuonTrack : public o2::track::TrackParCovFwd
 
   void setBestMFTTrackMatchID(int ID) { mBestMFTTrackMatchID = ID; }
   double getBestMFTTrackMatchID() { return mBestMFTTrackMatchID; }
-  void setGoodMatchTested() { mGoodMatchTested = true; }
-  bool goodMatchTested() { return mGoodMatchTested; }
+  void setCloseMatch() { mCloseMatch = true; }
+  bool closeMatch() { return mCloseMatch; }
 
   void print() const;
 
@@ -44,7 +44,7 @@ class GlobalMuonTrack : public o2::track::TrackParCovFwd
   double mMatchingChi2 = 1.0E308;
   int mBestMFTTrackMatchID = -1;
   int mNMFTCandidates = 0; // Number of candidates within search cut
-  bool mGoodMatchTested = false;
+  bool mCloseMatch = false;
 };
 }
 
@@ -56,14 +56,14 @@ struct MatchingHelper {
    std::string MatchingCutFunc;
    std::string MatchingCutConfig;
    int nMCHTracks = -1;
-   int nGoodMatches = -1;
+   int nCorrectMatches = -1;
    int nFakes = -1;
    int nNoMatch = -1;
-   int GMTracksGoodMFTTested = -1;
+   int nCloseMatches = -1;
    double matchingPlaneZ;
 
    int nGMTracks() { return nMCHTracks - nNoMatch; }
-   double getCorrectMatchRatio() { return 1.f*nGoodMatches/nGMTracks(); }
+   double getCorrectMatchRatio() { return 1.f*nCorrectMatches/nGMTracks(); }
    double getPairingEfficiency() { return 1.f*nGMTracks()/nMCHTracks; }
    std::string Annotation() {
      return Generator + GeneratorConfig + MatchingFunction + "_Z" + std::to_string(matchingPlaneZ) + MatchingCutFunc + MatchingCutConfig;

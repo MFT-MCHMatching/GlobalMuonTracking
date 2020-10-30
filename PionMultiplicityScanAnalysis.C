@@ -10,7 +10,7 @@ void loadHelperSummaries(std::vector<std::string> fileList,
                          std::vector<float>& EffVec,
                          std::vector<float>& CorrectMatchRatioVec,
                          std::vector<float>& combEffVec,
-                         std::vector<float>& gootMatchTestedVec,
+                         std::vector<float>& closeMatchVec,
                          std::string& matchingConfig);
 
 int get_NPions(std::string);
@@ -38,9 +38,9 @@ gStyle->SetMarkerSize(3);
 
 std::vector<std::string> fileNamesVector = getSortedFileListByNPions(fileList);
 
-std::vector<float> nPionsVec, effVec, combEffVec, correctMatchRatioVec, gootMatchTestedVec;
+std::vector<float> nPionsVec, effVec, combEffVec, correctMatchRatioVec, closeMatchVec;
 std::string matchingConfig;
-loadHelperSummaries(fileNamesVector, nPionsVec, effVec, correctMatchRatioVec, combEffVec, gootMatchTestedVec, matchingConfig);
+loadHelperSummaries(fileNamesVector, nPionsVec, effVec, correctMatchRatioVec, combEffVec, closeMatchVec, matchingConfig);
 
 THStack *effStack = new THStack("effStack","Matching Efficiencies");
 THStack *correctMatchRatioStack = new THStack("correctMatchRatioStack","GM Tracks CorrectMatchRatio");
@@ -76,17 +76,17 @@ pt->Draw();
 cEff->Draw();
 cEff->SaveAs(("Pairing_efficiency"+matchingConfig+".png").c_str());
 
-TCanvas *cGoodMatchTested = new TCanvas("GoodMatchTested_Vs_Pt","Good_Match_Tested",1260,800);
+TCanvas *cCloseMatch = new TCanvas("CloseMatch_Vs_Pt","Close_Match",1260,800);
 gStyle->SetOptTitle(0);
-buildEffCanvas(fileNamesVector,"MoreHistos/GoodMFTTrackTested",*resultsFile, *cGoodMatchTested, matchingConfig, "Good_Match_Tested");
+buildEffCanvas(fileNamesVector,"MoreHistos/Close_Match_Eff",*resultsFile, *cCloseMatch, matchingConfig, "Close_Match");
 pt = new TPaveText(0.1,0.918,0.9,0.995,"NDC");
 pt->SetBorderSize(0);
 pt->SetFillStyle(4000);
-pt->AddText("Good_Match_Tested");
+pt->AddText("Close_Match");
 pt->AddText(matchingConfig.c_str());
 pt->Draw();
-cGoodMatchTested->Draw();
-cGoodMatchTested->SaveAs(("Good_Match_Tested"+matchingConfig+".png").c_str());
+cCloseMatch->Draw();
+cCloseMatch->SaveAs(("Close_Match"+matchingConfig+".png").c_str());
 
 
 TCanvas *canvasMult_Scan = new TCanvas("Efficiency_Vs_Multiplicity","Pion multiplicity scan",1260,800);
@@ -121,13 +121,13 @@ gCombEff->SetMarkerStyle(22);
 gCombEff->SetMarkerColor(3);
 gCombEff->SetMarkerSize(3);
 
-TGraph* gGoodMatchTested = new TGraph(nPionsVec.size(),&nPionsVec[0],&gootMatchTestedVec[0]);
-gGoodMatchTested->SetTitle("GMTracking_Good_Match_Tested");
-gGoodMatchTested->SetName("GMTrackingGoodMatchTested");
-gGoodMatchTested->GetXaxis()->SetTitle("Pion multiplicity");
-gGoodMatchTested->SetMarkerStyle(23);
-gGoodMatchTested->SetMarkerColor(4);
-gGoodMatchTested->SetMarkerSize(3);
+TGraph* gCloseMatch = new TGraph(nPionsVec.size(),&nPionsVec[0],&closeMatchVec[0]);
+gCloseMatch->SetTitle("GMTracking_Close_Match");
+gCloseMatch->SetName("GMTrackingCloseMatch");
+gCloseMatch->GetXaxis()->SetTitle("Pion multiplicity");
+gCloseMatch->SetMarkerStyle(23);
+gCloseMatch->SetMarkerColor(4);
+gCloseMatch->SetMarkerSize(3);
 
 
 
@@ -135,7 +135,7 @@ gGoodMatchTested->SetMarkerSize(3);
 MultiGraph_Mult_Scan->Add(gEff);
 MultiGraph_Mult_Scan->Add(gCorrectMatchRatio);
 MultiGraph_Mult_Scan->Add(gCombEff);
-MultiGraph_Mult_Scan->Add(gGoodMatchTested);
+MultiGraph_Mult_Scan->Add(gCloseMatch);
 
 MultiGraph_Mult_Scan->GetXaxis()->SetTitle("Pion multiplicity");
 MultiGraph_Mult_Scan->SetTitle("Scan");
@@ -165,14 +165,14 @@ MultiGraph_Mult_Scan->Write();
 gEff->Write();
 gCorrectMatchRatio->Write();
 gCombEff->Write();
-cGoodMatchTested->Write();
+cCloseMatch->Write();
 resultsFile->Close();
 return 0;
 }
 
 
 //_____________________________________________________________________________________
-void loadHelperSummaries(std::vector<std::string> fileList, std::vector<float>& NPionsVec, std::vector<float>& EffVec, std::vector<float>& CorrectMatchRatioVec, std::vector<float>& combEffVec, std::vector<float>& gootMatchTestedVec, std::string& matchingConfig) {
+void loadHelperSummaries(std::vector<std::string> fileList, std::vector<float>& NPionsVec, std::vector<float>& EffVec, std::vector<float>& CorrectMatchRatioVec, std::vector<float>& combEffVec, std::vector<float>& closeMatchVec, std::string& matchingConfig) {
 
   TFile* checksFile;
 
@@ -191,7 +191,7 @@ void loadHelperSummaries(std::vector<std::string> fileList, std::vector<float>& 
       CorrectMatchRatioVec.push_back(correctMatchRatio);
       EffVec.push_back(eff);
       combEffVec.push_back(eff*correctMatchRatio);
-      gootMatchTestedVec.push_back((1.0*matching_helper.GMTracksGoodMFTTested)/matching_helper.nGMTracks());
+      closeMatchVec.push_back((1.0*matching_helper.nCloseMatches)/matching_helper.nMCHTracks);
       matchingConfig = matching_helper.MatchingConfig();
     }
   }

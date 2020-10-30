@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MATCHINGRESULTS="GlobalMuonTracks.root matching.log"
+MATCHINGRESULTS="GlobalMuonTracks.root matching.log MatchingPlaneMCHTrack*.png"
 CHECKRESULTS="GlobalMuonChecks.root checks.log"
 
 Usage()
@@ -202,7 +202,7 @@ runMatching()
     ## MFT MCH track matching & global muon track fitting:
     alienv setenv ${O2ENV} -c root.exe -e 'gSystem->Load("libO2MCHTracking")' -l -q -b runMatching.C+ | tee matching.log
     RESULTSDIR="Results`cat MatchingConfig.txt`"
-    mkdir ${RESULTSDIR}
+    mkdir -p ${RESULTSDIR}
     cp ${MATCHINGRESULTS} "${RESULTSDIR}"
 
     popd
@@ -370,7 +370,7 @@ CUSTOM_SHM="--shm-segment-size 5000000000"
 export MCHGENERATOR=${GENERATOR}
 export ALIROOT_OCDB_ROOT=~/alice/OCDB
 
-ALIROOTENV=${ALIROOTENV:-"AliPhysics/latest-master-next-root6"}
+ALIROOTENV=${ALIROOTENV:-"AliRoot/latest-master-next-root6"}
 O2ENV=${O2ENV:-"O2/latest-dev-o2"}
 
 if ! [ -z ${GENERATEMCH+x} ]; then

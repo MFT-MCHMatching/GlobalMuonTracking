@@ -20,6 +20,13 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "Math/SMatrix.h"
+#include "TGraph.h"
+#include "TColor.h"
+#include "TCanvas.h"
+#include "TMultiGraph.h"
+#include "TPaveText.h"
+#include "TEllipse.h"
+#include "TLegend.h"
 #endif
 
 #include "include/TrackExtrap.h"
@@ -109,6 +116,17 @@ public:
      }
   void runHeavyMatching(); // Finds best match (no search cut, no event separation)
   void runEventMatching(); // Finds best match event-per-event
+  void printMatchingPlaneView(int MCHTrackID = 0);
+  void exportNMatchingPlaneViews(int nTracks = -1) {
+    if (nTracks < 0) {
+      nTracks = mGlobalMuonTracks.size();
+    }
+    loadMCHTracks();
+    initGlobalTracks();
+      for (auto MCHTrackID = 0 ; MCHTrackID < nTracks ; MCHTrackID++) {
+        printMatchingPlaneView(MCHTrackID);
+      }
+  };
 
   // Matching cuts
   bool matchingCut(const GlobalMuonTrack&, const MFTTrack&); // Calls configured cut function
@@ -155,10 +173,6 @@ private:
   std::vector<MFTCluster> mMFTClusters;
   std::vector<int> mtrackExtClsIDs;
   std::vector<o2::itsmft::ROFRecord> mMFTTracksROFs;
-  std::vector<int> mFakeMatches;
-  std::vector<int> mGoodMatches;
-  int mTotalFakeMatches = 0;
-  int mTotalGoodMatches = 0;
   int mNEvents = 0;
   MatchingHelper mMatchingHelper;
 

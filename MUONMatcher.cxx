@@ -47,6 +47,8 @@ TTree *mchTrackTree = (TTree*) trkFileIn -> Get("treeMCH");
 std::vector<tempMCHTrack> trackMCHVec, *trackMCHVecP = &trackMCHVec;
 mchTrackTree->SetBranchAddress("tempMCHTracks", &trackMCHVecP);
 mNEvents = mchTrackTree->GetEntries();
+mMCHTracks.clear();
+mchTrackLabels.clear();
 
 auto MCHTrkID = 0;
 
@@ -276,16 +278,39 @@ void MUONMatcher::loadMFTClusters() {
 void MUONMatcher::initGlobalTracks() {
 // Populates mGlobalMuonTracks using MCH track data
 
-if(mGlobalMuonTracks.empty()) {
-for (auto& track: mMCHTracks) {
 
+mGlobalMuonTracks.clear();
+for (auto& track: mMCHTracks) {
     //mMCHTrackExtrap.extrapToVertex(&track,mMatchingPlaneZ); // No corrections
     mMCHTrackExtrap.extrapToVertexWithoutBranson(&track,mMatchingPlaneZ);
     mGlobalMuonTracks.push_back(MCHtoGlobal(track));
 }
 mMCHTracks.clear();
+
+// Populates mMatchingHelper.MatchingCutConfig with mCutParams
+MatchingHelper& helper = mMatchingHelper;
+helper.matchingPlaneZ = mMatchingPlaneZ;
+
+auto iparam = 0;
+for ( auto param: mCutParams) {
+  mMatchingHelper.MatchingCutConfig = mMatchingHelper.MatchingCutConfig + "_CutP" + std::to_string(iparam) + "=" + std::to_string(param);
+  iparam++;
 }
-else std::cout << "WARNING: mGlobalMuonTracks already initialized! Skipping initGlobalTracks()";
+if (mMatchingHelper.MatchingFunction == "") {
+  if (mMatchFunc == &MUONMatcher::matchMFT_MCH_TracksXY) mMatchingHelper.MatchingFunction = "_matchXY";
+  if (mMatchFunc == &MUONMatcher::matchMFT_MCH_TracksXYPhiTanl) mMatchingHelper.MatchingFunction = "_matchXYPhiTanl";
+  if (mMatchFunc == &MUONMatcher::matchMFT_MCH_TracksAllParam) mMatchingHelper.MatchingFunction = "_matchAllParams";
+}
+
+if (mMatchingHelper.MatchingCutFunc == "") {
+  if (mCutFunc == &MUONMatcher::matchCutDisabled) helper.MatchingCutFunc = "_cutDisabled";
+  if (mCutFunc == &MUONMatcher::matchCutDistance) helper.MatchingCutFunc = "_cutDistance";
+  if (mCutFunc == &MUONMatcher::matchCutDistanceSigma) helper.MatchingCutFunc = "_cutDistanceSigma";
+  if (mCutFunc == &MUONMatcher::matchCutDistanceAndAngles) helper.MatchingCutFunc = "_cutDistanceAndAngles";
+  if (mCutFunc == &MUONMatcher::matchCut3SigmaXYAngles) helper.MatchingCutFunc = "_cutDistanceAndAngles3Sigma";
+}
+
+
 
 }
 
@@ -310,8 +335,10 @@ else std::cout << "WARNING: mGlobalMuonTracks already initialized! Skipping init
 //_________________________________________________________________________________________________
 void MUONMatcher::runEventMatching() {
   // Runs matching over all tracks on a single event
-  std::cout << "Running runEventMatching for " << mNEvents << " events... " << std::endl;
-  std::cout << " mGlobalMuonTracks.size() = " << mGlobalMuonTracks.size() << std::endl;
+  std::cout << "mGlobalMuonTracks.size() = " << mGlobalMuonTracks.size() << std::endl;
+  std::cout << "Annotation: " << mMatchingHelper.Annotation() << std::endl;
+  std::cout << "Running runEventMatching for " << mNEvents << " events" << std::endl;
+
   uint32_t GTrackID = 0;
 
   for (int event = 0 ; event < mNEvents ; event++) {
@@ -330,7 +357,7 @@ void MUONMatcher::runEventMatching() {
             if(MFTlabel[0].getEventID()==event)
             if (matchingCut(gTrack, mftTrack)) {
               gTrack.countCandidate();
-              if(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) gTrack.setGoodMatchTested();
+              if(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) gTrack.setCloseMatch();
               auto chi2 = (*mCustomMatchFunc)(gTrack, mftTrack);
               if(chi2 < gTrack.getMatchingChi2()) {
                 gTrack.setBestMFTTrackMatchID(mftTrackID);
@@ -347,7 +374,7 @@ void MUONMatcher::runEventMatching() {
             if(MFTlabel[0].getEventID()==event)
             if (matchingCut(gTrack, mftTrack)) {
               gTrack.countCandidate();
-              if(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) gTrack.setGoodMatchTested();
+              if(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) gTrack.setCloseMatch();
               auto chi2 = (this->*mMatchFunc)(gTrack, mftTrack);
               if(chi2 < gTrack.getMatchingChi2()) {
                 gTrack.setBestMFTTrackMatchID(mftTrackID);
@@ -367,6 +394,266 @@ void MUONMatcher::runEventMatching() {
 
 }
 
+
+//_________________________________________________________________________________________________
+void MUONMatcher::printMatchingPlaneView(int MCHTrackID) {
+
+if (MCHTrackID > mGlobalMuonTracks.size()) {
+  std::cout << "  printMatchingPlaneView out of range: MCH Track ID = " <<  MCHTrackID << "  ; nMCHTracks = " << mGlobalMuonTracks.size() << std::endl;
+  return;
+}
+
+auto MCHlabel = mchTrackLabels.getLabels(MCHTrackID);
+auto event = MCHlabel[0].getEventID();
+auto MCHTrack = mGlobalMuonTracks[MCHTrackID];
+
+
+auto localBestMFTTrack = -1;
+auto localCorrectMFTMatch = -1;
+
+std::vector<double> xPositions;
+std::vector<double> yPositions;
+std::vector<std::string> pointsColors;
+
+xPositions.emplace_back(MCHTrack.getX());
+yPositions.emplace_back(MCHTrack.getY());
+pointsColors.emplace_back("orange");
+
+auto mftTrackID = 0;
+
+for (auto mftTrack: mMFTTracks) {
+  auto MFTlabel = mftTrackLabels.getLabels(mftTrackID);
+  if(MFTlabel[0].getEventID()==event) {
+    xPositions.emplace_back(mftTrack.getX());
+    yPositions.emplace_back(mftTrack.getY());
+    pointsColors.emplace_back("black");
+    if(mftTrack.getCharge()==MCHTrack.getCharge()) {
+      if (matchingCut(MCHTrack, mftTrack)) {
+        pointsColors.back() = "blue";
+        MCHTrack.countCandidate();
+        if(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) {
+          MCHTrack.setCloseMatch();
+          pointsColors.back() = "magenta";
+          localCorrectMFTMatch = pointsColors.size();
+        }
+        auto chi2 = (this->*mMatchFunc)(MCHTrack, mftTrack);
+        if(chi2 < MCHTrack.getMatchingChi2()) {
+          MCHTrack.setBestMFTTrackMatchID(mftTrackID);
+          MCHTrack.setMatchingChi2(chi2);
+          localBestMFTTrack = pointsColors.size();
+        }
+      }
+    } else {
+      if(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) {
+        pointsColors.back() = "violet";
+      }
+    }
+  }
+  mftTrackID++;
+}
+
+if (localBestMFTTrack > -1 ) {
+  pointsColors[localBestMFTTrack-1] = (localCorrectMFTMatch == localBestMFTTrack)? "green" : "red";
+}
+
+std::vector<double> xPositionsBlack, yPositionsBlack, xPositionsBlue, yPositionsBlue, xPositionsGreen, yPositionsGreen, xPositionsRed, yPositionsRed, xPositionsOrange, yPositionsOrange, xPositionsMagenta, yPositionsMagenta, xPositionsViolet, yPositionsViolet;
+
+if (mVerbose) {
+  std::cout << " printMatchingPlaneView: " << std::endl;
+}
+
+for (int i = 0 ; i < pointsColors.size(); i++ ) {
+  auto x = xPositions[i];
+  auto y = yPositions[i];
+  auto color = pointsColors[i];
+
+  if (mVerbose) {
+    std::cout << " x = " << x << " y = " << y;
+    std::cout << " color = " << color << std::endl;
+  }
+
+  if (color == "blue") { // Candidate
+    xPositionsBlue.emplace_back(x);
+    yPositionsBlue.emplace_back(y);
+  }
+
+  if (color == "red") { // Fake MFT Track
+    xPositionsRed.emplace_back(x);
+    yPositionsRed.emplace_back(y);
+  }
+
+  if (color == "black") { // Excluded by cut function
+    xPositionsBlack.emplace_back(x);
+    yPositionsBlack.emplace_back(y);
+  }
+
+  if (color == "orange") { // MCH track
+    xPositionsOrange.emplace_back(x);
+    yPositionsOrange.emplace_back(y);
+  }
+
+  if (color == "green") { // Correct MFT match
+    xPositionsGreen.emplace_back(x);
+    yPositionsGreen.emplace_back(y);
+  }
+
+  if (color == "magenta") { // Missed
+    xPositionsMagenta.emplace_back(x);
+    yPositionsMagenta.emplace_back(y);
+  }
+
+  if (color == "violet") {
+    xPositionsViolet.emplace_back(x);
+    yPositionsViolet.emplace_back(y);
+  }
+}
+
+
+
+TCanvas *canvasMatchingPlane = new TCanvas(("cMatchingPlane"+std::to_string(MCHTrackID)).c_str(),"Matching Plane View",1200,1200);
+TMultiGraph *MultiGraph_MacthingPlane = new TMultiGraph();
+MultiGraph_MacthingPlane->SetName("MatchingPlaneView");
+//MultiGraph_MacthingPlane->SetTitle(matchingConfig.c_str());
+//MultiGraph_MacthingPlane->SetMinimum(0.);
+//MultiGraph_MacthingPlane->SetMaximum(1.);
+
+auto legend = new TLegend(0.1,0.73,0.3,0.9);
+legend->SetFillColorAlpha(kWhite, 0.);
+
+
+if (xPositionsBlack.size()) {
+TGraph* TGBlack = new TGraph(xPositionsBlack.size(),&xPositionsBlack[0],&yPositionsBlack[0]);
+TGBlack->SetTitle("No candidate");
+TGBlack->SetName("Not_tested");
+TGBlack->GetXaxis()->SetTitle("x");
+TGBlack->SetMarkerStyle(kFullCircle);
+TGBlack->SetMarkerColor(kBlack);
+TGBlack->SetMarkerSize(2);
+TGBlack->SetLineWidth(0);
+MultiGraph_MacthingPlane->Add(TGBlack);
+TGBlack->Draw();
+//legend->AddEntry(TGBlack);
+}
+
+if (xPositionsBlue.size()) {
+TGraph* TGBlue = new TGraph(xPositionsBlue.size(),&xPositionsBlue[0],&yPositionsBlue[0]);
+TGBlue->SetTitle("Candidate");
+TGBlue->SetName("Candidate");
+TGBlue->GetXaxis()->SetTitle("x");
+TGBlue->SetMarkerStyle(kFullCircle);
+TGBlue->SetMarkerColor(kBlue);
+TGBlue->SetMarkerSize(2);
+TGBlue->SetLineWidth(0);
+MultiGraph_MacthingPlane->Add(TGBlue);
+legend->AddEntry(TGBlue);
+
+}
+
+if (xPositionsRed.size()) {
+TGraph* TGRed = new TGraph(xPositionsRed.size(),&xPositionsRed[0],&yPositionsRed[0]);
+TGRed->SetTitle("Fake Match");
+TGRed->SetName("FakeMatch");
+TGRed->GetXaxis()->SetTitle("x");
+TGRed->SetMarkerStyle(kFullCircle );
+TGRed->SetMarkerColor(kRed);
+TGRed->SetMarkerSize(3);
+TGRed->SetLineWidth(0);
+MultiGraph_MacthingPlane->Add(TGRed);
+legend->AddEntry(TGRed);
+}
+
+if (xPositionsGreen.size()) {
+TGraph* TGGreen = new TGraph(xPositionsGreen.size(),&xPositionsGreen[0],&yPositionsGreen[0]);
+TGGreen->SetTitle("CorrectMatch");
+TGGreen->SetName("CorrectMatch");
+TGGreen->GetXaxis()->SetTitle("x");
+TGGreen->SetMarkerStyle(kFullCircle);
+TGGreen->SetMarkerColor(kGreen);
+TGGreen->SetMarkerSize(3);
+TGGreen->SetLineWidth(0);
+MultiGraph_MacthingPlane->Add(TGGreen);
+legend->AddEntry(TGGreen);
+}
+
+if (xPositionsMagenta.size()) {
+TGraph* TGMagenta = new TGraph(xPositionsMagenta.size(),&xPositionsMagenta[0],&yPositionsMagenta[0]);
+TGMagenta->SetTitle("Close Match");
+TGMagenta->SetName("CloseMatch");
+TGMagenta->GetXaxis()->SetTitle("x");
+TGMagenta->SetMarkerStyle(kFullCircle);
+TGMagenta->SetMarkerColor(kMagenta);
+TGMagenta->SetMarkerSize(3);
+TGMagenta->SetLineWidth(0);
+MultiGraph_MacthingPlane->Add(TGMagenta);
+legend->AddEntry(TGMagenta);
+}
+
+if (xPositionsViolet.size()) {
+TGraph* TGViolet = new TGraph(xPositionsViolet.size(),&xPositionsViolet[0],&yPositionsViolet[0]);
+TGViolet->SetTitle("Far Match (missed)");
+TGViolet->SetName("FarMatch");
+TGViolet->GetXaxis()->SetTitle("x");
+TGViolet->SetMarkerStyle(kFullCircle);
+TGViolet->SetMarkerColor(kViolet);
+TGViolet->SetMarkerSize(3);
+TGViolet->SetLineWidth(0);
+MultiGraph_MacthingPlane->Add(TGViolet);
+legend->AddEntry(TGViolet);
+}
+
+TGraph* TGOrange = new TGraph(xPositionsOrange.size(),&xPositionsOrange[0],&yPositionsOrange[0]);
+TGOrange->SetTitle("MCHTrack");
+TGOrange->SetName("MCHTrack");
+TGOrange->GetXaxis()->SetTitle("x");
+TGOrange->SetMarkerStyle(kFullCircle);
+TGOrange->SetMarkerColor(kOrange);
+TGOrange->SetMarkerSize(3);
+TGOrange->SetLineWidth(0);
+MultiGraph_MacthingPlane->Add(TGOrange);
+legend->AddEntry(TGOrange);
+
+
+
+MultiGraph_MacthingPlane->GetXaxis()->SetTitle("x [cm]");
+MultiGraph_MacthingPlane->GetYaxis()->SetTitle("y [cm]");
+MultiGraph_MacthingPlane->SetTitle("MatchingPlaneView");
+
+auto rOuterMatchingPlane = mMatchingPlaneZ * 14.35/-77.5;
+auto rInnerMatchingPlane = mMatchingPlaneZ * 3.9/-77.5;
+auto rMargin = 1.4;
+MultiGraph_MacthingPlane->GetXaxis()->SetLimits(-rMargin*rOuterMatchingPlane,rMargin*rOuterMatchingPlane);
+MultiGraph_MacthingPlane->SetMinimum(-rMargin*rOuterMatchingPlane);
+MultiGraph_MacthingPlane->SetMaximum(rMargin*rOuterMatchingPlane);
+
+
+gPad->Modified();
+MultiGraph_MacthingPlane->Draw("LP same");
+
+//canvasMatchingPlane->BuildLegend();
+legend->Draw();
+canvasMatchingPlane->Update();
+TEllipse *outerR = new TEllipse(0,0,rOuterMatchingPlane,rOuterMatchingPlane);
+outerR->SetLineWidth(2);
+outerR->SetFillColorAlpha(kWhite, 0.);
+outerR->Draw();
+
+TEllipse *innerR = new TEllipse(0,0,rInnerMatchingPlane,rInnerMatchingPlane);
+innerR->SetLineWidth(2);
+innerR->SetFillColorAlpha(kWhite, 0.);
+innerR->Draw();
+
+
+TPaveText *pt = new TPaveText(0.1,0.918,0.9,0.995,"NDC");
+pt->SetBorderSize(0);
+pt->SetFillStyle(4000);
+pt->AddText(("Matching Plane View - MCH Track"+std::to_string(MCHTrackID)).c_str());
+pt->AddText(mMatchingHelper.Annotation().c_str());
+pt->Draw();
+
+canvasMatchingPlane->Draw();
+canvasMatchingPlane->SaveAs(("MatchingPlaneMCHTrack"+std::to_string(MCHTrackID)+".png").c_str());
+
+}
 
 //_________________________________________________________________________________________________
 bool MUONMatcher::matchingCut(const GlobalMuonTrack& mchTrack, const MFTTrack& mftTrack) {
@@ -445,12 +732,12 @@ void MUONMatcher::finalize() { // compute labels and populates mMatchingHelper
   auto GTrackID = 0;
   auto nFakes = 0;
   auto nNoMatch = 0;
-  auto nGoodMatchTested = 0;
+  auto nCloseMatches = 0;
 
   std::cout << "Computing Track Labels..." << std::endl;
 
   for (auto& gTrack: mGlobalMuonTracks) {
-      if (gTrack.goodMatchTested()) nGoodMatchTested++;
+      if (gTrack.closeMatch()) nCloseMatches++;
       auto bestMFTTrackMatchID = gTrack.getBestMFTTrackMatchID();
       if (mVerbose) {
         std::cout << " GlobalTrack # " << GTrackID << " chi^2 = " << gTrack.getMatchingChi2() << std::endl;
@@ -484,44 +771,23 @@ void MUONMatcher::finalize() { // compute labels and populates mMatchingHelper
     GTrackID++;
   }
 
-    auto nGoodMatches = GTrackID - nFakes - nNoMatch;
+    auto nCorrectMatches = GTrackID - nFakes - nNoMatch;
     auto nTracks = mGlobalMuonTracks.size();
 
 
     MatchingHelper& helper = mMatchingHelper;
     helper.nMCHTracks = nTracks;
-    helper.GMTracksGoodMFTTested = nGoodMatchTested;
-    helper.nGoodMatches = nGoodMatches;
+    helper.nCloseMatches = nCloseMatches;
+    helper.nCorrectMatches = nCorrectMatches;
     helper.nFakes = nFakes;
     helper.nNoMatch = nNoMatch;
-    helper.matchingPlaneZ = mMatchingPlaneZ;
-
-    // Populates mMatchingHelper.MatchingCutConfig with mCutParams
-    auto iparam = 0;
-    for ( auto param: mCutParams) {
-      mMatchingHelper.MatchingCutConfig = mMatchingHelper.MatchingCutConfig + "_CutP" + std::to_string(iparam) + "=" + std::to_string(param);
-      iparam++;
-    }
-    if (mMatchingHelper.MatchingFunction == "") {
-      if (mMatchFunc == &MUONMatcher::matchMFT_MCH_TracksXY) mMatchingHelper.MatchingFunction = "_matchXY";
-      if (mMatchFunc == &MUONMatcher::matchMFT_MCH_TracksXYPhiTanl) mMatchingHelper.MatchingFunction = "_matchXYPhiTanl";
-      if (mMatchFunc == &MUONMatcher::matchMFT_MCH_TracksAllParam) mMatchingHelper.MatchingFunction = "_matchAllParams";
-  }
-
-    if (helper.MatchingCutFunc == "") {
-      if (mCutFunc == &MUONMatcher::matchCutDisabled) helper.MatchingCutFunc = "_cutDisabled";
-      if (mCutFunc == &MUONMatcher::matchCutDistance) helper.MatchingCutFunc = "_cutDistance";
-      if (mCutFunc == &MUONMatcher::matchCutDistanceSigma) helper.MatchingCutFunc = "_cutDistanceSigma";
-      if (mCutFunc == &MUONMatcher::matchCutDistanceAndAngles) helper.MatchingCutFunc = "_cutDistanceAndAngles";
-      if (mCutFunc == &MUONMatcher::matchCut3SigmaXYAngles) helper.MatchingCutFunc = "_cutDistanceAndAngles3Sigma";
-  }
 
     std::cout << "********************************** Matching Summary ********************************** " << std::endl;
     std::cout << helper.nMCHTracks << " MCH Tracks." << std::endl;
     std::cout << helper.nNoMatch << " dangling MCH tracks (" << 100.0*nNoMatch/nTracks << "%)" << std::endl;
     std::cout << helper.nGMTracks() << " global muon tracks (efficiency = " << 100.0*helper.getPairingEfficiency() << "%)" << std::endl;
-    std::cout << helper.nGoodMatches  << " clean GM tracks (Correct Match Ratio = " << 100.0*helper.getCorrectMatchRatio() << "%)" << std::endl;
-    std::cout << nGoodMatchTested  << " Global Muon Tracks with good MFT track in search window" << " (" << 100.*nGoodMatchTested/(helper.nGMTracks()) << "%)"<< std::endl;
+    std::cout << helper.nCorrectMatches  << " Correct Match GM tracks (Correct Match Ratio = " << 100.0*helper.getCorrectMatchRatio() << "%)" << std::endl;
+    std::cout << nCloseMatches  << " Close matches - correct MFT match in search window" << " (" << 100.*nCloseMatches/(helper.nGMTracks()) << "%)"<< std::endl;
     std::cout << helper.nFakes << " Fake GM tracks (contamination = " << 100.0*(1.0 - helper.getCorrectMatchRatio()) << ")" << std::endl;
     std::cout << "************************************************************************************** " << std::endl;
     std::cout << " Annotation: " << helper.Annotation() << std::endl;
