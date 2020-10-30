@@ -1140,16 +1140,16 @@ GlobalMuonTrack MUONMatcher::MCHtoGlobal(MCHTrack &mchTrack) {
 
   jacobian(0, 0) = 1;
 
-  jacobian(1, 1) = 1;
+  jacobian(1, 2) = 1;
 
-  jacobian(2, 2) = -alpha3 / K;
+  jacobian(2, 1) = -alpha3 / K;
   jacobian(2, 3) = alpha1 / K;
 
-  jacobian(3, 2) = -alpha1 / K32;
+  jacobian(3, 1) = alpha1 / K32;
   jacobian(3, 3) = alpha3 / K32;
 
-  jacobian(4, 2) = -alpha1 * alpha4 * L / K32;
-  jacobian(4, 3) = alpha3 * alpha4 / (1 / (TMath::Sqrt(K) * L) - L / K32);
+  jacobian(4, 1) = -alpha1 * alpha4 * L / K32;
+  jacobian(4, 3) = alpha3 * alpha4 * (1 / (TMath::Sqrt(K) * L) - L / K32);
   jacobian(4, 4) = L / TMath::Sqrt(K);
 
   // jacobian*covariances*jacobian^T
