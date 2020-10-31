@@ -296,6 +296,7 @@ void MUONMatcher::initGlobalTracks() {
   helper.matchingPlaneZ = mMatchingPlaneZ;
 
   auto iparam = 0;
+  mMatchingHelper.MatchingCutConfig = "";
   for (auto param : mCutParams) {
     mMatchingHelper.MatchingCutConfig = mMatchingHelper.MatchingCutConfig +
                                         "_CutP" + std::to_string(iparam) + "=" +
@@ -433,12 +434,16 @@ void MUONMatcher::printMatchingPlaneView(int MCHTrackID) {
   xPositions.emplace_back(MCHTrack.getX());
   yPositions.emplace_back(MCHTrack.getY());
   pointsColors.emplace_back("orange");
+  std::string matchParamStr, correctParamStr, mchParamStr, matchCovStr,
+      correctCovStr, mchCovStr;
+  mchParamStr = getParamString(MCHTrack);
+  mchCovStr = getCovString(MCHTrack);
 
-  auto mftTrackID = 0;
-
+  auto mftTrackID = 0, nMFTTracks = 0;
   for (auto mftTrack : mMFTTracks) {
     auto MFTlabel = mftTrackLabels.getLabels(mftTrackID);
     if (MFTlabel[0].getEventID() == event) {
+      nMFTTracks++;
       xPositions.emplace_back(mftTrack.getX());
       yPositions.emplace_back(mftTrack.getY());
       pointsColors.emplace_back("black");
@@ -450,16 +455,22 @@ void MUONMatcher::printMatchingPlaneView(int MCHTrackID) {
           MCHTrack.setCloseMatch();
           pointsColors.back() = "magenta";
           localCorrectMFTMatch = pointsColors.size();
+          correctParamStr = getParamString(mftTrack);
+          correctCovStr = getCovString(mftTrack);
         }
         auto chi2 = (this->*mMatchFunc)(MCHTrack, mftTrack);
         if (chi2 < MCHTrack.getMatchingChi2()) {
           MCHTrack.setBestMFTTrackMatchID(mftTrackID);
           MCHTrack.setMatchingChi2(chi2);
           localBestMFTTrack = pointsColors.size();
+          matchParamStr = getParamString(mftTrack);
+          matchCovStr = getCovString(mftTrack);
         }
       } else {
         if (MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) {
           pointsColors.back() = "violet";
+          correctParamStr = getParamString(mftTrack);
+          correctCovStr = getCovString(mftTrack);
         }
       }
     }
@@ -528,15 +539,17 @@ void MUONMatcher::printMatchingPlaneView(int MCHTrackID) {
 
   TCanvas *canvasMatchingPlane =
       new TCanvas(("cMatchingPlane" + std::to_string(MCHTrackID)).c_str(),
-                  "Matching Plane View", 1200, 1200);
-  TMultiGraph *MultiGraph_MacthingPlane = new TMultiGraph();
-  MultiGraph_MacthingPlane->SetName("MatchingPlaneView");
-  // MultiGraph_MacthingPlane->SetTitle(matchingConfig.c_str());
-  // MultiGraph_MacthingPlane->SetMinimum(0.);
-  // MultiGraph_MacthingPlane->SetMaximum(1.);
+                  "Matching Plane View", 1000, 1000);
+  canvasMatchingPlane->SetFillStyle(4000);
+  canvasMatchingPlane->SetFrameLineWidth(3);
+  TMultiGraph *MultiGraph_MatchingPlane = new TMultiGraph();
+  MultiGraph_MatchingPlane->SetName("MatchingPlaneView");
 
   auto legend = new TLegend(0.1, 0.73, 0.3, 0.9);
   legend->SetFillColorAlpha(kWhite, 0.);
+  legend->SetBorderSize(2);
+
+  TPaveText *pt;
 
   if (xPositionsBlack.size()) {
     TGraph *TGBlack = new TGraph(xPositionsBlack.size(), &xPositionsBlack[0],
@@ -548,9 +561,8 @@ void MUONMatcher::printMatchingPlaneView(int MCHTrackID) {
     TGBlack->SetMarkerColor(kBlack);
     TGBlack->SetMarkerSize(2);
     TGBlack->SetLineWidth(0);
-    MultiGraph_MacthingPlane->Add(TGBlack);
+    MultiGraph_MatchingPlane->Add(TGBlack);
     TGBlack->Draw();
-    // legend->AddEntry(TGBlack);
   }
 
   if (xPositionsBlue.size()) {
@@ -563,7 +575,7 @@ void MUONMatcher::printMatchingPlaneView(int MCHTrackID) {
     TGBlue->SetMarkerColor(kBlue);
     TGBlue->SetMarkerSize(2);
     TGBlue->SetLineWidth(0);
-    MultiGraph_MacthingPlane->Add(TGBlue);
+    MultiGraph_MatchingPlane->Add(TGBlue);
     legend->AddEntry(TGBlue);
   }
 
@@ -577,7 +589,7 @@ void MUONMatcher::printMatchingPlaneView(int MCHTrackID) {
     TGRed->SetMarkerColor(kRed);
     TGRed->SetMarkerSize(3);
     TGRed->SetLineWidth(0);
-    MultiGraph_MacthingPlane->Add(TGRed);
+    MultiGraph_MatchingPlane->Add(TGRed);
     legend->AddEntry(TGRed);
   }
 
@@ -591,7 +603,7 @@ void MUONMatcher::printMatchingPlaneView(int MCHTrackID) {
     TGGreen->SetMarkerColor(kGreen);
     TGGreen->SetMarkerSize(3);
     TGGreen->SetLineWidth(0);
-    MultiGraph_MacthingPlane->Add(TGGreen);
+    MultiGraph_MatchingPlane->Add(TGGreen);
     legend->AddEntry(TGGreen);
   }
 
@@ -605,7 +617,7 @@ void MUONMatcher::printMatchingPlaneView(int MCHTrackID) {
     TGMagenta->SetMarkerColor(kMagenta);
     TGMagenta->SetMarkerSize(3);
     TGMagenta->SetLineWidth(0);
-    MultiGraph_MacthingPlane->Add(TGMagenta);
+    MultiGraph_MatchingPlane->Add(TGMagenta);
     legend->AddEntry(TGMagenta);
   }
 
@@ -615,11 +627,11 @@ void MUONMatcher::printMatchingPlaneView(int MCHTrackID) {
     TGViolet->SetTitle("Far Match (missed)");
     TGViolet->SetName("FarMatch");
     TGViolet->GetXaxis()->SetTitle("x");
-    TGViolet->SetMarkerStyle(kFullCircle);
+    TGViolet->SetMarkerStyle(kFullSquare);
     TGViolet->SetMarkerColor(kViolet);
-    TGViolet->SetMarkerSize(3);
+    TGViolet->SetMarkerSize(2);
     TGViolet->SetLineWidth(0);
-    MultiGraph_MacthingPlane->Add(TGViolet);
+    MultiGraph_MatchingPlane->Add(TGViolet);
     legend->AddEntry(TGViolet);
   }
 
@@ -632,25 +644,27 @@ void MUONMatcher::printMatchingPlaneView(int MCHTrackID) {
   TGOrange->SetMarkerColor(kOrange);
   TGOrange->SetMarkerSize(3);
   TGOrange->SetLineWidth(0);
-  MultiGraph_MacthingPlane->Add(TGOrange);
+  TGOrange->SetFillColorAlpha(kWhite, 0.);
+  MultiGraph_MatchingPlane->Add(TGOrange);
   legend->AddEntry(TGOrange);
 
-  MultiGraph_MacthingPlane->GetXaxis()->SetTitle("x [cm]");
-  MultiGraph_MacthingPlane->GetYaxis()->SetTitle("y [cm]");
-  MultiGraph_MacthingPlane->SetTitle("MatchingPlaneView");
+  MultiGraph_MatchingPlane->GetXaxis()->SetTitle("x [cm]");
+  MultiGraph_MatchingPlane->GetYaxis()->SetTitle("y [cm]");
+  MultiGraph_MatchingPlane->GetYaxis()->SetTitleOffset(1.25);
+  MultiGraph_MatchingPlane->SetTitle("MatchingPlaneView");
 
-  auto rOuterMatchingPlane = mMatchingPlaneZ * 14.35 / -77.5;
-  auto rInnerMatchingPlane = mMatchingPlaneZ * 3.9 / -77.5;
+  auto rOuterMatchingPlane = TMath::Abs(mMatchingPlaneZ * 14.35 / -77.5);
+  auto rInnerMatchingPlane = TMath::Abs(mMatchingPlaneZ * 3.9 / -77.5);
   auto rMargin = 1.4;
-  MultiGraph_MacthingPlane->GetXaxis()->SetLimits(
+  MultiGraph_MatchingPlane->GetXaxis()->SetLimits(
       -rMargin * rOuterMatchingPlane, rMargin * rOuterMatchingPlane);
-  MultiGraph_MacthingPlane->SetMinimum(-rMargin * rOuterMatchingPlane);
-  MultiGraph_MacthingPlane->SetMaximum(rMargin * rOuterMatchingPlane);
-
+  MultiGraph_MatchingPlane->SetMinimum(-rMargin * rOuterMatchingPlane);
+  MultiGraph_MatchingPlane->SetMaximum(rMargin * rOuterMatchingPlane);
+  MultiGraph_MatchingPlane->GetYaxis()->SetLimits(
+      -rMargin * rOuterMatchingPlane, rMargin * rOuterMatchingPlane);
   gPad->Modified();
-  MultiGraph_MacthingPlane->Draw("LP same");
+  MultiGraph_MatchingPlane->Draw("LP same");
 
-  // canvasMatchingPlane->BuildLegend();
   legend->Draw();
   canvasMatchingPlane->Update();
   TEllipse *outerR =
@@ -665,12 +679,45 @@ void MUONMatcher::printMatchingPlaneView(int MCHTrackID) {
   innerR->SetFillColorAlpha(kWhite, 0.);
   innerR->Draw();
 
-  TPaveText *pt = new TPaveText(0.1, 0.918, 0.9, 0.995, "NDC");
+  pt = new TPaveText(0.1, 0.918, 0.9, 0.995, "NDC");
   pt->SetBorderSize(0);
   pt->SetFillStyle(4000);
   pt->AddText(
       ("Matching Plane View - MCH Track" + std::to_string(MCHTrackID)).c_str());
   pt->AddText(mMatchingHelper.Annotation().c_str());
+  pt->Draw();
+
+  pt = new TPaveText(0.3, 0.8, 0.9, 0.9, "NDC");
+  pt->SetBorderSize(2);
+  pt->SetFillStyle(4000);
+  pt->AddText(("MCH: " + mchParamStr).c_str());
+  pt->AddText((mchCovStr).c_str());
+
+  if (xPositionsRed.size()) {
+    pt->AddText(("Fake: " + matchParamStr).c_str());
+    pt->AddText((matchCovStr).c_str());
+  }
+
+  if (xPositionsGreen.size()) {
+    pt->AddText(("Correct: " + matchParamStr).c_str());
+    pt->AddText((matchCovStr).c_str());
+  }
+
+  if (xPositionsMagenta.size()) {
+    pt->AddText(("Close match: " + correctParamStr).c_str());
+    pt->AddText((correctCovStr).c_str());
+  }
+
+  if (xPositionsViolet.size()) {
+    pt->AddText(("Far match: " + correctParamStr).c_str());
+    pt->AddText((correctCovStr).c_str());
+  }
+  pt->Draw();
+
+  pt = new TPaveText(0.11, 0.12, 0.4, 0.15, "NDC");
+  pt->SetBorderSize(0);
+  pt->SetFillStyle(4000);
+  pt->AddText(("nMFTTracks = " + std::to_string(nMFTTracks)).c_str());
   pt->Draw();
 
   canvasMatchingPlane->Draw();

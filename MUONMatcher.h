@@ -130,11 +130,11 @@ public:
   void runEventMatching(); // Finds best match event-per-event
   void printMatchingPlaneView(int MCHTrackID = 0);
   void exportNMatchingPlaneViews(int nTracks = -1) {
-    if (nTracks < 0) {
-      nTracks = mGlobalMuonTracks.size();
-    }
     loadMCHTracks();
     initGlobalTracks();
+    if (nTracks < 0 || nTracks > mGlobalMuonTracks.size()) {
+      nTracks = mGlobalMuonTracks.size();
+    }
     for (auto MCHTrackID = 0; MCHTrackID < nTracks; MCHTrackID++) {
       printMatchingPlaneView(MCHTrackID);
     }
@@ -206,6 +206,28 @@ private:
   std::vector<double> mCutParams;
   bool mVerbose = false;
 };
+
+//_________________________________________________________________________________________________
+std::string getParamString(o2::track::TrackParCovFwd t) {
+  std::string param;
+  param = " x = " + std::to_string(t.getX()) +
+          " y = " + std::to_string(t.getY()) +
+          " phi = " + std::to_string(t.getPhi()) +
+          " tanl = " + std::to_string(t.getTanl()) +
+          " q*pt = " + std::to_string(1.0 / t.getInvQPt());
+  return param;
+}
+
+//_________________________________________________________________________________________________
+std::string getCovString(o2::track::TrackParCovFwd t) {
+  std::string param;
+  param = "Cov: (" + std::to_string(t.getCovariances()(0, 0)) + " ; " +
+          std::to_string(t.getCovariances()(1, 1)) + " ; " +
+          std::to_string(t.getCovariances()(2, 2)) + " ; " +
+          std::to_string(t.getCovariances()(3, 3)) + " ; " +
+          std::to_string(t.getCovariances()(4, 4)) + ")";
+  return param;
+}
 
 #include "MUONMatcher.cxx"
 
