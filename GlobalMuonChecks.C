@@ -168,6 +168,11 @@ int GlobalMuonChecks(const std::string trkFile = "GlobalMuonTracks.root",
     kGMTrackDeltaPhiErr,
     kGMTrackDeltaTanLErr,
     kGMTrackDeltainvQPtErr,
+    kMCHResTrackDeltaXErr,
+    kMCHResTrackDeltaYErr,
+    kMCHResTrackDeltaPhiErr,
+    kMCHResTrackDeltaTanLErr,
+    kMCHResTrackDeltainvQPtErr,
     kGMTrackXChi2,
     kGMTrackYChi2,
     kGMTrackPhiChi2,
@@ -211,6 +216,11 @@ int GlobalMuonChecks(const std::string trkFile = "GlobalMuonTracks.root",
       {kGMTrackDeltaPhiErr, "Delta Phi at Vertex / SigmaPhi"},
       {kGMTrackDeltaTanLErr, "Delta_Tanl / SigmaTanl"},
       {kGMTrackDeltainvQPtErr, "Delta_InvQPt / Sigma_{q/pt}"},
+      {kMCHResTrackDeltaXErr, "MCH Delta X / SigmaX"},
+      {kMCHResTrackDeltaYErr, "MCH Delta Y / SigmaY"},
+      {kMCHResTrackDeltaPhiErr, "MCH Delta Phi at Vertex / SigmaPhi"},
+      {kMCHResTrackDeltaTanLErr, "MCH Delta_Tanl / SigmaTanl"},
+      {kMCHResTrackDeltainvQPtErr, "MCH Delta_InvQPt / Sigma_{q/pt}"},
       {kGMTrackDeltaTanl, "Global Muon Tracks Fitted Delta_tanl"},
       {kGMTrackXChi2, "X Chi2"},
       {kGMTrackYChi2, "Y Chi2"},
@@ -258,6 +268,11 @@ int GlobalMuonChecks(const std::string trkFile = "GlobalMuonTracks.root",
       {kGMTrackDeltaPhiErr, "\\Delta \\phi / \\sigma_\\phi"},
       {kGMTrackDeltaTanLErr, "\\Delta TanL / \\sigma_{TanL} "},
       {kGMTrackDeltainvQPtErr, "\\Delta(q/Pt) / \\sigma_{q/pt}"},
+      {kMCHResTrackDeltaXErr, "\\Delta X / \\sigma_X"},
+      {kMCHResTrackDeltaYErr, "\\Delta Y / \\sigma_Y"},
+      {kMCHResTrackDeltaPhiErr, "\\Delta \\phi / \\sigma_\\phi"},
+      {kMCHResTrackDeltaTanLErr, "\\Delta TanL / \\sigma_{TanL} "},
+      {kMCHResTrackDeltainvQPtErr, "\\Delta(q/Pt) / \\sigma_{q/pt}"},
       {kGMTrackXChi2, "\\chi^2(x)"},
       {kGMTrackYChi2, "\\chi^2(y)"},
       {kGMTrackPhiChi2, "\\chi^2(\\phi)"},
@@ -299,6 +314,11 @@ int GlobalMuonChecks(const std::string trkFile = "GlobalMuonTracks.root",
       {kGMTrackDeltaPhiErr, {500, -10, +10}},
       {kGMTrackDeltaTanLErr, {500, -10, +10}},
       {kGMTrackDeltainvQPtErr, {500, -50, +50}},
+      {kMCHResTrackDeltaXErr, {500, -10, 10}},
+      {kMCHResTrackDeltaYErr, {500, -10, 10}},
+      {kMCHResTrackDeltaPhiErr, {500, -10, +10}},
+      {kMCHResTrackDeltaTanLErr, {500, -10, +10}},
+      {kMCHResTrackDeltainvQPtErr, {500, -50, +50}},
       {kGMTrackXChi2, {500, 0, 100}},
       {kGMTrackYChi2, {500, 0, 100}},
       {kGMTrackPhiChi2, {500, 0, 100}},
@@ -348,6 +368,11 @@ int GlobalMuonChecks(const std::string trkFile = "GlobalMuonTracks.root",
       {kGMTrackDeltaPhiErr, "\\Delta \\phi  /\\sigma_{\\phi}"},
       {kGMTrackDeltaTanLErr, "\\Delta tanl /\\sigma_{tanl}"},
       {kGMTrackDeltainvQPtErr, "\\Delta (q/p_t)/\\sigma_{q/Pt}"},
+      {kMCHResTrackDeltaXErr, "\\Delta x  /\\sigma_{x}"},
+      {kMCHResTrackDeltaYErr, "\\Delta y  /\\sigma_{y}"},
+      {kMCHResTrackDeltaPhiErr, "\\Delta \\phi  /\\sigma_{\\phi}"},
+      {kMCHResTrackDeltaTanLErr, "\\Delta tanl /\\sigma_{tanl}"},
+      {kMCHResTrackDeltainvQPtErr, "\\Delta (q/p_t)/\\sigma_{q/Pt}"},
       {kGMTrackDeltaTanl, "\\Delta tanl"},
       {kGMTrackXChi2, "\\chi^2"},
       {kGMTrackYChi2, "\\chi^2"},
@@ -658,6 +683,16 @@ int GlobalMuonChecks(const std::string trkFile = "GlobalMuonTracks.root",
           TH1Histos[kGMTrackDeltainvQPtErr]->Fill(
               d_invQPt / sqrt(gmTrack.getCovariances()(4, 4)));
 
+          //
+          TH1Histos[kMCHResTrackDeltaXErr]->Fill(gmTrack.getResiduals2Cov()(0));
+          TH1Histos[kMCHResTrackDeltaYErr]->Fill(gmTrack.getResiduals2Cov()(1));
+          TH1Histos[kMCHResTrackDeltaPhiErr]->Fill(
+              gmTrack.getResiduals2Cov()(2));
+          TH1Histos[kMCHResTrackDeltaTanLErr]->Fill(
+              gmTrack.getResiduals2Cov()(3));
+          TH1Histos[kMCHResTrackDeltainvQPtErr]->Fill(
+              gmTrack.getResiduals2Cov()(4));
+
           TH1Histos[kGMTrackXChi2]->Fill(xChi2);
           TH1Histos[kGMTrackYChi2]->Fill(yChi2);
           TH1Histos[kGMTrackPhiChi2]->Fill(phiChi2);
@@ -815,6 +850,25 @@ int GlobalMuonChecks(const std::string trkFile = "GlobalMuonTracks.root",
                          TH1Histos[kGMTrackDeltaYErr]->GetEntries()),
       Form("%.2f%%", 100.0 * TH1Histos[kGMTrackDeltaTanLErr]->Integral() /
                          TH1Histos[kGMTrackDeltaTanLErr]->GetEntries()),
+      Form("%.2f%%", 100.0 * TH2Histos[kGMTrackQPRec_MC]->Integral() /
+                         TH2Histos[kGMTrackQPRec_MC]->GetEntries()));
+
+  // MCH Residuals Covariances summary
+  auto MCHcovariances_summary = summary_report_3x2(
+      *TH1Histos[kMCHResTrackDeltaXErr], *TH1Histos[kMCHResTrackDeltaPhiErr],
+      *TH1Histos[kMCHResTrackDeltainvQPtErr], *TH1Histos[kMCHResTrackDeltaYErr],
+      *TH1Histos[kMCHResTrackDeltaTanLErr], *TH2Histos[kGMTrackQPRec_MC],
+      "MCH residuals Covariances Summary", annotation, 1, 1, 1, 1, 1, 0,
+      Form("%.2f%%", 100.0 * TH1Histos[kMCHResTrackDeltaXErr]->Integral() /
+                         TH1Histos[kMCHResTrackDeltaXErr]->GetEntries()),
+      Form("%.2f%%", 100.0 * TH1Histos[kMCHResTrackDeltaPhiErr]->Integral() /
+                         TH1Histos[kMCHResTrackDeltaPhiErr]->GetEntries()),
+      Form("%.2f%%", 100.0 * TH1Histos[kMCHResTrackDeltainvQPtErr]->Integral() /
+                         TH1Histos[kMCHResTrackDeltainvQPtErr]->GetEntries()),
+      Form("%.2f%%", 100.0 * TH1Histos[kMCHResTrackDeltaYErr]->Integral() /
+                         TH1Histos[kMCHResTrackDeltaYErr]->GetEntries()),
+      Form("%.2f%%", 100.0 * TH1Histos[kMCHResTrackDeltaTanLErr]->Integral() /
+                         TH1Histos[kMCHResTrackDeltaTanLErr]->GetEntries()),
       Form("%.2f%%", 100.0 * TH2Histos[kGMTrackQPRec_MC]->Integral() /
                          TH2Histos[kGMTrackQPRec_MC]->GetEntries()));
 

@@ -846,6 +846,8 @@ void MUONMatcher::finalize() { // compute labels and populates mMatchingHelper
           (MCHlabel[0].getEventID() == MFTlabel[0].getEventID())) {
         thisLabel = MCHlabel[0];
         thisLabel.setFakeFlag(false);
+        gTrack.computeResiduals2Cov(mMFTTracks[bestMFTTrackMatchID]);
+
       } else {
         nFakes++;
       }

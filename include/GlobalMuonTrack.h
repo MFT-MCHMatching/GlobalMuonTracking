@@ -35,6 +35,25 @@ public:
   double getBestMFTTrackMatchID() { return mBestMFTTrackMatchID; }
   void setCloseMatch() { mCloseMatch = true; }
   bool closeMatch() { return mCloseMatch; }
+  void computeResiduals2Cov(const o2::track::TrackParCovFwd &t) {
+    mResiduals2Cov(0) =
+        (getX() - t.getX()) /
+        TMath::Sqrt(getCovariances()(0, 0) + t.getCovariances()(0, 0));
+    mResiduals2Cov(1) =
+        (getY() - t.getY()) /
+        TMath::Sqrt(getCovariances()(1, 1) + t.getCovariances()(1, 1));
+    mResiduals2Cov(2) =
+        (getPhi() - t.getPhi()) /
+        TMath::Sqrt(getCovariances()(2, 2) + t.getCovariances()(2, 2));
+    mResiduals2Cov(3) =
+        (getTanl() - t.getTanl()) /
+        TMath::Sqrt(getCovariances()(3, 3) + t.getCovariances()(3, 3));
+    mResiduals2Cov(4) =
+        (getInvQPt() - t.getInvQPt()) /
+        TMath::Sqrt(getCovariances()(4, 4) + t.getCovariances()(4, 4));
+    ;
+  }
+  const SMatrix5 &getResiduals2Cov() { return mResiduals2Cov; }
 
   void print() const;
 
@@ -44,6 +63,8 @@ private:
   int mBestMFTTrackMatchID = -1;
   int mNMFTCandidates = 0; // Number of candidates within search cut
   bool mCloseMatch = false;
+
+  SMatrix5 mResiduals2Cov;
 };
 } // namespace o2::track
 
