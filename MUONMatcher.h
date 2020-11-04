@@ -8,12 +8,17 @@
 #include "DataFormatsITSMFT/TopologyDictionary.h"
 #include "DataFormatsParameters/GRPObject.h"
 #include "DetectorsBase/Propagator.h"
+#include "DetectorsPassive/Absorber.h"
+#include "DetectorsPassive/Cave.h"
+#include "DetectorsPassive/Shil.h"
 #include "Field/MagneticField.h"
+#include "MCHSimulation/GeometryTest.h"
 #include "MFTBase/GeometryTGeo.h"
 #include "MFTTracking/IOUtils.h"
 #include "MFTTracking/TrackCA.h"
 #include "SimulationDataFormat/MCCompLabel.h"
 #include "SimulationDataFormat/MCTruthContainer.h"
+#include "TGeoManager.h"
 #include <TGeoGlobalMagField.h>
 
 #include "Math/SMatrix.h"
@@ -70,6 +75,7 @@ public:
   void Clear();
   void SetMatchingPlaneZ(double z) { mMatchingPlaneZ = z; }
   void SetVerbosity(bool v = true) { mVerbose = v; }
+  void LoadAbsorber();
 
   // Track IO
   void loadMCHTracks();
@@ -205,6 +211,7 @@ private:
   double mMatchingPlaneZ = sLastMFTPlaneZ;
   std::vector<double> mCutParams;
   bool mVerbose = false;
+  TGeoManager *mGeoManager;
 };
 
 //_________________________________________________________________________________________________

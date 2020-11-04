@@ -126,6 +126,8 @@ int runMatching() {
   // Configure matcher according command line options
   loadAndSetMatchingConfig();
 
+  // matcher.LoadAbsorber();
+
   // Load MFT tracks and propagates to matching plane
   matcher.loadMFTTracksOut();
 
