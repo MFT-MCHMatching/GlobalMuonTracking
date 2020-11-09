@@ -62,6 +62,9 @@ Usage()
   3) Run track matching:
      ${0##*/} --match --matchFcn <matching_function> --cutFcn <cut_function> --cutParam0 <val0> -o <outputdir>
 
+     --matchSaveAll
+       Save all MCH/MFT track combinations, not only the best match
+
      --matchFcn
        Sets the function to calculate matching score for a MCH-MFT track pair.  Built-in options:
 
@@ -299,6 +302,10 @@ while [ $# -gt 0 ] ; do
     --matchPlaneZ)
     export MATCHING_PLANEZ="$2";
     shift 2
+    ;;
+    --matchSaveAll)
+    export MATCH_SAVE_ALL="1";
+    shift 1
     ;;
     --matchFcn)
     export MATCHING_FCN="${2}_";
