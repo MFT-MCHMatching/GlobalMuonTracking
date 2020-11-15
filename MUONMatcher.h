@@ -146,6 +146,9 @@ public:
     }
   };
 
+  void exportData(int nMCHTracks = -1);
+  void exportTrainningDataCSV(int nMCHTracks = -1);
+
   // Matching cuts
   bool matchingCut(const GlobalMuonTrack &,
                    const MFTTrack &); // Calls configured cut function

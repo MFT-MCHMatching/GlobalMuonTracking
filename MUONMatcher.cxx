@@ -429,6 +429,173 @@ void MUONMatcher::runEventMatching() {
             << std::endl;
 }
 
+
+//_________________________________________________________________________________________________
+void MUONMatcher::exportTrainningDataCSV(int nMCHTracks) {
+
+int MCHTrackID = nMCHTracks;
+if (nMCHTracks < 0) MCHTrackID = mGlobalMuonTracks.size();
+
+std::cout << " Exporting trainning data for " << MCHTrackID << " MCH Tracks" << std::endl;
+std::ofstream track_pairs(std::to_string(nMCHTracks)+"_features.csv"), pairs_match(std::to_string(nMCHTracks)+"_truth.csv"), track_IDs(std::to_string(nMCHTracks)+"_MCHRanges.csv");
+auto pairID = 0;
+while (MCHTrackID) {
+  std::cout << " MCHTrackID =  " << MCHTrackID << std::endl;
+  auto MCHlabel = mchTrackLabels.getLabels(MCHTrackID);
+  auto event = MCHlabel[0].getEventID();
+  auto MCHTrack = mGlobalMuonTracks[MCHTrackID];
+
+  auto mftTrackID = 0, nMFTTracks = 0;
+  for (auto mftTrack : mMFTTracks) {
+    auto MFTlabel = mftTrackLabels.getLabels(mftTrackID);
+    if (MFTlabel[0].getEventID() == event) {
+      pairs_match << (int)(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID());
+      track_pairs << mftTrack.getX() << ", " <<
+                     mftTrack.getY() << ", " <<
+                     mftTrack.getPhi() << ", " <<
+                     mftTrack.getTanl() << ", " <<
+                     mftTrack.getInvQPt() << ", " <<
+                     mftTrack.getCovariances()(0,0) << ", " <<
+                     mftTrack.getCovariances()(0,1) << ", " <<
+                     mftTrack.getCovariances()(1,1) << ", " <<
+                     mftTrack.getCovariances()(0,2) << ", " <<
+                     mftTrack.getCovariances()(1,2) << ", " <<
+                     mftTrack.getCovariances()(2,2) << ", " <<
+                     mftTrack.getCovariances()(0,3) << ", " <<
+                     mftTrack.getCovariances()(1,3) << ", " <<
+                     mftTrack.getCovariances()(2,3) << ", " <<
+                     mftTrack.getCovariances()(3,3) << ", " <<
+                     mftTrack.getCovariances()(0,4) << ", " <<
+                     mftTrack.getCovariances()(1,4) << ", " <<
+                     mftTrack.getCovariances()(2,4) << ", " <<
+                     mftTrack.getCovariances()(3,4) << ", " <<
+                     mftTrack.getCovariances()(4,4) << ", " <<
+                     MCHTrack.getX() << ", " <<
+                     MCHTrack.getY() << ", " <<
+                     MCHTrack.getPhi() << ", " <<
+                     MCHTrack.getTanl() << ", " <<
+                     MCHTrack.getInvQPt() << ", " <<
+                     MCHTrack.getCovariances()(0,0) << ", " <<
+                     MCHTrack.getCovariances()(0,1) << ", " <<
+                     MCHTrack.getCovariances()(1,1) << ", " <<
+                     MCHTrack.getCovariances()(0,2) << ", " <<
+                     MCHTrack.getCovariances()(1,2) << ", " <<
+                     MCHTrack.getCovariances()(2,2) << ", " <<
+                     MCHTrack.getCovariances()(0,3) << ", " <<
+                     MCHTrack.getCovariances()(1,3) << ", " <<
+                     MCHTrack.getCovariances()(2,3) << ", " <<
+                     MCHTrack.getCovariances()(3,3) << ", " <<
+                     MCHTrack.getCovariances()(0,4) << ", " <<
+                     MCHTrack.getCovariances()(1,4) << ", " <<
+                     MCHTrack.getCovariances()(2,4) << ", " <<
+                     MCHTrack.getCovariances()(3,4) << ", " <<
+                     MCHTrack.getCovariances()(4,4);
+
+      track_pairs << "\n";
+      pairs_match << "\n ";
+      pairID++;
+    }
+    mftTrackID++;
+
+}
+MCHTrackID--;
+track_IDs << pairID - 1 << "\n";
+}
+
+track_pairs.close();
+pairs_match.close();
+track_IDs.close();
+
+}
+
+
+//_________________________________________________________________________________________________
+void MUONMatcher::exportData(int nMCHTracks) {
+
+int MCHTrackID = nMCHTracks;
+if (nMCHTracks < 0) MCHTrackID = mGlobalMuonTracks.size();
+
+std::cout << " Exporting trainning data for " << MCHTrackID << " MCH Tracks" << std::endl;
+std::ofstream track_pairs("track_pairs_data.py"), pairs_match("track_pairs_match.py"), track_IDs("track_IDs.py");
+track_pairs << "import numpy as np\n";
+track_pairs << "pairs_data = np.array([ ";
+pairs_match << "import numpy as np\n";
+pairs_match << "pairs_match = np.array([ ";
+track_IDs << "import numpy as np\n";
+track_IDs << "track_IDs = np.array([ ";
+auto pairID = 0;
+while (MCHTrackID) {
+  std::cout << " MCHTrackID =  " << MCHTrackID << std::endl;
+  auto MCHlabel = mchTrackLabels.getLabels(MCHTrackID);
+  auto event = MCHlabel[0].getEventID();
+  auto MCHTrack = mGlobalMuonTracks[MCHTrackID];
+
+  auto mftTrackID = 0, nMFTTracks = 0;
+  for (auto mftTrack : mMFTTracks) {
+    auto MFTlabel = mftTrackLabels.getLabels(mftTrackID);
+    if (MFTlabel[0].getEventID() == event) {
+      track_pairs << "[ ";
+      pairs_match << (int)(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID());
+      track_pairs << mftTrack.getX() << ", " <<
+                     mftTrack.getY() << ", " <<
+                     mftTrack.getPhi() << ", " <<
+                     mftTrack.getTanl() << ", " <<
+                     mftTrack.getInvQPt() << ", " <<
+                     mftTrack.getCovariances()(0,0) << ", " <<
+                     mftTrack.getCovariances()(0,1) << ", " <<
+                     mftTrack.getCovariances()(1,1) << ", " <<
+                     mftTrack.getCovariances()(0,2) << ", " <<
+                     mftTrack.getCovariances()(1,2) << ", " <<
+                     mftTrack.getCovariances()(2,2) << ", " <<
+                     mftTrack.getCovariances()(0,3) << ", " <<
+                     mftTrack.getCovariances()(1,3) << ", " <<
+                     mftTrack.getCovariances()(2,3) << ", " <<
+                     mftTrack.getCovariances()(3,3) << ", " <<
+                     mftTrack.getCovariances()(0,4) << ", " <<
+                     mftTrack.getCovariances()(1,4) << ", " <<
+                     mftTrack.getCovariances()(2,4) << ", " <<
+                     mftTrack.getCovariances()(3,4) << ", " <<
+                     mftTrack.getCovariances()(4,4) << ", " <<
+                     MCHTrack.getX() << ", " <<
+                     MCHTrack.getY() << ", " <<
+                     MCHTrack.getPhi() << ", " <<
+                     MCHTrack.getTanl() << ", " <<
+                     MCHTrack.getInvQPt() << ", " <<
+                     MCHTrack.getCovariances()(0,0) << ", " <<
+                     MCHTrack.getCovariances()(0,1) << ", " <<
+                     MCHTrack.getCovariances()(1,1) << ", " <<
+                     MCHTrack.getCovariances()(0,2) << ", " <<
+                     MCHTrack.getCovariances()(1,2) << ", " <<
+                     MCHTrack.getCovariances()(2,2) << ", " <<
+                     MCHTrack.getCovariances()(0,3) << ", " <<
+                     MCHTrack.getCovariances()(1,3) << ", " <<
+                     MCHTrack.getCovariances()(2,3) << ", " <<
+                     MCHTrack.getCovariances()(3,3) << ", " <<
+                     MCHTrack.getCovariances()(0,4) << ", " <<
+                     MCHTrack.getCovariances()(1,4) << ", " <<
+                     MCHTrack.getCovariances()(2,4) << ", " <<
+                     MCHTrack.getCovariances()(3,4) << ", " <<
+                     MCHTrack.getCovariances()(4,4);
+
+      track_pairs << " ], ";
+      pairs_match << ", ";
+      pairID++;
+    }
+    mftTrackID++;
+
+}
+MCHTrackID--;
+track_IDs << pairID - 1 << ", ";
+}
+track_pairs << " ])\n";
+pairs_match << " ])\n";
+track_IDs << " ])\n";
+track_pairs.close();
+pairs_match.close();
+track_IDs.close();
+
+}
+
 //_________________________________________________________________________________________________
 void MUONMatcher::printMatchingPlaneView(int MCHTrackID) {
 

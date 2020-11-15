@@ -137,16 +137,18 @@ int runMatching() {
   // Propagate MCH tracks to matching plane and convert parameters and
   // covariances matrix to MFT coordinate system
   matcher.initGlobalTracks();
+  matcher.exportTrainningDataCSV(10);
 
   // Runs track matching event-by-event
-  matcher.runEventMatching();
+  //matcher.runEventMatching();
 
   // Kalman filter
-  matcher.fitTracks();
-  matcher.saveGlobalMuonTracks();
+  //matcher.fitTracks();
+  //matcher.saveGlobalMuonTracks();
 
   // Export Matching Plane views in png
-  matcher.exportNMatchingPlaneViews(100);
+  //matcher.exportNMatchingPlaneViews(100);
+  //matcher.printMatchingPlaneView(93);
 
   return 0;
 }
