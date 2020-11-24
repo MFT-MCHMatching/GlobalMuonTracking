@@ -439,14 +439,14 @@ void MUONMatcher::runEventMatching()
       // store all given matches for performance studies
       // loop MCH tracks
       for (auto& track : mMCHTracks) {
-        printf("BV: MCH track %d \n", GTrackID);
+        //printf("BV: MCH track %d \n", GTrackID);
         mMCHTrackExtrap.extrapToVertexWithoutBranson(&track, mMatchingPlaneZ);
         auto gTrackTmp = MCHtoGlobal(track);
         auto MCHlabel = mchTrackLabels.getLabels(GTrackID);
         if (MCHlabel[0].getEventID() == event) {
           auto mftTrackID = 0;
           for (auto mftTrack : mMFTTracks) {
-            printf("BV: MFT track %d \n", mftTrackID);
+            //printf("BV: MFT track %d \n", mftTrackID);
             auto MFTlabel = mftTrackLabels.getLabels(mftTrackID);
             if (mftTrack.getCharge() == gTrackTmp.getCharge()) {
               if (MFTlabel[0].getEventID() == event) {
@@ -455,7 +455,7 @@ void MUONMatcher::runEventMatching()
                   gTrack.setParametersMCH(gTrack.getParameters());
                   gTrack.setCovariancesMCH(gTrack.getCovariances());
                   gTrack.countCandidate();
-                  printf("BV: match MCH %d MFT %d \n", GTrackID, mftTrackID);
+                  //printf("BV: match MCH %d MFT %d \n", GTrackID, mftTrackID);
                   if (MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) {
                     gTrack.setCloseMatch();
                   }
