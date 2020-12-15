@@ -16,8 +16,9 @@ MUONMatcher matcher;
 
 //_________________________________________________________________________________________________
 // Sample custom matching function that can be passed to MUONMatcher
-double MyMatchingFunc(const GlobalMuonTrack &mchTrack,
-                      const MFTTrack &mftTrack) {
+double MyMatchingFunc(const GlobalMuonTrack& mchTrack,
+                      const MFTTrack& mftTrack)
+{
   auto dx = mchTrack.getX() - mftTrack.getX();
   auto dy = mchTrack.getY() - mftTrack.getY();
   auto score = dx * dx + dy * dy;
@@ -26,7 +27,8 @@ double MyMatchingFunc(const GlobalMuonTrack &mchTrack,
 
 //_________________________________________________________________________________________________
 // Sample custom cut criteria that can be passed to MUONMatcher
-bool MyMatchingCut(GlobalMuonTrack &mchTrack, MFTTrack &mftTrack) {
+bool MyMatchingCut(GlobalMuonTrack& mchTrack, MFTTrack& mftTrack)
+{
   auto cutDistance = 1.0;
   auto dx = mchTrack.getX() - mftTrack.getX();
   auto dy = mchTrack.getY() - mftTrack.getY();
@@ -36,8 +38,14 @@ bool MyMatchingCut(GlobalMuonTrack &mchTrack, MFTTrack &mftTrack) {
 
 //_________________________________________________________________________________________________
 // Set Matching function defined by shell variable
-void loadAndSetMatchingConfig() {
+void loadAndSetMatchingConfig()
+{
   std::string matching_fcn;
+  if (gSystem->Getenv("MATCH_SAVE_ALL")) {
+    matcher.setMatchSaveAll(true);
+    std::cout << " MATCH_SAVE_ALL set to true " << std::endl;
+  }
+
   if (gSystem->Getenv("MATCHING_FCN")) {
     matching_fcn = gSystem->Getenv("MATCHING_FCN");
     std::cout << " MATCHING_FCN: " << matching_fcn << std::endl;
@@ -116,7 +124,8 @@ void loadAndSetMatchingConfig() {
 }
 
 //_________________________________________________________________________________________________
-int runMatching() {
+int runMatching()
+{
 
   // gSystem->Load("libO2MCHTracking");
   // Custom matching function

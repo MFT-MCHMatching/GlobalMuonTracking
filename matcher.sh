@@ -62,6 +62,9 @@ Usage()
   3) Run track matching:
      ${0##*/} --match --matchFcn <matching_function> --cutFcn <cut_function> --cutParam0 <val0> -o <outputdir>
 
+     --matchSaveAll
+       Save all MCH/MFT track combinations, not only the best match
+
      --matchFcn
        Sets the function to calculate matching score for a MCH-MFT track pair.  Built-in options:
 
@@ -300,6 +303,10 @@ while [ $# -gt 0 ] ; do
     export MATCHING_PLANEZ="$2";
     shift 2
     ;;
+    --matchSaveAll)
+    export MATCH_SAVE_ALL="1";
+    shift 1
+    ;;
     --matchFcn)
     export MATCHING_FCN="${2}_";
     shift 2
@@ -368,7 +375,7 @@ GENERATOR=${GENERATOR:-"gun0_100GeV"}
 CUSTOM_SHM="--shm-segment-size 5000000000"
 
 export MCHGENERATOR=${GENERATOR}
-export ALIROOT_OCDB_ROOT=~/alice/OCDB
+export ALIROOT_OCDB_ROOT=${ALIROOT_OCDB_ROOT:-"~/alice/OCDB"}
 
 ALIROOTENV=${ALIROOTENV:-"AliRoot/latest-master-next-root6"}
 O2ENV=${O2ENV:-"O2/latest-dev-o2"}
