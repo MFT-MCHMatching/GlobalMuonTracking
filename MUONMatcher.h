@@ -107,6 +107,11 @@ class MUONMatcher
   //// Position, Angles & Charged Momentum
   double matchMFT_MCH_TracksAllParam(const GlobalMuonTrack& mchTrack,
                                      const MFTTrack& mftTrack);
+
+  //// Matching using trained ML
+  double matchTrainedML(const GlobalMuonTrack &mchTrack,
+                        const MFTTrack &mftTrack);
+
   void setMatchingFunction(double (MUONMatcher::*func)(const GlobalMuonTrack&,
                                                        const MFTTrack&))
   {
@@ -117,6 +122,9 @@ class MUONMatcher
       mMatchingHelper.MatchingFunction = "_matchXYPhiTanl";
     if (func == &MUONMatcher::matchMFT_MCH_TracksAllParam)
       mMatchingHelper.MatchingFunction = "_matchAllParams";
+    if (func == &MUONMatcher::matchTrainedML)
+      mMatchingHelper.MatchingFunction = "_matchML";
+
     std::cout << " ** MUONMATCHER: Setting matching function => "
               << mMatchingHelper.MatchingFunction << std::endl;
   }
@@ -168,6 +176,54 @@ class MUONMatcher
                                          const MFTTrack&))
   {
     mCustomCutFunc = func;
+  }
+  void configureTMVA(std::string filename, scorecut) {
+    mTMVAWeightFileName = filename;
+    mMLScoreCut = scorecut;
+    mTMVAReader = new TMVA::Reader("!Color:!Silent");
+
+    mTMVAReader->AddVariable("MFT_X", &mMCH_MFT_pair[0]);
+    mTMVAReader->AddVariable("MFT_Y", &mMCH_MFT_pair[1]);
+    mTMVAReader->AddVariable("MFT_Phi", &mMCH_MFT_pair[2]);
+    mTMVAReader->AddVariable("MFT_Tanl", &mMCH_MFT_pair[3]);
+    mTMVAReader->AddVariable("MFT_InvQPt", &mMCH_MFT_pair[4]);
+    mTMVAReader->AddVariable("MFT_Cov00", &mMCH_MFT_pair[5]);
+    mTMVAReader->AddVariable("MFT_Cov01", &mMCH_MFT_pair[6]);
+    mTMVAReader->AddVariable("MFT_Cov11", &mMCH_MFT_pair[7]);
+    mTMVAReader->AddVariable("MFT_Cov02", &mMCH_MFT_pair[8]);
+    mTMVAReader->AddVariable("MFT_Cov12", &mMCH_MFT_pair[9]);
+    mTMVAReader->AddVariable("MFT_Cov22", &mMCH_MFT_pair[10]);
+    mTMVAReader->AddVariable("MFT_Cov03", &mMCH_MFT_pair[11]);
+    mTMVAReader->AddVariable("MFT_Cov13", &mMCH_MFT_pair[12]);
+    mTMVAReader->AddVariable("MFT_Cov23", &mMCH_MFT_pair[13]);
+    mTMVAReader->AddVariable("MFT_Cov33", &mMCH_MFT_pair[14]);
+    mTMVAReader->AddVariable("MFT_Cov04", &mMCH_MFT_pair[15]);
+    mTMVAReader->AddVariable("MFT_Cov14", &mMCH_MFT_pair[16]);
+    mTMVAReader->AddVariable("MFT_Cov24", &mMCH_MFT_pair[17]);
+    mTMVAReader->AddVariable("MFT_Cov34", &mMCH_MFT_pair[18]);
+    mTMVAReader->AddVariable("MFT_Cov44", &mMCH_MFT_pair[19]);
+    mTMVAReader->AddVariable("MCH_X", &mMCH_MFT_pair[20]);
+    mTMVAReader->AddVariable("MCH_Y", &mMCH_MFT_pair[21]);
+    mTMVAReader->AddVariable("MCH_Phi", &mMCH_MFT_pair[22]);
+    mTMVAReader->AddVariable("MCH_Tanl", &mMCH_MFT_pair[23]);
+    mTMVAReader->AddVariable("MCH_InvQPt", &mMCH_MFT_pair[24]);
+    mTMVAReader->AddVariable("MCH_Cov00", &mMCH_MFT_pair[25]);
+    mTMVAReader->AddVariable("MCH_Cov01", &mMCH_MFT_pair[26]);
+    mTMVAReader->AddVariable("MCH_Cov11", &mMCH_MFT_pair[27]);
+    mTMVAReader->AddVariable("MCH_Cov02", &mMCH_MFT_pair[28]);
+    mTMVAReader->AddVariable("MCH_Cov12", &mMCH_MFT_pair[29]);
+    mTMVAReader->AddVariable("MCH_Cov22", &mMCH_MFT_pair[30]);
+    mTMVAReader->AddVariable("MCH_Cov03", &mMCH_MFT_pair[31]);
+    mTMVAReader->AddVariable("MCH_Cov13", &mMCH_MFT_pair[32]);
+    mTMVAReader->AddVariable("MCH_Cov23", &mMCH_MFT_pair[33]);
+    mTMVAReader->AddVariable("MCH_Cov33", &mMCH_MFT_pair[34]);
+    mTMVAReader->AddVariable("MCH_Cov04", &mMCH_MFT_pair[35]);
+    mTMVAReader->AddVariable("MCH_Cov14", &mMCH_MFT_pair[36]);
+    mTMVAReader->AddVariable("MCH_Cov24", &mMCH_MFT_pair[37]);
+    mTMVAReader->AddVariable("MCH_Cov34", &mMCH_MFT_pair[38]);
+    mTMVAReader->AddVariable("MCH_Cov44", &mMCH_MFT_pair[39]);
+
+    mTMVAReader->BookMVA("MUONMatcherML", mTMVAWeightFileName);
   }
   //  Built-in cut functions
   bool matchCutDisabled(const GlobalMuonTrack&, const MFTTrack&);
@@ -236,6 +292,12 @@ class MUONMatcher
   TGeoManager* mGeoManager;
   bool mMatchSaveAll = false;
   bool mChargeCutEnabled = true;
+
+  // TMVA interface
+  std::string mTMVAWeightFileName;
+  TMVA::Reader *mTMVAReader;
+  float_t mMCH_MFT_TMVApair[40];
+  float_t mMLScoreCut;
 };
 
 //_________________________________________________________________________________________________

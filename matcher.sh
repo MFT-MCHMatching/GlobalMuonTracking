@@ -52,7 +52,7 @@ Usage()
     Example:
     ${0##*/} --genMCH -g gun0_100GeV -n 20 --nmuons 4 --npions 20 -o sampletest
 
-  2) Generate MFT Tracks
+  2) Generate MFT Tracks:
      ${0##*/} --genMFT -o <outputdir> -j <jobs>
 
       Options:
@@ -73,6 +73,8 @@ Usage()
          matchXYPhiTanl - matching chi2 calculated by position and angles: X, Y, Phi, Tanl
 
          matchXY - matching chi2 calculated track positions: X, Y
+
+         trainedML - matching using a trained neural network
 
      --cutFcn
        Sets the function that defines the search window for matching candidates. Built-in options:
@@ -125,6 +127,29 @@ Usage()
   ======================================================================================
   Contents of ${SCRIPTDIR} are copied to <outputdir> when --genMCH option is used.
   To replace the macros on --genMFT, --match and --check steps, use option --updatecode
+
+  ======================================================================================
+  Machine learning interface - ROOT TMVA (WIP)
+
+  1) Generate training data file:
+    {0##*/} --genTrainingData NMCH_Tracks -o outputdir
+    TODO: Configurable training data format
+
+  2) Train neural network:
+     {0##*/} --train <config_alias/es> <training_data_file.root>
+
+   - Option 1: $ matcher.sh --train DNN5.1 <training_data_file.root>
+   - Option 2: $ matcher.sh --train --layout DNN5.1 --strategy ts_1 --error es1  <training_data_file.root>
+
+   This creates folder named config_aliases_training_data_file with te following files:
+    - config_aliases_training_data_file.xml  => trained neural network
+    - config_aliases_training_data_file.cfg  => Training configuration
+
+   3) Run track-matching using trained network:
+      {0##*/} --match --matchFcn trainedML --weightfile weightfilename.xml -o outputdir
+      In additon to the generation all the output of a regular --match execution,
+      this command outputs ML scoring plots such as correct matching vs. MCH_rejection_rate.
+      Matching cut score defaults to 0.5, configurable by --MLScoreCut <val0>
 
 END
   exit
@@ -333,6 +358,13 @@ while [ $# -gt 0 ] ; do
     --disableChargeMatchCut)
     export DISABLECHARGEMATCHCUT="1";
     shift 1
+    --weightfile)
+    export ML_WEIGHTFILE="$2";
+    shift 2
+    ;;
+    --MLScoreCut)
+    export ML_SCORECUT="$2";
+    shift 2
     ;;
     --convert)
     CONVERT="1";
