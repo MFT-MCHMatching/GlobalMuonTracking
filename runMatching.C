@@ -64,6 +64,24 @@ void loadAndSetMatchingConfig()
       std::cout << " Setting " << matching_fcn << std::endl;
       matcher.setMatchingFunction(&MUONMatcher::matchMFT_MCH_TracksAllParam);
     }
+    if (matching_fcn.find("trainedML_") < matching_fcn.length()) {
+      std::cout << " Setting " << matching_fcn << std::endl;
+      matcher.setMatchingFunction(&MUONMatcher::matchTrainedML);
+      if (gSystem->Getenv("ML_WEIGHTFILE")) {
+        float_t scorecut = 0.5;
+        if (gSystem->Getenv("ML_SCORECUT"))
+          scorecut = atof(gSystem->Getenv("ML_SCORECUT"));
+        std::string weightfilename = gSystem->Getenv("ML_WEIGHTFILE");
+        matcher.configureTMVA(weightfilename, score_cut);
+        std::cout << "Setting TMVA weight file: " << weightfilename
+                  << std::endl;
+        std::cout << "Setting matching score cut = " << score_cut << std::endl;
+      } else {
+        std::cout << "Missing TMVA Weight File!" << std::endl;
+        exit(1);
+      }
+    }
+  }
   }
 
   if (gSystem->Getenv("MATCHING_PLANEZ")) {
