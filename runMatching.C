@@ -6,7 +6,9 @@
 
 //#ifdef __MAKECINT__
 #pragma link C++ class GlobalMuonTrack + ;
+#pragma link C++ class GlobalMuonTrackExt + ;
 #pragma link C++ class std::vector < GlobalMuonTrack> + ;
+#pragma link C++ class std::vector < GlobalMuonTrackExt> + ;
 #pragma link C++ class tempMCHTrack + ;
 #pragma link C++ class o2::mch::TrackExtrap + ;
 #pragma link C++ class std::vector < tempMCHTrack> + ;
