@@ -910,7 +910,7 @@ void MUONMatcher::finalize()
   std::cout << "Computing Track Labels..." << std::endl;
 
   if (!mMatchSaveAll) {
-    for (auto &gTrack : mGlobalMuonTracks) {
+    for (auto& gTrack : mGlobalMuonTracks) {
       if (gTrack.closeMatch())
         nCloseMatches++;
       auto bestMFTTrackMatchID = gTrack.getBestMFTTrackMatchID();
@@ -956,7 +956,7 @@ void MUONMatcher::finalize()
     }
 
   } else { // if matchSaveAll is set
-    for (auto &gTrack : mGlobalMuonTracksExt) {
+    for (auto& gTrack : mGlobalMuonTracksExt) {
       if (gTrack.closeMatch())
         nCloseMatches++;
       auto bestMFTTrackMatchID = gTrack.getBestMFTTrackMatchID();
@@ -1042,11 +1042,13 @@ void MUONMatcher::finalize()
 //_________________________________________________________________________________________________
 void MUONMatcher::saveGlobalMuonTracks()
 {
-
-  TFile outFile("GlobalMuonTracks.root", "RECREATE");
+  std::string gmtracksfilename;
+  gmtracksfilename =
+    mMatchSaveAll ? "GlobalMuonTracksExt.root" : "GlobalMuonTracks.root";
+  TFile outFile(gmtracksfilename.c_str(), "RECREATE");
   TTree outTree("o2sim", "Global Muon Tracks");
   std::vector<GlobalMuonTrack>* tracks = &mGlobalMuonTracks;
-  std::vector<GlobalMuonTrackExt> *tracksExt = &mGlobalMuonTracksExt;
+  std::vector<GlobalMuonTrackExt>* tracksExt = &mGlobalMuonTracksExt;
   MCLabels* trackLabels = &mGlobalTrackLabels;
 
   if (!mMatchSaveAll) {
@@ -1061,7 +1063,7 @@ void MUONMatcher::saveGlobalMuonTracks()
   outTree.Write();
   outFile.WriteObjectAny(&mMatchingHelper, "MatchingHelper", "Matching Helper");
   outFile.Close();
-  std::cout << "Global Muon Tracks saved to GlobalMuonTracks.root" << std::endl;
+  std::cout << "Global Muon Tracks saved to " << gmtracksfilename << std::endl;
 
   std::ofstream matcherConfig("MatchingConfig.txt");
   matcherConfig << mMatchingHelper.MatchingConfig() << std::endl;
@@ -1088,6 +1090,23 @@ void MUONMatcher::fitTracks()
     }
     GTrackID++;
   }
+
+  GTrackID = 0;
+  for (auto& gTrack : mGlobalMuonTracksExt) {
+    if (gTrack.getBestMFTTrackMatchID() >= 0) {
+      if (mVerbose)
+        std::cout << "Fitting Global Track Ext # " << GTrackID
+                  << " with MFT track # " << gTrack.getBestMFTTrackMatchID()
+                  << ":" << std::endl;
+      fitGlobalMuonTrack(gTrack);
+    } else {
+      if (mVerbose)
+        std::cout << "No matching candidate for MCH Track " << GTrackID
+                  << std::endl;
+    }
+    GTrackID++;
+  }
+
   std::cout << "Finished fitting global muon tracks." << std::endl;
 }
 
