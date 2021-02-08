@@ -45,6 +45,7 @@
 using MCHTrack = o2::mch::TrackParam;
 using MFTTrack = o2::mft::TrackMFT;
 using GlobalMuonTrack = o2::track::GlobalMuonTrack;
+using GlobalMuonTrackExt = o2::track::GlobalMuonTrackExt;
 using MCLabels = o2::dataformats::MCTruthContainer<o2::MCCompLabel>;
 using MFTCluster = o2::mft::Cluster;
 
@@ -200,6 +201,7 @@ class MUONMatcher
   std::vector<MFTTrack>
     mMCHTracksDummy; // Dummy MCH tracks at the MFT coordinate system
   std::vector<GlobalMuonTrack> mGlobalMuonTracks;
+  std::vector<GlobalMuonTrackExt> mGlobalMuonTracksExt;
   std::vector<MFTCluster> mMFTClusters;
   std::vector<int> mtrackExtClsIDs;
   std::vector<o2::itsmft::ROFRecord> mMFTTracksROFs;

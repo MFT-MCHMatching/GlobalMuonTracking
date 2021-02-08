@@ -3,6 +3,8 @@
 #ifdef __MAKECINT__
 #pragma link C++ class GlobalMuonTrack + ;
 #pragma link C++ class std::vector < GlobalMuonTrack> + ;
+#pragma link C++ class GlobalMuonTrackExt + ;
+#pragma link C++ class std::vector < GlobalMuonTrackExt> + ;
 #pragma link C++ class MatchingHelper + ;
 #endif
 
@@ -14,6 +16,7 @@
 #endif
 
 using GlobalMuonTrack = o2::track::GlobalMuonTrack;
+using GlobalMuonTrackExt = o2::track::GlobalMuonTrackExt;
 using SMatrix5 = o2::track::SMatrix5;
 using SMatrix55 = o2::track::SMatrix55;
 
@@ -23,8 +26,8 @@ void Read_Match_MCH_MFT(const std::string trkFile = "GlobalMuonTracks.root")
   // Global Muon Tracks
   TFile *trkFileIn = new TFile(trkFile.c_str());
   TTree *gmTrackTree = (TTree *)trkFileIn->Get("o2sim");
-  std::vector<GlobalMuonTrack> trackGMVec, *trackGMVecP = &trackGMVec;
-  gmTrackTree->SetBranchAddress("GlobalMuonTrack", &trackGMVecP);
+  std::vector<GlobalMuonTrackExt> trackGMVec, *trackGMVecP = &trackGMVec;
+  gmTrackTree->SetBranchAddress("GlobalMuonTrackExt", &trackGMVecP);
 
   gmTrackTree->GetEntry(0);
 

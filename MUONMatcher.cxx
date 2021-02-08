@@ -441,7 +441,9 @@ void MUONMatcher::runEventMatching()
       for (auto& track : mMCHTracks) {
         //printf("BV: MCH track %d \n", GTrackID);
         mMCHTrackExtrap.extrapToVertexWithoutBranson(&track, mMatchingPlaneZ);
-        auto gTrackTmp = MCHtoGlobal(track);
+        GlobalMuonTrackExt gTrackTmp{MCHtoGlobal(track)};
+        // GlobalMuonTrackExt gTrackTmpPtr =
+        // static_cast<GlobalMuonTrackExt*>(&gTrackTmp);
         auto MCHlabel = mchTrackLabels.getLabels(GTrackID);
         if (MCHlabel[0].getEventID() == event) {
           auto mftTrackID = 0;
@@ -451,7 +453,7 @@ void MUONMatcher::runEventMatching()
             if (mftTrack.getCharge() == gTrackTmp.getCharge()) {
               if (MFTlabel[0].getEventID() == event) {
                 if (matchingCut(gTrackTmp, mftTrack)) {
-                  auto gTrack = MCHtoGlobal(track);
+                  GlobalMuonTrackExt gTrack{MCHtoGlobal(track)};
                   gTrack.setParametersMCH(gTrack.getParameters());
                   gTrack.setCovariancesMCH(gTrack.getCovariances());
                   gTrack.countCandidate();
@@ -465,7 +467,7 @@ void MUONMatcher::runEventMatching()
                   gTrack.setParametersMFT(mftTrack.getParameters());
                   gTrack.setCovariancesMFT(mftTrack.getCovariances());
                   gTrack.setMCHTrackID(GTrackID);
-                  mGlobalMuonTracks.push_back(gTrack);
+                  mGlobalMuonTracksExt.push_back(gTrack);
                 } // matching cut
               }   // end event match, MFT
             }     // end charge match
@@ -907,53 +909,97 @@ void MUONMatcher::finalize()
 
   std::cout << "Computing Track Labels..." << std::endl;
 
-  for (auto& gTrack : mGlobalMuonTracks) {
-    if (gTrack.closeMatch())
-      nCloseMatches++;
-    auto bestMFTTrackMatchID = gTrack.getBestMFTTrackMatchID();
-    if (mVerbose) {
-      std::cout << " GlobalTrack # " << GTrackID
-                << " chi^2 = " << gTrack.getMatchingChi2() << std::endl;
-      std::cout << "    bestMFTTrackMatchID :  " << bestMFTTrackMatchID
-                << std::endl;
-    }
-    if (!mMatchSaveAll) {
-      mMCHTrackID = GTrackID;
-    } else {
-      mMCHTrackID = gTrack.getMCHTrackID();
-    }
-    auto MCHlabel = mchTrackLabels.getLabels(mMCHTrackID);
-    o2::MCCompLabel thisLabel{MCHlabel[0].getTrackID(),
-                              MCHlabel[0].getEventID(), -1, true};
-    if (bestMFTTrackMatchID >= 0) {
-      auto MFTlabel = mftTrackLabels.getLabels(bestMFTTrackMatchID);
+  if (!mMatchSaveAll) {
+    for (auto &gTrack : mGlobalMuonTracks) {
+      if (gTrack.closeMatch())
+        nCloseMatches++;
+      auto bestMFTTrackMatchID = gTrack.getBestMFTTrackMatchID();
       if (mVerbose) {
-        std::cout << "    MFT Label:  ";
-        MFTlabel[0].print();
-        std::cout << "    MCH Label:  ";
-        MCHlabel[0].print();
+        std::cout << " GlobalTrack # " << GTrackID
+                  << " chi^2 = " << gTrack.getMatchingChi2() << std::endl;
+        std::cout << "    bestMFTTrackMatchID :  " << bestMFTTrackMatchID
+                  << std::endl;
       }
+      mMCHTrackID = GTrackID;
+      auto MCHlabel = mchTrackLabels.getLabels(mMCHTrackID);
+      o2::MCCompLabel thisLabel{MCHlabel[0].getTrackID(),
+                                MCHlabel[0].getEventID(), -1, true};
+      if (bestMFTTrackMatchID >= 0) {
+        auto MFTlabel = mftTrackLabels.getLabels(bestMFTTrackMatchID);
+        if (mVerbose) {
+          std::cout << "    MFT Label:  ";
+          MFTlabel[0].print();
+          std::cout << "    MCH Label:  ";
+          MCHlabel[0].print();
+        }
 
-      if ((MCHlabel[0].getTrackID() == MFTlabel[0].getTrackID()) and
-          (MCHlabel[0].getEventID() == MFTlabel[0].getEventID())) {
-        thisLabel = MCHlabel[0];
-        thisLabel.setFakeFlag(false);
-        gTrack.computeResiduals2Cov(mMFTTracks[bestMFTTrackMatchID]);
+        if ((MCHlabel[0].getTrackID() == MFTlabel[0].getTrackID()) and
+            (MCHlabel[0].getEventID() == MFTlabel[0].getEventID())) {
+          thisLabel = MCHlabel[0];
+          thisLabel.setFakeFlag(false);
+          gTrack.computeResiduals2Cov(mMFTTracks[bestMFTTrackMatchID]);
 
+        } else {
+          nFakes++;
+        }
       } else {
-        nFakes++;
+        nNoMatch++;
       }
-    } else {
-      nNoMatch++;
+      if (mVerbose) {
+        std::cout << "    Global Track Label => ";
+        thisLabel.print();
+        std::cout << std::endl;
+      }
+      mGlobalTrackLabels.addElement(mGlobalTrackLabels.getIndexedSize(),
+                                    thisLabel);
+      GTrackID++;
     }
-    if (mVerbose) {
-      std::cout << "    Global Track Label => ";
-      thisLabel.print();
-      std::cout << std::endl;
+
+  } else { // if matchSaveAll is set
+    for (auto &gTrack : mGlobalMuonTracksExt) {
+      if (gTrack.closeMatch())
+        nCloseMatches++;
+      auto bestMFTTrackMatchID = gTrack.getBestMFTTrackMatchID();
+      if (mVerbose) {
+        std::cout << " GlobalTrack # " << GTrackID
+                  << " chi^2 = " << gTrack.getMatchingChi2() << std::endl;
+        std::cout << "    bestMFTTrackMatchID :  " << bestMFTTrackMatchID
+                  << std::endl;
+      }
+      mMCHTrackID = gTrack.getMCHTrackID();
+      auto MCHlabel = mchTrackLabels.getLabels(mMCHTrackID);
+      o2::MCCompLabel thisLabel{MCHlabel[0].getTrackID(),
+                                MCHlabel[0].getEventID(), -1, true};
+      if (bestMFTTrackMatchID >= 0) {
+        auto MFTlabel = mftTrackLabels.getLabels(bestMFTTrackMatchID);
+        if (mVerbose) {
+          std::cout << "    MFT Label:  ";
+          MFTlabel[0].print();
+          std::cout << "    MCH Label:  ";
+          MCHlabel[0].print();
+        }
+
+        if ((MCHlabel[0].getTrackID() == MFTlabel[0].getTrackID()) and
+            (MCHlabel[0].getEventID() == MFTlabel[0].getEventID())) {
+          thisLabel = MCHlabel[0];
+          thisLabel.setFakeFlag(false);
+          gTrack.computeResiduals2Cov(mMFTTracks[bestMFTTrackMatchID]);
+
+        } else {
+          nFakes++;
+        }
+      } else {
+        nNoMatch++;
+      }
+      if (mVerbose) {
+        std::cout << "    Global Track Label => ";
+        thisLabel.print();
+        std::cout << std::endl;
+      }
+      mGlobalTrackLabels.addElement(mGlobalTrackLabels.getIndexedSize(),
+                                    thisLabel);
+      GTrackID++;
     }
-    mGlobalTrackLabels.addElement(mGlobalTrackLabels.getIndexedSize(),
-                                  thisLabel);
-    GTrackID++;
   }
 
   auto nCorrectMatches = GTrackID - nFakes - nNoMatch;
@@ -1000,8 +1046,16 @@ void MUONMatcher::saveGlobalMuonTracks()
   TFile outFile("GlobalMuonTracks.root", "RECREATE");
   TTree outTree("o2sim", "Global Muon Tracks");
   std::vector<GlobalMuonTrack>* tracks = &mGlobalMuonTracks;
+  std::vector<GlobalMuonTrackExt> *tracksExt = &mGlobalMuonTracksExt;
   MCLabels* trackLabels = &mGlobalTrackLabels;
-  outTree.Branch("GlobalMuonTrack", &tracks);
+
+  if (!mMatchSaveAll) {
+    outTree.Branch("GlobalMuonTrack", &tracks);
+
+  } else {
+    outTree.Branch("GlobalMuonTrackExt", &tracksExt);
+  }
+
   outTree.Branch("GlobalMuonTrackMCTruth", &trackLabels);
   outTree.Fill();
   outTree.Write();
