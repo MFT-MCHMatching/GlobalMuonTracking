@@ -20,19 +20,20 @@ using GlobalMuonTrackExt = o2::track::GlobalMuonTrackExt;
 using SMatrix5 = o2::track::SMatrix5;
 using SMatrix55 = o2::track::SMatrix55;
 
-void Read_Match_MCH_MFT(const std::string trkFile = "GlobalMuonTracks.root")
+void Read_Match_MCH_MFT(
+  const std::string trkFile = "GlobalMuonTracksExt.root")
 {
 
   // Global Muon Tracks
-  TFile *trkFileIn = new TFile(trkFile.c_str());
-  TTree *gmTrackTree = (TTree *)trkFileIn->Get("o2sim");
+  TFile* trkFileIn = new TFile(trkFile.c_str());
+  TTree* gmTrackTree = (TTree*)trkFileIn->Get("o2sim");
   std::vector<GlobalMuonTrackExt> trackGMVec, *trackGMVecP = &trackGMVec;
   gmTrackTree->SetBranchAddress("GlobalMuonTrackExt", &trackGMVecP);
 
   gmTrackTree->GetEntry(0);
 
   Int_t igm = 0;
-  for (auto &gmTrack : trackGMVec) {
+  for (auto& gmTrack : trackGMVec) {
     const SMatrix5& trackMCHpar = gmTrack.getParametersMCH();
     const SMatrix5& trackMFTpar = gmTrack.getParametersMFT();
     const SMatrix55& trackMCHcov = gmTrack.getCovariancesMCH();
@@ -55,14 +56,14 @@ void Read_Match_MCH_MFT(const std::string trkFile = "GlobalMuonTracks.root")
     printf("MCH covariances:\n");
     for (Int_t i = 0; i < 5; i++) {
       for (Int_t j = 0; j < 5; j++) {
-	printf("%f ", trackMCHcov(i,j));
+        printf("%f ", trackMCHcov(i, j));
       }
       printf("\n");
     }
     printf("MFT covariances:\n");
     for (Int_t i = 0; i < 5; i++) {
       for (Int_t j = 0; j < 5; j++) {
-	printf("%f ", trackMFTcov(i,j));
+        printf("%f ", trackMFTcov(i, j));
       }
       printf("\n");
     }
@@ -71,5 +72,4 @@ void Read_Match_MCH_MFT(const std::string trkFile = "GlobalMuonTracks.root")
   }
 
   trkFileIn->Close();
-
 }
