@@ -400,7 +400,6 @@ void MUONMatcher::runEventMatching()
           if (mCustomMatchFunc) { // Custom matching function
             for (auto mftTrack : mMFTTracks) {
               auto MFTlabel = mftTrackLabels.getLabels(mftTrackID);
-              if (mftTrack.getCharge() == gTrack.getCharge())
                 if (MFTlabel[0].getEventID() == event)
                   if (matchingCut(gTrack, mftTrack)) {
                     gTrack.countCandidate();
@@ -417,7 +416,6 @@ void MUONMatcher::runEventMatching()
           } else { // Built-in matching function
             for (auto mftTrack : mMFTTracks) {
               auto MFTlabel = mftTrackLabels.getLabels(mftTrackID);
-              if (mftTrack.getCharge() == gTrack.getCharge())
                 if (MFTlabel[0].getEventID() == event)
                   if (matchingCut(gTrack, mftTrack)) {
                     gTrack.countCandidate();
@@ -450,7 +448,6 @@ void MUONMatcher::runEventMatching()
           for (auto mftTrack : mMFTTracks) {
             //printf("BV: MFT track %d \n", mftTrackID);
             auto MFTlabel = mftTrackLabels.getLabels(mftTrackID);
-            if (mftTrack.getCharge() == gTrackTmp.getCharge()) {
               if (MFTlabel[0].getEventID() == event) {
                 if (matchingCut(gTrackTmp, mftTrack)) {
                   GlobalMuonTrackExt gTrack{MCHtoGlobal(track)};
@@ -470,7 +467,6 @@ void MUONMatcher::runEventMatching()
                   mGlobalMuonTracksExt.push_back(gTrack);
                 } // matching cut
               }   // end event match, MFT
-            }     // end charge match
             mftTrackID++;
           } // end loop MFT tracks
         }   // end event match, MCH
@@ -527,8 +523,7 @@ void MUONMatcher::printMatchingPlaneView(int MCHTrackID)
       xPositions.emplace_back(mftTrack.getX());
       yPositions.emplace_back(mftTrack.getY());
       pointsColors.emplace_back("black");
-      if ((mftTrack.getCharge() == MCHTrack.getCharge()) and
-          matchingCut(MCHTrack, mftTrack)) {
+      if (matchingCut(MCHTrack, mftTrack)) {
         pointsColors.back() = "blue";
         MCHTrack.countCandidate();
         if (MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) {
@@ -822,6 +817,9 @@ bool MUONMatcher::matchCutDistance(const GlobalMuonTrack& mchTrack,
                                    const MFTTrack& mftTrack)
 {
 
+  if (mChargeCutEnabled && (mchTrack.getCharge() != mftTrack.getCharge()))
+    return false;
+
   auto dx = mchTrack.getX() - mftTrack.getX();
   auto dy = mchTrack.getY() - mftTrack.getY();
   auto distance = TMath::Sqrt(dx * dx + dy * dy);
@@ -832,6 +830,9 @@ bool MUONMatcher::matchCutDistance(const GlobalMuonTrack& mchTrack,
 bool MUONMatcher::matchCutDistanceAndAngles(const GlobalMuonTrack& mchTrack,
                                             const MFTTrack& mftTrack)
 {
+
+  if (mChargeCutEnabled && (mchTrack.getCharge() != mftTrack.getCharge()))
+    return false;
 
   auto dx = mchTrack.getX() - mftTrack.getX();
   auto dy = mchTrack.getY() - mftTrack.getY();
@@ -848,6 +849,9 @@ bool MUONMatcher::matchCutDistanceSigma(const GlobalMuonTrack& mchTrack,
                                         const MFTTrack& mftTrack)
 {
 
+  if (mChargeCutEnabled && (mchTrack.getCharge() != mftTrack.getCharge()))
+    return false;
+
   auto dx = mchTrack.getX() - mftTrack.getX();
   auto dy = mchTrack.getY() - mftTrack.getY();
   auto distance = TMath::Sqrt(dx * dx + dy * dy);
@@ -860,6 +864,9 @@ bool MUONMatcher::matchCutDistanceSigma(const GlobalMuonTrack& mchTrack,
 bool MUONMatcher::matchCut3SigmaXYAngles(const GlobalMuonTrack& mchTrack,
                                          const MFTTrack& mftTrack)
 {
+
+  if (mChargeCutEnabled && (mchTrack.getCharge() != mftTrack.getCharge()))
+    return false;
 
   auto dx = mchTrack.getX() - mftTrack.getX();
   auto dy = mchTrack.getY() - mftTrack.getY();

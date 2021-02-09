@@ -153,6 +153,7 @@ class MUONMatcher
   };
 
   // Matching cuts
+  void disableChargeMatchCut() { mChargeCutEnabled = false; }
   bool matchingCut(const GlobalMuonTrack&,
                    const MFTTrack&); // Calls configured cut function
   void setCutFunction(bool (MUONMatcher::*func)(const GlobalMuonTrack&,
@@ -222,6 +223,7 @@ class MUONMatcher
   bool mVerbose = false;
   TGeoManager* mGeoManager;
   bool mMatchSaveAll = false;
+  bool mChargeCutEnabled = true;
 };
 
 //_________________________________________________________________________________________________
