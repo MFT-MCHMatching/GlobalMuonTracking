@@ -1547,15 +1547,53 @@ double MUONMatcher::matchMFT_MCH_TracksAllParam(const GlobalMuonTrack& mchTrack,
 double MUONMatcher::matchTrainedML(const GlobalMuonTrack &mchTrack,
                                    const MFTTrack &mftTrack) {
 
-  mMCH_MFT_pair[0] = mchTrack.GetX();
-  mMCH_MFT_pair[1] = ...... mMCH_MFT_pair[39] =
+  mMCH_MFT_pair[0] = mftTrack.getX();
+  mMCH_MFT_pair[1] = mftTrack.getY();
+  mMCH_MFT_pair[2] = mftTrack.getPhi(),
+  mMCH_MFT_pair[3] = mftTrack.getTanl();
+  mMCH_MFT_pair[4] = mftTrack.getInvQPt();
+  mMCH_MFT_pair[5] = mftTrack.getCovariances()(0, 0);
+  mMCH_MFT_pair[6] = mftTrack.getCovariances()(0, 1);
+  mMCH_MFT_pair[7] = mftTrack.getCovariances()(1, 1);
+  mMCH_MFT_pair[8] = mftTrack.getCovariances()(0, 2);
+  mMCH_MFT_pair[9] = mftTrack.getCovariances()(1, 2);
+  mMCH_MFT_pair[10] = mftTrack.getCovariances()(2, 2);
+  mMCH_MFT_pair[11] = mftTrack.getCovariances()(0, 3);
+  mMCH_MFT_pair[12] = mftTrack.getCovariances()(1, 3);
+  mMCH_MFT_pair[13] = mftTrack.getCovariances()(2, 3);
+  mMCH_MFT_pair[14] = mftTrack.getCovariances()(3, 3);
+  mMCH_MFT_pair[15] = mftTrack.getCovariances()(0, 4);
+  mMCH_MFT_pair[16] = mftTrack.getCovariances()(1, 4);
+  mMCH_MFT_pair[17] = mftTrack.getCovariances()(2, 4);
+  mMCH_MFT_pair[18] = mftTrack.getCovariances()(3, 4);
+  mMCH_MFT_pair[19] = mftTrack.getCovariances()(4, 4);
+  mMCH_MFT_pair[20] = mchTrack.getX();
+  mMCH_MFT_pair[21] = mchTrack.getY();
+  mMCH_MFT_pair[22] = mchTrack.getPhi(),
+  mMCH_MFT_pair[23] = mchTrack.getTanl();
+  mMCH_MFT_pair[24] = mchTrack.getInvQPt();
+  mMCH_MFT_pair[25] = mchTrack.getCovariances()(0, 0);
+  mMCH_MFT_pair[26] = mchTrack.getCovariances()(0, 1);
+  mMCH_MFT_pair[27] = mchTrack.getCovariances()(1, 1);
+  mMCH_MFT_pair[28] = mchTrack.getCovariances()(0, 2);
+  mMCH_MFT_pair[29] = mchTrack.getCovariances()(1, 2);
+  mMCH_MFT_pair[30] = mchTrack.getCovariances()(2, 2);
+  mMCH_MFT_pair[31] = mchTrack.getCovariances()(0, 3);
+  mMCH_MFT_pair[32] = mchTrack.getCovariances()(1, 3);
+  mMCH_MFT_pair[33] = mchTrack.getCovariances()(2, 3);
+  mMCH_MFT_pair[34] = mchTrack.getCovariances()(3, 3);
+  mMCH_MFT_pair[35] = mchTrack.getCovariances()(0, 4);
+  mMCH_MFT_pair[36] = mchTrack.getCovariances()(1, 4);
+  mMCH_MFT_pair[37] = mchTrack.getCovariances()(2, 4);
+  mMCH_MFT_pair[38] = mchTrack.getCovariances()(3, 4);
+  mMCH_MFT_pair[39] = mchTrack.getCovariances()(4, 4);
+
 
       double matchingscore =
           mTMVAReader->EvaluateRegression(0, "MUONMatcherML");
 
   return -matchingscore;
 }
-
 Float_t EtaToTheta(Float_t arg)
 {
   return (180. / TMath::Pi()) * 2. * atan(exp(-arg));

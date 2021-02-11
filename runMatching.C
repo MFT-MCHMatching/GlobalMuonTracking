@@ -72,17 +72,17 @@ void loadAndSetMatchingConfig()
         if (gSystem->Getenv("ML_SCORECUT"))
           scorecut = atof(gSystem->Getenv("ML_SCORECUT"));
         std::string weightfilename = gSystem->Getenv("ML_WEIGHTFILE");
-        matcher.configureTMVA(weightfilename, score_cut);
+        matcher.configureTMVA(weightfilename, scorecut);
         std::cout << "Setting TMVA weight file: " << weightfilename
                   << std::endl;
-        std::cout << "Setting matching score cut = " << score_cut << std::endl;
+        std::cout << "Setting matching score cut = " << scorecut << std::endl;
       } else {
         std::cout << "Missing TMVA Weight File!" << std::endl;
         exit(1);
       }
     }
   }
-  }
+  
 
   if (gSystem->Getenv("MATCHING_PLANEZ")) {
     double matching_planeZ = atof(gSystem->Getenv("MATCHING_PLANEZ"));

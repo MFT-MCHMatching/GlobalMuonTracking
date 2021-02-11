@@ -40,6 +40,11 @@
 #include "include/TrackExtrap.h"
 #include "include/tempMCHTrack.h"
 
+
+#include "TMVA/Tools.h"
+#include "TMVA/Reader.h"
+#include "TMVA/DataLoader.h"
+
 #include <iostream>
 
 using MCHTrack = o2::mch::TrackParam;
@@ -177,7 +182,7 @@ class MUONMatcher
   {
     mCustomCutFunc = func;
   }
-  void configureTMVA(std::string filename, scorecut) {
+  void configureTMVA(std::string filename, float scorecut) {
     mTMVAWeightFileName = filename;
     mMLScoreCut = scorecut;
     mTMVAReader = new TMVA::Reader("!Color:!Silent");
@@ -296,7 +301,7 @@ class MUONMatcher
   // TMVA interface
   std::string mTMVAWeightFileName;
   TMVA::Reader *mTMVAReader;
-  float_t mMCH_MFT_TMVApair[40];
+  float_t mMCH_MFT_pair[40];
   float_t mMLScoreCut;
 };
 
