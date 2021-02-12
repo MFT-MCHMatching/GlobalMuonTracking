@@ -30,6 +30,8 @@
 #include "TMultiGraph.h"
 #include "TPaveText.h"
 #include "TTree.h"
+#include "TSystem.h"
+#include "TROOT.h"
 #endif
 
 #include "MCHTracking/TrackParam.h"
@@ -116,6 +118,8 @@ class MUONMatcher
   //// Matching using trained ML
   double matchTrainedML(const GlobalMuonTrack &mchTrack,
                         const MFTTrack &mftTrack);
+
+  void EvaluateML();
 
   void setMatchingFunction(double (MUONMatcher::*func)(const GlobalMuonTrack&,
                                                        const MFTTrack&))

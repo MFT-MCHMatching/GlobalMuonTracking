@@ -381,38 +381,37 @@ void MUONMatcher::runEventMatching()
         auto MCHlabel = mSortedMCHTrackLabels[event].getLabels(GTrackID);
         if (mCustomMatchFunc) { // Custom matching function
           auto mftTrackID = 0;
-          for (auto mftTrack : mMFTTracks) {
-            auto MFTlabel = mftTrackLabels.getLabels(mftTrackLabelsIDx[event][mftTrackID]);
-            if (matchingCut(gTrack, mftTrack)) {
-              gTrack.countCandidate();
-              if (MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID())
-                gTrack.setCloseMatch();
-              auto chi2 = (*mCustomMatchFunc)(gTrack, mftTrack);
-              if (chi2 < gTrack.getMatchingChi2()) {
-                gTrack.setBestMFTTrackMatchID(mftTrackLabelsIDx[event][mftTrackID]);
-                gTrack.setMatchingChi2(chi2);
-              }
+          if (mCustomMatchFunc) { // Custom matching function
+            for (auto mftTrack : mMFTTracks) {
+              auto MFTlabel = mftTrackLabels.getLabels(mftTrackID);
+              if (MFTlabel[0].getEventID() == event)
+                if (matchingCut(gTrack, mftTrack)) {
+                  gTrack.countCandidate();
+                  if (MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID())
+                    gTrack.setCloseMatch();
+                  auto chi2 = (*mCustomMatchFunc)(gTrack, mftTrack);
+                  if (chi2 < gTrack.getMatchingChi2()) {
+                    gTrack.setBestMFTTrackMatchID(mftTrackID);
+                    gTrack.setMatchingChi2(chi2);
+                  }
+                }
+              mftTrackID++;
             }
-            mftTrackID++;
-          }
-        } else { // Built-in matching function
-          auto mftTrackID = 0;
-          for (auto mftTrack : mSortedMFTTracks[event]) {
-            auto MFTlabel = mftTrackLabels.getLabels(mftTrackLabelsIDx[event][mftTrackID]);
-            if (matchingCut(gTrack, mftTrack)) {
-              gTrack.countCandidate();
-              if (MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID())
-                gTrack.setCloseMatch();
-              auto chi2 = (this->*mMatchFunc)(gTrack, mftTrack);
-              if (chi2 < gTrack.getMatchingChi2()) {
-                gTrack.setBestMFTTrackMatchID(mftTrackLabelsIDx[event][mftTrackID]);
-                gTrack.setMatchingChi2(chi2);
-                // TMVA: Drop MFT candidate if score bellow threshold
-                //  Note: comparing negative ML scores to get lowest value
-                //  as for chi2
-                if (!(mTMVAReader && (std::abs(chi2) < mMLScoreCut)))
-                  gTrack.setBestMFTTrackMatchID(mftTrackID);
-              }
+          } else { // Built-in matching function
+            for (auto mftTrack : mMFTTracks) {
+              auto MFTlabel = mftTrackLabels.getLabels(mftTrackID);
+              if (MFTlabel[0].getEventID() == event)
+                if (matchingCut(gTrack, mftTrack)) {
+                  gTrack.countCandidate();
+                  if (MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID())
+                    gTrack.setCloseMatch();
+                  auto chi2 = (this->*mMatchFunc)(gTrack, mftTrack);
+                  if (chi2 < gTrack.getMatchingChi2()) {
+                    gTrack.setMatchingChi2(chi2);
+                    gTrack.setBestMFTTrackMatchID(mftTrackID);
+                  }
+                }
+              mftTrackID++;
             }
             mftTrackID++;
           }
@@ -467,6 +466,7 @@ void MUONMatcher::runEventMatching()
               << std::endl;
   }
   finalize();
+  if(mTMVAReader) EvaluateML();
 }
 
 //_________________________________________________________________________________________________
@@ -1523,7 +1523,7 @@ double MUONMatcher::matchMFT_MCH_TracksAllParam(const GlobalMuonTrack& mchTrack,
   invResCov.Invert();
 
   // Kalman Gain Matrix
-  SMatrix55Std K_k =
+	SMatrix55Std K_k =
     GlobalMuonTrackCovariances * ROOT::Math::Transpose(H_k) * invResCov;
 
   // Update Parameters
@@ -1591,9 +1591,137 @@ double MUONMatcher::matchTrainedML(const GlobalMuonTrack &mchTrack,
 
       double matchingscore =
           mTMVAReader->EvaluateRegression(0, "MUONMatcherML");
-
+			//  Note: returning negative ML scores to get lowest value = best match
   return -matchingscore;
 }
+
+void MUONMatcher::EvaluateML() {
+
+	TFile *outputfile  = new TFile( "ML_Evaluation.root","RECREATE" );
+
+  int npoints=25;
+	float cutsteps = 1./(float)npoints;
+  TGraph *gr1 = new TGraph(npoints);
+ 	gr1->SetMarkerColor(kGreen+2);
+	gr1->SetMarkerStyle(20);
+  TGraph *gr2 = new TGraph(npoints);
+	gr2->SetMarkerColor(2);
+	gr2->SetMarkerStyle(20);
+  TGraph *gr3 = new TGraph(npoints);
+ 	gr3->SetMarkerColor(4);
+	gr3->SetMarkerStyle(20);
+  TGraph *gr4 = new TGraph(npoints);
+	gr4->SetMarkerColor(9);
+	gr4->SetMarkerStyle(20);
+
+
+	auto GTrackID = 0;
+  int correct_match, fake, reject, ntracks;
+  for(float cut = 0.05; cut < 1.; cut+=cutsteps) {
+    correct_match = fake = reject = GTrackID = 0;
+		for (auto& gTrack : mGlobalMuonTracks) { //counting correct and fake matches and rejected tracks by cut score
+
+			auto GMTracklabel = mGlobalTrackLabels.getLabels(GTrackID);
+			auto bestMFTTrackMatchID = gTrack.getBestMFTTrackMatchID();  //pegando o ID do melhor match (candidada), se houver
+
+			if (bestMFTTrackMatchID >= 0 && std::abs(gTrack.getMatchingChi2()) > cut)
+				GMTracklabel[0].isCorrect() ? (correct_match++) : (fake++);
+			else reject++;
+
+			GTrackID++;
+		} //loop over global tracks
+			ntracks = GTrackID;
+			gr1->SetPoint(gr1->GetN(),cut, (float)correct_match/(ntracks - reject));
+			gr2->SetPoint(gr2->GetN(),cut, (float)fake/(ntracks - reject));
+			gr3->SetPoint(gr3->GetN(),cut, (float)reject/ntracks);
+			gr4->SetPoint(gr4->GetN(),(float)reject/ntracks, (float)correct_match/(ntracks - reject));
+	}
+
+	TCanvas *c1 = new TCanvas("c1","c1");
+	 gr1->SetTitle("Correct Match Ratio Vs Score Cut");
+	 gr1->Draw("ap");
+	 gr1->GetXaxis()->SetTitle("Score Cut");
+	 gr1->GetYaxis()->SetTitle("Correct Match Ratio");
+	 c1->SetName("Correct Match Ratio");
+	 c1->Write();
+	 c1->Close();
+	TCanvas *c2 = new TCanvas("c2","c2");
+	 gr2->SetTitle("Fake Match Ratio Vs Score Cut");
+	 gr2->Draw("ap");
+	 gr2->GetXaxis()->SetTitle("Score Cut");
+	 gr2->GetYaxis()->SetTitle("Fake Match Ratio");
+	 c2->SetName("Fake Match Ratio");
+	 c2->Write();
+	 c2->Close();
+	TCanvas *c3 = new TCanvas("c3","c3");
+	 gr3->SetTitle("Tracks Rejected by Score Cut");
+	 gr3->Draw("ap");
+	 gr3->GetXaxis()->SetTitle("Score Cut");
+	 gr3->GetYaxis()->SetTitle("MCH Tracks Rejection Ratio");
+	 c3->SetName("Reject Tracks ratio");
+	 c3->Write();
+	 c3->Close();
+	TCanvas *c123 = new TCanvas("c123","c123");
+	 gr1->Draw("ap");
+	 gr2->Draw("p same");
+	 gr3->Draw("p same");
+	 c123->SetTitle("all ratios");
+	 c123->SetName("All Ratios");
+	 c123->Write();
+	 c123->Close();
+	TCanvas *c4 = new TCanvas("c4","c4");
+	 gr4->SetTitle("Correct Match Ratio Vs Rejection Ratio");
+	 gr4->Draw("ap");
+	 gr4->GetXaxis()->SetTitle("MCH Tracks Rejection Ratio");
+	 gr4->GetYaxis()->SetTitle("Correct Match ratio");
+	 c4->SetName("Correct & Reject");
+	 c4->Write();
+	 c4->Close();
+
+		//Creating Histograms
+	TCanvas *score_canvas = new TCanvas("scores hist","c0");
+	TH1D *correctmatch_hist = new TH1D("Correct Matches","Correct Matches Scores", 50, -0.1, 1.15);
+	correctmatch_hist->SetLineColor(kGreen+1);
+	correctmatch_hist->SetLineWidth(5);
+	correctmatch_hist->SetXTitle("Matching Score");
+	TH1D *fakematch_hist = new TH1D("Fake Matches","Fake Matches Scores", 50, -0.1, 1.15);
+	fakematch_hist->SetLineColor(2);
+	fakematch_hist->SetLineWidth(5);
+	fakematch_hist->SetXTitle("Matching Score");
+
+	GTrackID = 0;
+	for (auto& gTrack : mGlobalMuonTracks) {
+
+//		auto MCHlabel = mchTrackLabels.getLabels(GTrackID);
+		auto mMCHTrackID = gTrack.getMCHTrackID();
+		auto GMTracklabel = mGlobalTrackLabels.getLabels(GTrackID);
+    auto bestMFTTrackMatchID = gTrack.getBestMFTTrackMatchID();
+		auto bestchi2 = std::abs(gTrack.getMatchingChi2());
+
+	  if (bestMFTTrackMatchID >= 0) {
+			if (GMTracklabel[0].isCorrect()) {
+				correctmatch_hist->Fill(bestchi2);
+			} else {
+					fakematch_hist->Fill(bestchi2);
+			}
+		}
+		if (bestchi2 < mMLScoreCut) {		// TMVA: Drop MFT candidate if score bellow threshold
+			gTrack.setBestMFTTrackMatchID(-1);
+			mGlobalTrackLabels.getLabels(GTrackID)[0].setFakeFlag(true);
+		}
+		GTrackID++;
+	} //end loop over global tracks
+	correctmatch_hist->SetStats(0);
+	correctmatch_hist->Draw();
+	fakematch_hist->SetStats(0);
+	fakematch_hist->Draw("SAME");
+	score_canvas->Write();
+   // --- Write histograms and graphics
+	outputfile->Write();
+	outputfile->Close();
+}
+
+
 Float_t EtaToTheta(Float_t arg)
 {
   return (180. / TMath::Pi()) * 2. * atan(exp(-arg));
