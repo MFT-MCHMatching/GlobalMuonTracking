@@ -175,6 +175,8 @@ class MUONMatcher
     }
   };
 
+	void exportTrainningDataRoot(int nMCHTracks = -1);
+
   // Matching cuts
   void disableChargeMatchCut() { mChargeCutEnabled = false; }
   bool matchingCut(const GlobalMuonTrack&,

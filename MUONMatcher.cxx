@@ -1543,6 +1543,7 @@ double MUONMatcher::matchMFT_MCH_TracksAllParam(const GlobalMuonTrack& mchTrack,
   // matchTrack.setMatchingChi2(matchChi2Track);
   return matchChi2Track;
 }
+
 //_________________________________________________________________________________________________
 double MUONMatcher::matchTrainedML(const GlobalMuonTrack &mchTrack,
                                    const MFTTrack &mftTrack) {
@@ -1595,6 +1596,7 @@ double MUONMatcher::matchTrainedML(const GlobalMuonTrack &mchTrack,
   return -matchingscore;
 }
 
+//_________________________________________________________________________________________________
 void MUONMatcher::EvaluateML() {
 
 	TFile *outputfile  = new TFile( "ML_Evaluation.root","RECREATE" );
@@ -1721,7 +1723,146 @@ void MUONMatcher::EvaluateML() {
 	outputfile->Close();
 }
 
+//_________________________________________________________________________________________________
+void MUONMatcher::exportTrainningDataRoot(int nMCHTracks) {
 
+	int MCHTrackID = nMCHTracks;
+	if (nMCHTracks < 0) MCHTrackID = mGlobalMuonTracks.size();
+
+  std::string outputfile ( std::to_string(nMCHTracks) + "MCHTracks.root");
+
+	auto fT = TFile::Open(outputfile.c_str(),"RECREATE");
+	std::cout << " Exporting trainning data for TTree with " << MCHTrackID << " MCH Tracks" << std::endl;
+
+	Float_t MFT_X, MFT_Y, MFT_Phi, MFT_Tanl, MFT_InvQPt, MFT_Cov00, MFT_Cov01, MFT_Cov11, MFT_Cov02, MFT_Cov12, MFT_Cov22, MFT_Cov03, MFT_Cov13, MFT_Cov23, MFT_Cov33, MFT_Cov04, MFT_Cov14, MFT_Cov24, MFT_Cov34, MFT_Cov44, MCH_X, MCH_Y, MCH_Phi, MCH_Tanl, MCH_InvQPt, MCH_Cov00, MCH_Cov01, MCH_Cov11, MCH_Cov02, MCH_Cov12, MCH_Cov22, MCH_Cov03, MCH_Cov13, MCH_Cov23, MCH_Cov33, MCH_Cov04, MCH_Cov14, MCH_Cov24, MCH_Cov34, MCH_Cov44;
+	Int_t	Truth, track_IDs;
+	int pairID=0;
+	int ID_vec[nMCHTracks];
+
+  TTree* matchTree = new TTree("matchTree", "MatchTree");
+  matchTree->Branch("MFT_X",&MFT_X, "MFT_X/F");
+  matchTree->Branch("MFT_Y",&MFT_Y, "MFT_Y/F");
+  matchTree->Branch("MFT_Phi",&MFT_Phi, "MFT_Phi/F");
+  matchTree->Branch("MFT_Tanl",&MFT_Tanl, "MFT_Tanl/F");
+  matchTree->Branch("MFT_InvQPt",&MFT_InvQPt, "MFT_InvQPt/F");
+  matchTree->Branch("MFT_Cov00",&MFT_Cov00, "MFT_Cov00/F");
+  matchTree->Branch("MFT_Cov01",&MFT_Cov01, "MFT_Cov01/F");
+  matchTree->Branch("MFT_Cov11",&MFT_Cov11, "MFT_Cov11/F");
+  matchTree->Branch("MFT_Cov02",&MFT_Cov02, "MFT_Cov02/F");
+  matchTree->Branch("MFT_Cov12",&MFT_Cov12, "MFT_Cov12/F");
+  matchTree->Branch("MFT_Cov22",&MFT_Cov22, "MFT_Cov22/F");
+  matchTree->Branch("MFT_Cov03",&MFT_Cov03, "MFT_Cov03/F");
+  matchTree->Branch("MFT_Cov13",&MFT_Cov13, "MFT_Cov13/F");
+  matchTree->Branch("MFT_Cov23",&MFT_Cov23, "MFT_Cov23/F");
+  matchTree->Branch("MFT_Cov33",&MFT_Cov33, "MFT_Cov33/F");
+  matchTree->Branch("MFT_Cov04",&MFT_Cov04, "MFT_Cov04/F");
+  matchTree->Branch("MFT_Cov14",&MFT_Cov14, "MFT_Cov14/F");
+  matchTree->Branch("MFT_Cov24",&MFT_Cov24, "MFT_Cov24/F");
+  matchTree->Branch("MFT_Cov34",&MFT_Cov34, "MFT_Cov34/F");
+  matchTree->Branch("MFT_Cov44",&MFT_Cov44, "MFT_Cov44/F");
+  matchTree->Branch("MCH_X",&MCH_X, "MCH_X/F");
+  matchTree->Branch("MCH_Y",&MCH_Y, "MCH_Y/F");
+  matchTree->Branch("MCH_Phi",&MCH_Phi, "MCH_Phi/F");
+  matchTree->Branch("MCH_Tanl",&MCH_Tanl, "MCH_Tanl/F");
+  matchTree->Branch("MCH_InvQPt",&MFT_InvQPt, "MCH_InvQPt/F");
+  matchTree->Branch("MCH_Cov00",&MCH_Cov00, "MCH_Cov00/F");
+  matchTree->Branch("MCH_Cov01",&MCH_Cov01, "MCH_Cov01/F");
+  matchTree->Branch("MCH_Cov11",&MCH_Cov11, "MCH_Cov11/F");
+  matchTree->Branch("MCH_Cov02",&MCH_Cov02, "MCH_Cov02/F");
+  matchTree->Branch("MCH_Cov12",&MCH_Cov12, "MCH_Cov12/F");
+  matchTree->Branch("MCH_Cov22",&MCH_Cov22, "MCH_Cov22/F");
+  matchTree->Branch("MCH_Cov03",&MCH_Cov03, "MCH_Cov03/F");
+  matchTree->Branch("MCH_Cov13",&MCH_Cov13, "MCH_Cov13/F");
+  matchTree->Branch("MCH_Cov23",&MCH_Cov23, "MCH_Cov23/F");
+  matchTree->Branch("MCH_Cov33",&MCH_Cov33, "MCH_Cov33/F");
+  matchTree->Branch("MCH_Cov04",&MCH_Cov04, "MCH_Cov04/F");
+  matchTree->Branch("MCH_Cov14",&MCH_Cov14, "MCH_Cov14/F");
+  matchTree->Branch("MCH_Cov24",&MCH_Cov24, "MCH_Cov24/F");
+  matchTree->Branch("MCH_Cov34",&MCH_Cov34, "MCH_Cov34/F");
+  matchTree->Branch("MCH_Cov44",&MCH_Cov44, "MCH_Cov44/F");
+  matchTree->Branch("Truth", &Truth, "Truth/I");
+
+
+	while (MCHTrackID) {
+		std::cout << " MCHTrackID =  " << MCHTrackID << std::endl;
+		auto MCHlabel = mchTrackLabels.getLabels(MCHTrackID);
+		auto event = MCHlabel[0].getEventID();
+		auto MCHTrack = mGlobalMuonTracks[MCHTrackID];
+
+		auto mftTrackID = 0, nMFTTracks = 0;
+		for (auto mftTrack : mMFTTracks) {
+		  auto MFTlabel = mftTrackLabels.getLabels(mftTrackID);
+		  if (MFTlabel[0].getEventID() == event) {
+	//			std::cout<< " MFT X " << mftTrack.getX() << std::endl;
+				 MFT_X = mftTrack.getX();
+		     MFT_Y = mftTrack.getY();
+		     MFT_Phi = mftTrack.getPhi();
+		     MFT_Tanl =  mftTrack.getTanl();
+		     MFT_InvQPt = mftTrack.getInvQPt();
+		     MFT_Cov00 = mftTrack.getCovariances()(0,0);
+		     MFT_Cov01 = mftTrack.getCovariances()(0,1);
+		     MFT_Cov11 = mftTrack.getCovariances()(1,1);
+		     MFT_Cov02 = mftTrack.getCovariances()(0,2);
+		     MFT_Cov12 = mftTrack.getCovariances()(1,2);
+		     MFT_Cov22 = mftTrack.getCovariances()(2,2);
+		     MFT_Cov03 = mftTrack.getCovariances()(0,3);
+		     MFT_Cov13 = mftTrack.getCovariances()(1,3);
+		     MFT_Cov23 = mftTrack.getCovariances()(2,3);
+		     MFT_Cov33 = mftTrack.getCovariances()(3,3);
+		     MFT_Cov04 = mftTrack.getCovariances()(0,4);
+		     MFT_Cov14 = mftTrack.getCovariances()(1,4);
+		     MFT_Cov24 = mftTrack.getCovariances()(2,4);
+		     MFT_Cov34 = mftTrack.getCovariances()(3,4);
+		     MFT_Cov44 = mftTrack.getCovariances()(4,4);
+		     MCH_X = MCHTrack.getX();
+		     MCH_Y = MCHTrack.getY();
+		     MCH_Phi = MCHTrack.getPhi();
+		     MCH_Tanl = MCHTrack.getTanl();
+		     MCH_InvQPt = MCHTrack.getInvQPt();
+		     MCH_Cov00 = MCHTrack.getCovariances()(0,0);
+		     MCH_Cov01 = MCHTrack.getCovariances()(0,1);
+		     MCH_Cov11 = MCHTrack.getCovariances()(1,1);
+		     MCH_Cov02 = MCHTrack.getCovariances()(0,2);
+		     MCH_Cov12 = MCHTrack.getCovariances()(1,2);
+		     MCH_Cov22 = MCHTrack.getCovariances()(2,2);
+		     MCH_Cov03 = MCHTrack.getCovariances()(0,3);
+		     MCH_Cov13 = MCHTrack.getCovariances()(1,3);
+		     MCH_Cov23 = MCHTrack.getCovariances()(2,3);
+		     MCH_Cov33 = MCHTrack.getCovariances()(3,3);
+		     MCH_Cov04 = MCHTrack.getCovariances()(0,4);
+		     MCH_Cov14 = MCHTrack.getCovariances()(1,4);
+		     MCH_Cov24 = MCHTrack.getCovariances()(2,4);
+		     MCH_Cov34 = MCHTrack.getCovariances()(3,4);
+		     MCH_Cov44 = MCHTrack.getCovariances()(4,4);
+         Truth = (int)(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID());
+	//      track_pairs << "\n";
+	//      pairs_match << "\n ";
+		    pairID++;
+				matchTree->Fill();  //okay...here it fills MCHRanges too...thats the error. Maybe create a vector and after all this create the branch?
+			}
+    mftTrackID++;
+		}
+	ID_vec[nMCHTracks - MCHTrackID] = pairID - 1;
+	MCHTrackID--;
+	//std::cout<< pairID -1<<"\n";
+	//track_IDs = pairID - 1;
+	//track_IDs << pairID - 1 << "\n";   //spectator
+	}
+	std::string strrange ("MCHRanges[" +std::to_string(nMCHTracks)+"]/I");
+	auto MCHRanges = matchTree->Branch("MCHRanges", &ID_vec, strrange.c_str());
+	//for(int i=0; i<nMCHTracks; i++)
+	//{
+	//track_IDs = ID_vec[i];
+	MCHRanges->Fill();
+	//}
+	fT->Write();
+	//track_pairs.close();
+	//pairs_match.close();
+	//track_IDs.close();
+
+}
+
+//_________________________________________________________________________________________________
 Float_t EtaToTheta(Float_t arg)
 {
   return (180. / TMath::Pi()) * 2. * atan(exp(-arg));
