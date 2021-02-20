@@ -132,7 +132,7 @@ Usage()
   Machine learning interface - ROOT TMVA (WIP)
 
   1) Generate training data file:
-    {0##*/} --genTrainingData NMCH_Tracks -o outputdir
+    {0##*/} --exportTrainingData NMCH_Tracks -o outputdir
     TODO: Configurable training data format
 
   2) Train neural network:
@@ -358,6 +358,10 @@ while [ $# -gt 0 ] ; do
     --disableChargeMatchCut)
     export DISABLECHARGEMATCHCUT="1";
     shift 1
+    --exportTrainingData)
+    export ML_EXPORTTRAINDATA="$2";
+    shift 2
+    ;;
     --weightfile)
     export ML_WEIGHTFILE="$2";
     shift 2

@@ -82,7 +82,6 @@ void loadAndSetMatchingConfig()
       }
     }
   }
-  
 
   if (gSystem->Getenv("MATCHING_PLANEZ")) {
     double matching_planeZ = atof(gSystem->Getenv("MATCHING_PLANEZ"));
@@ -169,7 +168,14 @@ int runMatching()
   // covariances matrix to MFT coordinate system
   matcher.initGlobalTracks();
 
-  // Runs track matching event-by-event
+  // Runs track matching event-by-event or generate training data
+  if (gSystem->Getenv("ML_EXPORTTRAINDATA")) {
+    int nMCHTracks = atoi(gSystem->Getenv("ML_EXPORTTRAINDATA"));
+    std::cout << " Generate ML traning data file for " << nMCHTracks << " MCH tracks." << std::endl;
+    matcher.exportTrainningDataRoot(nMCHTracks);
+    return 0;
+  }
+
   matcher.runEventMatching();
 
   // Kalman filter
