@@ -1630,11 +1630,11 @@ void MUONMatcher::EvaluateML() {
 				GMTracklabel[0].isCorrect() ? (correct_match++) : (fake++);
 			else reject++;
 
-			GTrackID++;
-		} //loop over global tracks
+      GTrackID++;
+    } //loop over global tracks
 			ntracks = GTrackID;
-			gr1->SetPoint(gr1->GetN(),cut, (float)correct_match/(ntracks - reject));
-			gr2->SetPoint(gr2->GetN(),cut, (float)fake/(ntracks - reject));
+      gr1->SetPoint(gr1->GetN(), cut, (float)correct_match / (ntracks - reject));
+      gr2->SetPoint(gr2->GetN(),cut, (float)fake/(ntracks - reject));
 			gr3->SetPoint(gr3->GetN(),cut, (float)reject/ntracks);
 			gr4->SetPoint(gr4->GetN(),(float)reject/ntracks, (float)correct_match/(ntracks - reject));
 	}
@@ -1668,22 +1668,22 @@ void MUONMatcher::EvaluateML() {
 	 gr2->Draw("p same");
 	 gr3->Draw("p same");
 	 c123->SetTitle("all ratios");
-	 c123->SetName("All Ratios");
-	 c123->Write();
+   c123->SetName("All Ratios");
+   c123->Write();
 	 c123->Close();
 	TCanvas *c4 = new TCanvas("c4","c4");
-	 gr4->SetTitle("Correct Match Ratio Vs Rejection Ratio");
-	 gr4->Draw("ap");
-	 gr4->GetXaxis()->SetTitle("MCH Tracks Rejection Ratio");
-	 gr4->GetYaxis()->SetTitle("Correct Match ratio");
-	 c4->SetName("Correct & Reject");
-	 c4->Write();
-	 c4->Close();
+  gr4->SetTitle("Correct Match Ratio Vs Rejection Ratio");
+  gr4->Draw("ap");
+  gr4->GetXaxis()->SetTitle("MCH Tracks Rejection Ratio");
+  gr4->GetYaxis()->SetTitle("Correct Match ratio");
+  c4->SetName("Correct & Reject");
+  c4->Write();
+  c4->Close();
 
-		//Creating Histograms
+  //Creating Histograms
 	TCanvas *score_canvas = new TCanvas("scores hist","c0");
-	TH1D *correctmatch_hist = new TH1D("Correct Matches","Correct Matches Scores", 50, -0.1, 1.15);
-	correctmatch_hist->SetLineColor(kGreen+1);
+  TH1D* correctmatch_hist = new TH1D("Correct Matches", "Correct Matches Scores", 50, -0.1, 1.15);
+  correctmatch_hist->SetLineColor(kGreen+1);
 	correctmatch_hist->SetLineWidth(5);
 	correctmatch_hist->SetXTitle("Matching Score");
 	TH1D *fakematch_hist = new TH1D("Fake Matches","Fake Matches Scores", 50, -0.1, 1.15);
@@ -1698,23 +1698,23 @@ void MUONMatcher::EvaluateML() {
 		auto mMCHTrackID = gTrack.getMCHTrackID();
 		auto GMTracklabel = mGlobalTrackLabels.getLabels(GTrackID);
     auto bestMFTTrackMatchID = gTrack.getBestMFTTrackMatchID();
-		auto bestchi2 = std::abs(gTrack.getMatchingChi2());
+    auto bestchi2 = std::abs(gTrack.getMatchingChi2());
 
-	  if (bestMFTTrackMatchID >= 0) {
-			if (GMTracklabel[0].isCorrect()) {
-				correctmatch_hist->Fill(bestchi2);
-			} else {
-					fakematch_hist->Fill(bestchi2);
-			}
-		}
-		if (bestchi2 < mMLScoreCut) {		// TMVA: Drop MFT candidate if score bellow threshold
+    if (bestMFTTrackMatchID >= 0) {
+      if (GMTracklabel[0].isCorrect()) {
+        correctmatch_hist->Fill(bestchi2);
+      } else {
+        fakematch_hist->Fill(bestchi2);
+      }
+    }
+    if (bestchi2 < mMLScoreCut) {		// TMVA: Drop MFT candidate if score bellow threshold
 			gTrack.setBestMFTTrackMatchID(-1);
 			mGlobalTrackLabels.getLabels(GTrackID)[0].setFakeFlag(true);
 		}
 		GTrackID++;
 	} //end loop over global tracks
-	correctmatch_hist->SetStats(0);
-	correctmatch_hist->Draw();
+  correctmatch_hist->SetStats(0);
+  correctmatch_hist->Draw();
 	fakematch_hist->SetStats(0);
 	fakematch_hist->Draw("SAME");
 	score_canvas->Write();
@@ -1727,11 +1727,12 @@ void MUONMatcher::EvaluateML() {
 void MUONMatcher::exportTrainningDataRoot(int nMCHTracks) {
 
 	int MCHTrackID = nMCHTracks;
-	if (nMCHTracks < 0) MCHTrackID = mGlobalMuonTracks.size();
+  if (nMCHTracks <= 0)
+    MCHTrackID = mGlobalMuonTracks.size();
 
-  std::string outputfile ( std::to_string(nMCHTracks) + "MCHTracks.root");
+  std::string outputfile("MLTraining_ " + std::to_string(nMCHTracks) + "_MCHTracks.root");
 
-	auto fT = TFile::Open(outputfile.c_str(),"RECREATE");
+  auto fT = TFile::Open(outputfile.c_str(),"RECREATE");
 	std::cout << " Exporting trainning data for TTree with " << MCHTrackID << " MCH Tracks" << std::endl;
 
 	Float_t MFT_X, MFT_Y, MFT_Phi, MFT_Tanl, MFT_InvQPt, MFT_Cov00, MFT_Cov01, MFT_Cov11, MFT_Cov02, MFT_Cov12, MFT_Cov22, MFT_Cov03, MFT_Cov13, MFT_Cov23, MFT_Cov33, MFT_Cov04, MFT_Cov14, MFT_Cov24, MFT_Cov34, MFT_Cov44, MCH_X, MCH_Y, MCH_Phi, MCH_Tanl, MCH_InvQPt, MCH_Cov00, MCH_Cov01, MCH_Cov11, MCH_Cov02, MCH_Cov12, MCH_Cov22, MCH_Cov03, MCH_Cov13, MCH_Cov23, MCH_Cov33, MCH_Cov04, MCH_Cov14, MCH_Cov24, MCH_Cov34, MCH_Cov44;
@@ -1793,7 +1794,6 @@ void MUONMatcher::exportTrainningDataRoot(int nMCHTracks) {
 		for (auto mftTrack : mMFTTracks) {
 		  auto MFTlabel = mftTrackLabels.getLabels(mftTrackID);
 		  if (MFTlabel[0].getEventID() == event) {
-	//			std::cout<< " MFT X " << mftTrack.getX() << std::endl;
 				 MFT_X = mftTrack.getX();
 		     MFT_Y = mftTrack.getY();
 		     MFT_Phi = mftTrack.getPhi();
@@ -1835,31 +1835,18 @@ void MUONMatcher::exportTrainningDataRoot(int nMCHTracks) {
 		     MCH_Cov34 = MCHTrack.getCovariances()(3,4);
 		     MCH_Cov44 = MCHTrack.getCovariances()(4,4);
          Truth = (int)(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID());
-	//      track_pairs << "\n";
-	//      pairs_match << "\n ";
-		    pairID++;
-				matchTree->Fill();  //okay...here it fills MCHRanges too...thats the error. Maybe create a vector and after all this create the branch?
-			}
+         pairID++;
+         matchTree->Fill();
+      }
     mftTrackID++;
 		}
 	ID_vec[nMCHTracks - MCHTrackID] = pairID - 1;
 	MCHTrackID--;
-	//std::cout<< pairID -1<<"\n";
-	//track_IDs = pairID - 1;
-	//track_IDs << pairID - 1 << "\n";   //spectator
 	}
 	std::string strrange ("MCHRanges[" +std::to_string(nMCHTracks)+"]/I");
 	auto MCHRanges = matchTree->Branch("MCHRanges", &ID_vec, strrange.c_str());
-	//for(int i=0; i<nMCHTracks; i++)
-	//{
-	//track_IDs = ID_vec[i];
 	MCHRanges->Fill();
-	//}
 	fT->Write();
-	//track_pairs.close();
-	//pairs_match.close();
-	//track_IDs.close();
-
 }
 
 //_________________________________________________________________________________________________
