@@ -143,11 +143,11 @@ int runMatching()
 
   // matcher.LoadAbsorber();
 
-  // Load MFT tracks and propagates to matching plane
-  matcher.loadMFTTracksOut();
-
   // Load MCH tracks
   matcher.loadMCHTracks();
+
+  // Load MFT tracks and propagates to matching plane
+  matcher.loadMFTTracksOut();
 
   // Propagate MCH tracks to matching plane and convert parameters and
   // covariances matrix to MFT coordinate system
@@ -161,7 +161,7 @@ int runMatching()
   matcher.saveGlobalMuonTracks();
 
   // Export Matching Plane views in png
-  matcher.exportNMatchingPlaneViews(100);
+  //matcher.exportNMatchingPlaneViews(100);
 
   return 0;
 }

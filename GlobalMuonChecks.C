@@ -555,6 +555,7 @@ int GlobalMuonChecks(const std::string trkFile = "GlobalMuonTracks.root",
                 << " MCH tracks " << std::endl;
     }
     o2SimKineTree->GetEntry(iEvent);
+    gmTrackTree->GetEntry(iEvent);
 
     if (0)
       for (auto &gmTrack : trackGMVec) {
