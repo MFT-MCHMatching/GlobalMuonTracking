@@ -198,11 +198,19 @@ class MUONMatcher
 
   // Data Members
   std::vector<MFTTrack> mMFTTracks;
+  std::vector<std::vector<MFTTrack>> mXMFTTracks2;
+
   std::vector<MCHTrack> mMCHTracks;
+  std::vector<std::vector<MCHTrack>> mXMCHTracks2;
+
   std::vector<MFTTrack>
     mMCHTracksDummy; // Dummy MCH tracks at the MFT coordinate system
   std::vector<GlobalMuonTrack> mGlobalMuonTracks;
+  std::vector<std::vector<GlobalMuonTrack>> mXGlobalMuonTracks2;
+
   std::vector<GlobalMuonTrackExt> mGlobalMuonTracksExt;
+  std::vector<std::vector<GlobalMuonTrackExt>> mXGlobalMuonTracksExt2;
+
   std::vector<MFTCluster> mMFTClusters;
   std::vector<int> mtrackExtClsIDs;
   std::vector<o2::itsmft::ROFRecord> mMFTTracksROFs;
@@ -210,8 +218,13 @@ class MUONMatcher
   MatchingHelper mMatchingHelper;
 
   o2::dataformats::MCTruthContainer<o2::MCCompLabel> mftTrackLabels;
+  std::vector<std::vector<int>> mftTrackLabelsIDx;
+
   o2::dataformats::MCTruthContainer<o2::MCCompLabel> mchTrackLabels;
+  std::vector<o2::dataformats::MCTruthContainer<o2::MCCompLabel>> mchXTrackLabels2;
+
   o2::dataformats::MCTruthContainer<o2::MCCompLabel> mGlobalTrackLabels;
+  std::vector<o2::dataformats::MCTruthContainer<o2::MCCompLabel>> mXGlobalTrackLabels2;
 
   // MCH Track Propagation clasee
   o2::mch::TrackExtrap mMCHTrackExtrap;

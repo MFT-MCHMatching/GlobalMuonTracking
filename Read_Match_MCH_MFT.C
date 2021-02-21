@@ -30,46 +30,49 @@ void Read_Match_MCH_MFT(
   std::vector<GlobalMuonTrackExt> trackGMVec, *trackGMVecP = &trackGMVec;
   gmTrackTree->SetBranchAddress("GlobalMuonTrackExt", &trackGMVecP);
 
-  gmTrackTree->GetEntry(0);
-
+  Int_t numberOfEvents = gmTrackTree->GetEntries();
   Int_t igm = 0;
-  for (auto& gmTrack : trackGMVec) {
-    const SMatrix5& trackMCHpar = gmTrack.getParametersMCH();
-    const SMatrix5& trackMFTpar = gmTrack.getParametersMFT();
-    const SMatrix55& trackMCHcov = gmTrack.getCovariancesMCH();
-    const SMatrix55& trackMFTcov = gmTrack.getCovariancesMFT();
-    if (gmTrack.closeMatch()) {
-      printf("Global track %d close match!\n", igm);
-    } else {
-      printf("Global track %d \n", igm);
-    }
-    printf("MCH parameters (x, y, phi, tanl, invqpt):\n");
-    for (auto& par : trackMCHpar) {
-      printf("%f ", par);
-    }
-    printf("\n");
-    printf("MFT parameters (x, y, phi, tanl, invqpt):\n");
-    for (auto& par : trackMFTpar) {
-      printf("%f ", par);
-    }
-    printf("\n");
-    printf("MCH covariances:\n");
-    for (Int_t i = 0; i < 5; i++) {
-      for (Int_t j = 0; j < 5; j++) {
-        printf("%f ", trackMCHcov(i, j));
-      }
-      printf("\n");
-    }
-    printf("MFT covariances:\n");
-    for (Int_t i = 0; i < 5; i++) {
-      for (Int_t j = 0; j < 5; j++) {
-        printf("%f ", trackMFTcov(i, j));
-      }
-      printf("\n");
-    }
-    printf("-------------------------------------------------------------\n");
-    ++igm;
-  }
+  for (int iEvent = 0; iEvent < numberOfEvents; iEvent++) {
 
+    gmTrackTree->GetEntry(iEvent);
+    printf("\n\n        ##### Event %i #####\n\n", iEvent);
+    for (auto& gmTrack : trackGMVec) {
+      const SMatrix5& trackMCHpar = gmTrack.getParametersMCH();
+      const SMatrix5& trackMFTpar = gmTrack.getParametersMFT();
+      const SMatrix55& trackMCHcov = gmTrack.getCovariancesMCH();
+      const SMatrix55& trackMFTcov = gmTrack.getCovariancesMFT();
+      if (gmTrack.closeMatch()) {
+        printf("Global track %d close match!\n", igm);
+      } else {
+        printf("Global track %d \n", igm);
+      }
+      printf("MCH parameters (x, y, phi, tanl, invqpt):\n");
+      for (auto& par : trackMCHpar) {
+        printf("%f ", par);
+      }
+      printf("\n");
+      printf("MFT parameters (x, y, phi, tanl, invqpt):\n");
+      for (auto& par : trackMFTpar) {
+        printf("%f ", par);
+      }
+      printf("\n");
+      printf("MCH covariances:\n");
+      for (Int_t i = 0; i < 5; i++) {
+        for (Int_t j = 0; j < 5; j++) {
+          printf("%f ", trackMCHcov(i, j));
+        }
+        printf("\n");
+      }
+      printf("MFT covariances:\n");
+      for (Int_t i = 0; i < 5; i++) {
+        for (Int_t j = 0; j < 5; j++) {
+          printf("%f ", trackMFTcov(i, j));
+        }
+        printf("\n");
+      }
+      printf("-------------------------------------------------------------\n");
+      ++igm;
+    }
+  }
   trkFileIn->Close();
 }
