@@ -42,7 +42,6 @@
 #include "include/TrackExtrap.h"
 #include "include/tempMCHTrack.h"
 
-
 #include "TMVA/Tools.h"
 #include "TMVA/Reader.h"
 #include "TMVA/DataLoader.h"
@@ -116,8 +115,8 @@ class MUONMatcher
                                      const MFTTrack& mftTrack);
 
   //// Matching using trained ML
-  double matchTrainedML(const GlobalMuonTrack &mchTrack,
-                        const MFTTrack &mftTrack);
+  double matchTrainedML(const GlobalMuonTrack& mchTrack,
+                        const MFTTrack& mftTrack);
 
   void EvaluateML();
 
@@ -175,12 +174,15 @@ class MUONMatcher
     }
   };
 
-	void exportTrainningDataRoot(int nMCHTracks = -1);
+  void exportTrainingDataRoot(int nMCHTracks = -1);
 
   // Matching cuts
   void disableChargeMatchCut() { mChargeCutEnabled = false; }
   bool matchingCut(const GlobalMuonTrack&,
                    const MFTTrack&); // Calls configured cut function
+
+  double matchingEval(const GlobalMuonTrack&,
+                      const MFTTrack&); // Calls configured cut function
   void setCutFunction(bool (MUONMatcher::*func)(const GlobalMuonTrack&,
                                                 const MFTTrack&));
   void setCustomCutFunction(bool (*func)(const GlobalMuonTrack&,
@@ -188,7 +190,8 @@ class MUONMatcher
   {
     mCustomCutFunc = func;
   }
-  void configureTMVA(std::string filename, float scorecut) {
+  void configureTMVA(std::string filename, float scorecut)
+  {
     mTMVAWeightFileName = filename;
     mMLScoreCut = scorecut;
     mTMVAReader = new TMVA::Reader("!Color:!Silent");
@@ -306,7 +309,7 @@ class MUONMatcher
 
   // TMVA interface
   std::string mTMVAWeightFileName;
-  TMVA::Reader *mTMVAReader;
+  TMVA::Reader* mTMVAReader;
   float_t mMCH_MFT_pair[40];
   float_t mMLScoreCut;
 };

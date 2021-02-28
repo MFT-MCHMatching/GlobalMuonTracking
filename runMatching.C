@@ -172,7 +172,7 @@ int runMatching()
   if (gSystem->Getenv("ML_EXPORTTRAINDATA")) {
     int nMCHTracks = atoi(gSystem->Getenv("ML_EXPORTTRAINDATA"));
     std::cout << " Generate ML traning data file for " << nMCHTracks << " MCH tracks." << std::endl;
-    matcher.exportTrainningDataRoot(nMCHTracks);
+    matcher.exportTrainingDataRoot(nMCHTracks);
     return 0;
   }
 
