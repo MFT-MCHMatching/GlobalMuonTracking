@@ -1730,15 +1730,15 @@ void MUONMatcher::exportTrainningDataRoot(int nMCHTracks) {
   if (nMCHTracks <= 0)
     MCHTrackID = mGlobalMuonTracks.size();
 
-  std::string outputfile("MLTraining_ " + std::to_string(nMCHTracks) + "_MCHTracks.root");
+  std::string outputfile("MLTraining_" + std::to_string(nMCHTracks) + "_MCHTracks.root");
 
   auto fT = TFile::Open(outputfile.c_str(),"RECREATE");
 	std::cout << " Exporting trainning data for TTree with " << MCHTrackID << " MCH Tracks" << std::endl;
 
 	Float_t MFT_X, MFT_Y, MFT_Phi, MFT_Tanl, MFT_InvQPt, MFT_Cov00, MFT_Cov01, MFT_Cov11, MFT_Cov02, MFT_Cov12, MFT_Cov22, MFT_Cov03, MFT_Cov13, MFT_Cov23, MFT_Cov33, MFT_Cov04, MFT_Cov14, MFT_Cov24, MFT_Cov34, MFT_Cov44, MCH_X, MCH_Y, MCH_Phi, MCH_Tanl, MCH_InvQPt, MCH_Cov00, MCH_Cov01, MCH_Cov11, MCH_Cov02, MCH_Cov12, MCH_Cov22, MCH_Cov03, MCH_Cov13, MCH_Cov23, MCH_Cov33, MCH_Cov04, MCH_Cov14, MCH_Cov24, MCH_Cov34, MCH_Cov44;
-	Int_t	Truth, track_IDs;
-	int pairID=0;
-	int ID_vec[nMCHTracks];
+  Int_t Truth, track_IDs, nCorrectPairs = 0, nFakesPairs = 0;
+  Int_t pairID = 0;
+  Int_t ID_vec[nMCHTracks];
 
   TTree* matchTree = new TTree("matchTree", "MatchTree");
   matchTree->Branch("MFT_X",&MFT_X, "MFT_X/F");
@@ -1835,6 +1835,7 @@ void MUONMatcher::exportTrainningDataRoot(int nMCHTracks) {
 		     MCH_Cov34 = MCHTrack.getCovariances()(3,4);
 		     MCH_Cov44 = MCHTrack.getCovariances()(4,4);
          Truth = (int)(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID());
+         Truth ? nCorrectPairs++ : nFakesPairs++;
          pairID++;
          matchTree->Fill();
       }
@@ -1847,6 +1848,12 @@ void MUONMatcher::exportTrainningDataRoot(int nMCHTracks) {
 	auto MCHRanges = matchTree->Branch("MCHRanges", &ID_vec, strrange.c_str());
 	MCHRanges->Fill();
 	fT->Write();
+  auto nPairs = nCorrectPairs + nFakesPairs;
+  std::cout << "Exported training data: " << nPairs << " pairs (" << nCorrectPairs << " correct pairs ; " << nFakesPairs << " fake pairs)" << std::endl;
+
+  std::ofstream matcherConfig("MatchingConfig.txt");
+  matcherConfig << mMatchingHelper.MatchingConfig() << std::endl;
+  matcherConfig.close();
 }
 
 //_________________________________________________________________________________________________
