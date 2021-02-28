@@ -141,8 +141,6 @@ int runMatching()
   // Configure matcher according command line options
   loadAndSetMatchingConfig();
 
-  // matcher.LoadAbsorber();
-
   // Load MCH tracks
   matcher.loadMCHTracks();
 
@@ -161,7 +159,7 @@ int runMatching()
   matcher.saveGlobalMuonTracks();
 
   // Export Matching Plane views in png
-  //matcher.exportNMatchingPlaneViews(100);
+  matcher.exportNMatchingPlaneViews(10);
 
   return 0;
 }
