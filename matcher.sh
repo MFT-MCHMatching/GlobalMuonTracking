@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MATCHINGRESULTS="GlobalMuonTracks.root matching.log MatchingPlane_eV*.png"
+MATCHINGRESULTS="GlobalMuonTracks.root matching.log MatchingPlane_eV*.png MLTraining_*.root"
 CHECKRESULTS="GlobalMuonChecks.root checks.log"
 
 Usage()
@@ -243,6 +243,39 @@ runMatching()
 
 }
 
+exportMLTrainningData()
+{
+
+  if ! [ -f "${OUTDIR}/tempMCHTracks.root" ]; then
+    echo " Nothing to export... MCH Tracks not found on `realpath ${OUTDIR}/tempMCHTracks.root` ..."
+    EXITERROR="1"
+  fi
+
+  if ! [ -f "${OUTDIR}/mfttracks.root" ]; then
+    echo " Nothing to export... MFT Tracks not found on `realpath ${OUTDIR}/mfttracks.root` ..."
+    EXITERROR="1"
+  fi
+
+  if ! [ -z ${EXITERROR+x} ]; then exit ; fi
+
+  if [ -d "${OUTDIR}" ]; then
+    if ! [ -z ${UPDATECODE+x} ]; then updatecode ; fi
+
+    pushd ${OUTDIR}
+    echo "Exporting ML Traning data file on `pwd` ..."
+    ## MFT MCH track matching & global muon track fitting:
+    alienv setenv ${O2ENV} -c root.exe -e 'gSystem->Load("libO2MCHTracking")' -l -q -b runMatching.C+ | tee matching.log
+    RESULTSDIR="MLTraning`cat MatchingConfig.txt`"
+    mkdir -p ${RESULTSDIR}
+    cp matching.log MLTraining_*.root "${RESULTSDIR}"
+
+    popd
+    echo " Finished exporting ML Traning data. File saved on `realpath ${RESULTSDIR}`"
+  fi
+
+
+}
+
 
 runChecks()
 {
@@ -358,6 +391,7 @@ while [ $# -gt 0 ] ; do
     --disableChargeMatchCut)
     export DISABLECHARGEMATCHCUT="1";
     shift 1
+    ;;
     --exportTrainingData)
     export ML_EXPORTTRAINDATA="$2";
     shift 2
@@ -403,7 +437,7 @@ if ! [[ -z "$LOADEDMODULES" ]]
  fi
 
 
-if [ -z ${GENERATEMCH+x} ] && [ -z ${GENERATEMFT+x} ] && [ -z ${MATCHING+x} ] && [ -z ${CHECKS+x} ]
+if [ -z ${GENERATEMCH+x} ] && [ -z ${GENERATEMFT+x} ] && [ -z ${MATCHING+x} ] && [ -z ${CHECKS+x} ] && [ -z ${ML_EXPORTTRAINDATA+x} ]
 then
   echo "Missing use mode!"
   echo " "
@@ -442,4 +476,5 @@ if ! [ -z ${GENERATEMFT+x} ]; then
 fi
 
 if ! [ -z ${MATCHING+x} ]; then runMatching ; fi
+if ! [ -z ${ML_EXPORTTRAINDATA+x} ]; then exportMLTrainningData ; fi
 if ! [ -z ${CHECKS+x} ]; then runChecks ; fi
