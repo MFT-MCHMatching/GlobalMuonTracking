@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MATCHINGRESULTS="GlobalMuonTracks.root matching.log MatchingPlaneMCHTrack*.png"
+MATCHINGRESULTS="GlobalMuonTracks.root matching.log MatchingPlane_eV*.png"
 CHECKRESULTS="GlobalMuonChecks.root checks.log"
 
 Usage()

@@ -79,13 +79,9 @@ class MUONMatcher
 
   // Track IO
   void loadMCHTracks();
-  void loadDummyMCHTracks();
   void loadMFTTracksOut();
   void saveGlobalMuonTracks();
-  std::vector<GlobalMuonTrack> getGlobalMuonTracks() const
-  {
-    return mGlobalMuonTracks;
-  }
+
   void printMFTLabels()
   {
     for (auto i = 0; i < (int)mftTrackLabels.getNElements(); i++) {
@@ -98,8 +94,6 @@ class MUONMatcher
   }
 
   void initGlobalTracks(); // Configure Global Tracks with MCH track parameters
-  void
-    initDummyGlobalTracks(); // Configure Global Tracks with MFT tracks (Dummy)
   void fitTracks();          // Fit all matched tracks
 
   // Matching methods
@@ -139,16 +133,28 @@ class MUONMatcher
   void
     runHeavyMatching();    // Finds best match (no search cut, no event separation)
   void runEventMatching(); // Finds best match event-per-event
-  void printMatchingPlaneView(int MCHTrackID = 0);
+  bool printMatchingPlaneView(int event, int MCHTrackID = 0);
   void exportNMatchingPlaneViews(int nTracks = -1)
   {
+    if (mMatchSaveAll) {
+      std::cout << " ** exportNMatchingPlaneViews disabled for option --matchSaveAll" << std::endl;
+      return;
+    }
     loadMCHTracks();
     initGlobalTracks();
-    if (nTracks < 0 || nTracks > mGlobalMuonTracks.size()) {
-      nTracks = mGlobalMuonTracks.size();
-    }
-    for (auto MCHTrackID = 0; MCHTrackID < nTracks; MCHTrackID++) {
-      printMatchingPlaneView(MCHTrackID);
+    auto event = 0;
+    if (nTracks < 0 or nTracks > mMatchingHelper.nMCHTracks)
+      nTracks = mMatchingHelper.nMCHTracks;
+    while (nTracks > 0 or event < mNEvents) {
+      for (auto& mchTracks : mSortedGlobalMuonTracks) {
+        auto MCHTrackID = 0;
+        for (auto& mchTrack : mchTracks) {
+          printMatchingPlaneView(event, MCHTrackID);
+          nTracks--;
+          MCHTrackID++;
+        }
+        event++;
+      }
     }
   };
 
@@ -198,18 +204,13 @@ class MUONMatcher
 
   // Data Members
   std::vector<MFTTrack> mMFTTracks;
-  std::vector<std::vector<MFTTrack>> mXMFTTracks2;
+  std::vector<std::vector<MFTTrack>> mSortedMFTTracks;
 
-  std::vector<MCHTrack> mMCHTracks;
-  std::vector<std::vector<MCHTrack>> mXMCHTracks2;
+  std::vector<std::vector<MCHTrack>> mSortedMCHTracks;
 
-  std::vector<MFTTrack>
-    mMCHTracksDummy; // Dummy MCH tracks at the MFT coordinate system
-  std::vector<GlobalMuonTrack> mGlobalMuonTracks;
-  std::vector<std::vector<GlobalMuonTrack>> mXGlobalMuonTracks2;
+  std::vector<std::vector<GlobalMuonTrack>> mSortedGlobalMuonTracks;
 
-  std::vector<GlobalMuonTrackExt> mGlobalMuonTracksExt;
-  std::vector<std::vector<GlobalMuonTrackExt>> mXGlobalMuonTracksExt2;
+  std::vector<std::vector<GlobalMuonTrackExt>> mSortedGlobalMuonTracksExt;
 
   std::vector<MFTCluster> mMFTClusters;
   std::vector<int> mtrackExtClsIDs;
@@ -220,11 +221,9 @@ class MUONMatcher
   o2::dataformats::MCTruthContainer<o2::MCCompLabel> mftTrackLabels;
   std::vector<std::vector<int>> mftTrackLabelsIDx;
 
-  o2::dataformats::MCTruthContainer<o2::MCCompLabel> mchTrackLabels;
-  std::vector<o2::dataformats::MCTruthContainer<o2::MCCompLabel>> mchXTrackLabels2;
+  std::vector<o2::dataformats::MCTruthContainer<o2::MCCompLabel>> mSortedMCHTrackLabels;
 
-  o2::dataformats::MCTruthContainer<o2::MCCompLabel> mGlobalTrackLabels;
-  std::vector<o2::dataformats::MCTruthContainer<o2::MCCompLabel>> mXGlobalTrackLabels2;
+  std::vector<o2::dataformats::MCTruthContainer<o2::MCCompLabel>> mSortedGlobalTrackLabels;
 
   // MCH Track Propagation clasee
   o2::mch::TrackExtrap mMCHTrackExtrap;
