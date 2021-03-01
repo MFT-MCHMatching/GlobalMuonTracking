@@ -789,7 +789,7 @@ int GlobalMuonChecks(const std::string trkFile = "GlobalMuonTracks.root",
       Form("Correct_Match_Ratio = %.2f%%",
            100. * nCorrectMatchGMTracks / (nRecoGMTracks)));
   closeMatchEff->SetTitle(
-      Form("Close_Match_=_%.2f%%", 100. * nCloseMatches / (nRecoGMTracks)));
+    Form("Close_Match_=_%.2f%%", 100. * nCloseMatches / (nMCHTracks)));
 
   // Remove stat boxes
   TH2Histos[kGMTrackQPRec_MC]->SetStats(0);
@@ -1131,8 +1131,8 @@ int GlobalMuonChecks(const std::string trkFile = "GlobalMuonTracks.root",
             << " (contamination = " << 100. * nFakeGMTracks / (nRecoGMTracks)
             << "%)" << std::endl;
   std::cout << " ==> " << nCloseMatches
-            << "close matches - correct MFT track in search window"
-            << " (" << 100. * nCloseMatches / (nRecoGMTracks) << "%)"
+            << " close matches - correct MFT track in search window"
+            << " (" << 100. * nCloseMatches / (nMCHTracks) << "%)"
             << std::endl;
   std::cout << " ==> " << nCorrectMatchGMTracks
             << " Correct Match Global Muon Tracks"

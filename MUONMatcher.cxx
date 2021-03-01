@@ -392,7 +392,6 @@ void MUONMatcher::runEventMatching()
                 gTrack.setMatchingChi2(chi2);
               }
             }
-            std::cout << " mftTrackID = " << mftTrackID << std::endl;
             mftTrackID++;
           }
         GTrackID++;
@@ -461,6 +460,7 @@ bool MUONMatcher::printMatchingPlaneView(int event, int MCHTrackID)
   auto MCHTrack = mSortedGlobalMuonTracks[event][MCHTrackID];
 
   auto localBestMFTTrack = -1;
+  auto localBestMatchChi2 = 1e100;
   auto localCorrectMFTMatch = -1;
 
   std::vector<double> xPositions;
@@ -488,22 +488,23 @@ bool MUONMatcher::printMatchingPlaneView(int event, int MCHTrackID)
         MCHTrack.countCandidate();
         if (MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) {
           MCHTrack.setCloseMatch();
-          pointsColors.back() = "magenta";
+          pointsColors.back() = "magenta"; // Close match
           localCorrectMFTMatch = pointsColors.size();
           correctParamStr = getParamString(mftTrack);
           correctCovStr = getCovString(mftTrack);
         }
-        auto chi2 = (this->*mMatchFunc)(MCHTrack, mftTrack);
+        auto chi2 = matchingEval(MCHTrack, mftTrack);
         if (chi2 < MCHTrack.getMatchingChi2()) {
           MCHTrack.setBestMFTTrackMatchID(mftTrackLabelsIDx[event][mftTrackID]);
           MCHTrack.setMatchingChi2(chi2);
           localBestMFTTrack = pointsColors.size();
+          localBestMatchChi2 = chi2;
           matchParamStr = getParamString(mftTrack);
           matchCovStr = getCovString(mftTrack);
         }
       } else {
         if (MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) {
-          pointsColors.back() = "violet";
+          pointsColors.back() = "violet"; // far match
           correctParamStr = getParamString(mftTrack);
           correctCovStr = getCovString(mftTrack);
         }
@@ -513,8 +514,13 @@ bool MUONMatcher::printMatchingPlaneView(int event, int MCHTrackID)
   }
 
   if (localBestMFTTrack > -1) {
-    pointsColors[localBestMFTTrack - 1] =
-      (localCorrectMFTMatch == localBestMFTTrack) ? "green" : "red";
+    if (mTMVAReader) {
+      if (localBestMatchChi2 < -mMLScoreCut) {
+        pointsColors[localBestMFTTrack - 1] = (localCorrectMFTMatch == localBestMFTTrack) ? "green" : "red";
+      }
+    } else {
+      pointsColors[localBestMFTTrack - 1] = (localCorrectMFTMatch == localBestMFTTrack) ? "green" : "red";
+    }
   }
 
   std::vector<double> xPositionsBlack, yPositionsBlack, xPositionsBlue,
@@ -1590,6 +1596,7 @@ double MUONMatcher::matchTrainedML(const GlobalMuonTrack& mchTrack,
 //_________________________________________________________________________________________________
 void MUONMatcher::EvaluateML()
 {
+  std::cout << " Checking ML performance... " << std::endl;
 
   TFile* outputfile = new TFile("ML_Evaluation.root", "RECREATE");
 
@@ -1609,27 +1616,27 @@ void MUONMatcher::EvaluateML()
   gr4->SetMarkerStyle(20);
 
   auto GTrackID = 0;
-  int correct_match, fake, reject, ntracks;
+  int correct_match, fake, reject, nMCHtracks = mMatchingHelper.nMCHTracks;
+
   for (float cut = 0.05; cut < 1.; cut += cutsteps) {
-    correct_match = fake = reject = GTrackID = 0;
+    correct_match = fake = reject = 0;
     for (int event = 0; event < mNEvents; event++) {
+      GTrackID = 0;
       for (auto& gTrack : mSortedGlobalMuonTracks[event]) {
         auto GMTracklabel = mSortedGlobalTrackLabels[event].getLabels(GTrackID);
         auto bestMFTTrackMatchID = gTrack.getBestMFTTrackMatchID();
-
         if (bestMFTTrackMatchID >= 0 && std::abs(gTrack.getMatchingChi2()) > cut)
           GMTracklabel[0].isCorrect() ? (correct_match++) : (fake++);
         else
           reject++;
-
         GTrackID++;
       } //loop over global tracks
     }
-    ntracks = GTrackID;
-    gr1->SetPoint(gr1->GetN(), cut, (float)correct_match / (ntracks - reject));
-    gr2->SetPoint(gr2->GetN(), cut, (float)fake / (ntracks - reject));
-    gr3->SetPoint(gr3->GetN(), cut, (float)reject / ntracks);
-    gr4->SetPoint(gr4->GetN(), (float)reject / ntracks, (float)correct_match / (ntracks - reject));
+
+    gr1->SetPoint(gr1->GetN(), cut, (float)correct_match / (nMCHtracks - reject));
+    gr2->SetPoint(gr2->GetN(), cut, (float)fake / (nMCHtracks - reject));
+    gr3->SetPoint(gr3->GetN(), cut, (float)reject / nMCHtracks);
+    gr4->SetPoint(gr4->GetN(), (float)reject / nMCHtracks, (float)correct_match / (nMCHtracks - reject));
   }
 
   TCanvas* c1 = new TCanvas("c1", "c1");
