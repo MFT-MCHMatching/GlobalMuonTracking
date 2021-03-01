@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<DNN_options>
+  <DNN_layouts>
+    <DNN4.2>Layout=RELU|30,RELU|20,RELU|15,RELU|5,LINEAR</DNN4.2>
+    <DNN13.0>Layout=RELU|35,RELU|33,RELU|30,RELU|28,RELU|25,RELU|23,RELU|20,RELU|18,RELU|15,RELU|12,RELU|10,RELU|8,RELU|5,LINEAR</DNN13.0>
+  </DNN_layouts>
+  <Training_Strategies>
+    <ts1>TrainingStrategy=LearningRate=1e-3,ConvergenceSteps=50,BatchSize=50,TestRepetitions=10,Regularization=L2,MaxEpochs=2000,Repetitions=1</ts1>
+    <ts2>TrainingStrategy=LearningRate=1e-3,ConvergenceSteps=300,BatchSize=50,TestRepetitions=10,Regularization=L2,MaxEpochs=2000,Repetitions=1</ts2>
+  </Training_Strategies>
+  <Other_Options>
+    <oo1>H:V:ErrorStrategy=SUMOFSQUARES:VarTransform=G:WeightInitialization=XAVIERUNIFORM:Architecture=CPU:ValidationSize=0.2:RandomSeed=42</oo1>
+  </Other_Options>
+</DNN_options>
