@@ -132,23 +132,29 @@ Usage()
   Machine learning interface - ROOT TMVA (WIP)
 
   1) Generate training data file:
-    {0##*/} --exportTrainingData NMCH_Tracks -o outputdir
-    TODO: Configurable training data format
+     {0##*/} --exportTrainingData NMCH_Tracks -o <outputdir>
+     TODO: Configurable training data format
+
+     Example:
+     ${0##*/} --exportTrainingData 42 -o ML_testdir
 
   2) Train neural network:
-     {0##*/} --train <config_alias/es> <training_data_file.root>
+     {0##*/} --train <config_alias/es> --trainingdata <training_data_file.root>
 
-   - Option 1: $ matcher.sh --train DNN5.1 <training_data_file.root>
-   - Option 2: $ matcher.sh --train --layout DNN5.1 --strategy ts_1 --error es1  <training_data_file.root>
+     Example:
+     ${0##*/} --train --layout DNN4.2 --strategy ts1 --MLoptions oo1 --trainingdata MLTraining_42_MCHTracks.root -o ML_testdir
 
-   This creates folder named config_aliases_training_data_file with te following files:
-    - config_aliases_training_data_file.xml  => trained neural network
-    - config_aliases_training_data_file.cfg  => Training configuration
+      This creates the Trained Network file "Trained_ML_<config_alias>_<training_data_file>.weights.xml" in the folder "outputdir/trainedMLs/weights/"
+      Existing aliases are in ML configuration file "MLConfigs.xml"
 
-   3) Run track-matching using trained network:
-      {0##*/} --match --matchFcn trainedML --weightfile weightfilename.xml -o outputdir
+  3) Run track-matching using trained network:
+     {0##*/} --match --matchFcn trainedML --weightfile weightfilename.xml -o outputdir
+
+     Example:
+     ${0##*/} --match --matchFcn trainedML --weightfile trainedMLs/weights/Trained_ML_DNN13.0_ts2_oo1_MLTraining_42_MCHTracks.weights.xml -o ML_testdir
+
       In additon to the generation all the output of a regular --match execution,
-      this command outputs ML scoring plots such as correct matching vs. MCH_rejection_rate.
+      this command outputs ML scoring plots such as correct matching vs. MCH_rejection_rate, in a results subdirectory
       Matching cut score defaults to 0.5, configurable by --MLScoreCut <val0>
 
 END
@@ -247,12 +253,12 @@ exportMLTrainningData()
 {
 
   if ! [ -f "${OUTDIR}/tempMCHTracks.root" ]; then
-    echo " Nothing to export... MCH Tracks not found on `realpath ${OUTDIR}/tempMCHTracks.root` ..."
+    echo " Nothing to export... MCH Tracks not found on `realpath ${OUTDIR}` ..."
     EXITERROR="1"
   fi
 
   if ! [ -f "${OUTDIR}/mfttracks.root" ]; then
-    echo " Nothing to export... MFT Tracks not found on `realpath ${OUTDIR}/mfttracks.root` ..."
+    echo " Nothing to export... MFT Tracks not found on `realpath ${OUTDIR}` ..."
     EXITERROR="1"
   fi
 
@@ -280,12 +286,12 @@ exportMLTrainningData()
 trainML()
 {
 
-	if ! [ -f "${OUTDIR}/MLConfigs.xml" ]; then
-    echo " Machine Learning configuration file absent..." #TODO option to create configuration file
-    exit
+  if ! [ -f "${OUTDIR}/MLConfigs.xml" ]; then
+    echo " Machine Learning configuration file absent...copying from script directory to ${OUTDIR}" #TODO option to create configuration file
+    cp MLConfigs.xml "${OUTDIR}"
   fi
 
-  if ! [ -f "${ML_TRAINING_FILE}" ]; then
+  if ! [ -f "${OUTDIR}/${ML_TRAINING_FILE}" ]; then
     echo " ERROR: could not open data file! "
     exit
   fi
@@ -444,9 +450,9 @@ while [ $# -gt 0 ] ; do
     shift 2
     ;;
     --trainingdata)
-		export ML_TRAINING_FILE="$2";
-		shift 2
-		;;
+    export ML_TRAINING_FILE="$2";
+    shift 2
+    ;;
     --convert)
     CONVERT="1";
     shift 1
@@ -480,7 +486,7 @@ if ! [[ -z "$LOADEDMODULES" ]]
  fi
 
 
-if [ -z ${GENERATEMCH+x} ] && [ -z ${GENERATEMFT+x} ] && [ -z ${MATCHING+x} ] && [ -z ${CHECKS+x} ] && [ -z ${ML_EXPORTTRAINDATA+x} && [ -z ${TRAIN_ML+x} ]
+if [ -z ${GENERATEMCH+x} ] && [ -z ${GENERATEMFT+x} ] && [ -z ${MATCHING+x} ] && [ -z ${CHECKS+x} ] && [ -z ${ML_EXPORTTRAINDATA+x} ] && [ -z ${TRAIN_ML+x} ]
 then
   echo "Missing use mode!"
   echo " "
