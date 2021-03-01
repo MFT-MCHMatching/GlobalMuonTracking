@@ -277,6 +277,29 @@ exportMLTrainningData()
 }
 
 
+trainML()
+{
+
+	if ! [ -f "${OUTDIR}/MLConfigs.xml" ]; then
+    echo " Machine Learning configuration file absent..." #TODO option to create configuration file
+    exit
+  fi
+
+  if ! [ -f "${ML_TRAINING_FILE}" ]; then
+    echo " ERROR: could not open data file! "
+    exit
+  fi
+
+
+  if [ -d "${OUTDIR}" ]; then
+    if ! [ -z ${UPDATECODE+x} ]; then updatecode ; fi
+    pushd ${OUTDIR}
+   	alienv setenv ${O2ENV} -c root -l -b -q MLTraining.C
+    
+  fi
+
+}
+
 runChecks()
 {
 
@@ -404,6 +427,26 @@ while [ $# -gt 0 ] ; do
     export ML_SCORECUT="$2";
     shift 2
     ;;
+    --train)
+    TRAIN_ML="1";
+    shift 1
+    ;;
+    --layout)
+    export ML_LAYOUT="$2";
+    shift 2
+    ;;
+    --strategy)
+    export ML_TRAINING_STRAT="$2";
+    shift 2
+    ;;
+    --MLoptions)
+    export ML_GENERAL_OPT="$2";
+    shift 2
+    ;;
+    --trainingdata)
+		export ML_TRAINING_FILE="$2";
+		shift 2
+		;;
     --convert)
     CONVERT="1";
     shift 1
@@ -437,7 +480,7 @@ if ! [[ -z "$LOADEDMODULES" ]]
  fi
 
 
-if [ -z ${GENERATEMCH+x} ] && [ -z ${GENERATEMFT+x} ] && [ -z ${MATCHING+x} ] && [ -z ${CHECKS+x} ] && [ -z ${ML_EXPORTTRAINDATA+x} ]
+if [ -z ${GENERATEMCH+x} ] && [ -z ${GENERATEMFT+x} ] && [ -z ${MATCHING+x} ] && [ -z ${CHECKS+x} ] && [ -z ${ML_EXPORTTRAINDATA+x} && [ -z ${TRAIN_ML+x} ]
 then
   echo "Missing use mode!"
   echo " "
@@ -477,4 +520,5 @@ fi
 
 if ! [ -z ${MATCHING+x} ]; then runMatching ; fi
 if ! [ -z ${ML_EXPORTTRAINDATA+x} ]; then exportMLTrainningData ; fi
+if ! [ -z ${TRAIN_ML+x} ]; then trainML ; fi
 if ! [ -z ${CHECKS+x} ]; then runChecks ; fi
