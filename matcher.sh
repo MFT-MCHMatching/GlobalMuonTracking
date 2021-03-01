@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MATCHINGRESULTS="GlobalMuonTracks.root matching.log MatchingPlane_eV*.png MLTraining_*.root"
+MATCHINGRESULTS="GlobalMuonTracks.root matching.log MatchingPlane_eV*.png ML_Evaluation*.root"
 CHECKRESULTS="GlobalMuonChecks.root checks.log"
 
 Usage()
@@ -264,10 +264,10 @@ exportMLTrainningData()
     pushd ${OUTDIR}
     echo "Exporting ML Traning data file on `pwd` ..."
     ## MFT MCH track matching & global muon track fitting:
-    alienv setenv ${O2ENV} -c root.exe -e 'gSystem->Load("libO2MCHTracking")' -l -q -b runMatching.C+ | tee matching.log
+    alienv setenv ${O2ENV} -c root.exe -e 'gSystem->Load("libO2MCHTracking")' -l -q -b runMatching.C+ | tee training_data_gen.log
     RESULTSDIR="MLTraning`cat MatchingConfig.txt`"
     mkdir -p ${RESULTSDIR}
-    cp matching.log MLTraining_*.root "${RESULTSDIR}"
+    cp training_data_gen.log MLTraining_*.root "${RESULTSDIR}"
 
     popd
     echo " Finished exporting ML Traning data. File saved on `realpath ${RESULTSDIR}`"
@@ -295,7 +295,7 @@ trainML()
     if ! [ -z ${UPDATECODE+x} ]; then updatecode ; fi
     pushd ${OUTDIR}
    	alienv setenv ${O2ENV} -c root -l -b -q MLTraining.C
-    
+
   fi
 
 }
