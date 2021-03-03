@@ -74,7 +74,7 @@ Usage()
 
          matchXY - matching chi2 calculated track positions: X, Y
 
-         trainedML - matching using a trained neural network
+         trainedML - matching using a trained neural network (see TMVA interface bellow)
 
      --cutFcn
        Sets the function that defines the search window for matching candidates. Built-in options:
@@ -129,33 +129,41 @@ Usage()
   To replace the macros on --genMFT, --match and --check steps, use option --updatecode
 
   ======================================================================================
-  Machine learning interface - ROOT TMVA (WIP)
+  Machine learning interface - ROOT TMVA
 
   1) Generate training data file:
      {0##*/} --exportTrainingData NMCH_Tracks -o <outputdir>
+     Creates a traning data root file. Each entry o on the tree contains
+       40 parameters and 1 truth.
+     Track-pairs can be selected by the matching cut functions. See option --cutFcn.
      TODO: Configurable training data format
 
      Example:
-     ${0##*/} --exportTrainingData 42 -o ML_testdir
+     ${0##*/} --exportTrainingData 42 --cutFcn cutDistance --cutParam0 2.0 -o outputdir
 
   2) Train neural network:
      {0##*/} --train <config_alias/es> --trainingdata <training_data_file.root>
 
      Example:
-     ${0##*/} --train --layout DNN4.2 --strategy ts1 --MLoptions oo1 --trainingdata MLTraining_42_MCHTracks.root -o ML_testdir
+     ${0##*/} --train --layout DNN4.2 --strategy ts1 --MLoptions oo1 --trainingdata MLTraining_1000_MCHTracks.root -o outputdir
 
       This creates the Trained Network file "Trained_ML_<config_alias>_<training_data_file>.weights.xml" in the folder "outputdir/trainedMLs/weights/"
       Existing aliases are in ML configuration file "MLConfigs.xml"
 
   3) Run track-matching using trained network:
      {0##*/} --match --matchFcn trainedML --weightfile weightfilename.xml -o outputdir
+     Runs track-matching as any matching function with a default machine learning
+     score cut of 0.5 (see --MLScoreCut). Also generates ML_Evaluation.root with
+     basic performance assessment of the method.
+
+     --MLScoreCut <val0>
+     Configures matching score cut to select the final GlobalMuonTracks.root. (default: 0.5)
 
      Example:
-     ${0##*/} --match --matchFcn trainedML --weightfile trainedMLs/weights/Trained_ML_DNN13.0_ts2_oo1_MLTraining_42_MCHTracks.weights.xml -o ML_testdir
+     ${0##*/} --match --matchFcn trainedML --weightfile trainedMLs/weights/Trained_ML_DNN13.0_ts2_oo1_MLTraining_1000_MCHTracks.weights.xml -o outputdir
 
-      In additon to the generation all the output of a regular --match execution,
-      this command outputs ML scoring plots such as correct matching vs. MCH_rejection_rate, in a results subdirectory
-      Matching cut score defaults to 0.5, configurable by --MLScoreCut <val0>
+
+
 
 END
   exit
