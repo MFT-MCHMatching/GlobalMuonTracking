@@ -7,6 +7,11 @@ void sim(Int_t nev = 4) {
   gSystem->Load("libAliPythia6");
   gSystem->Load("libgeant321");
 
+  gROOT->ProcessLine(".include $ALICE_ROOT/include");
+  gSystem->AddIncludePath("-I. -I$ROOTSYS/include -I$ALICE_ROOT/include -I$ALICE_PHYSICS/include -I$ALIDPG_ROOT/include");
+  gROOT->LoadMacro("./AliGenMimicPbPb.cxx++g");
+
+  
   AliSimulation simulator;
   simulator.SetMakeSDigits("MUON");
   // simulator.SetMakeDigitsFromHits("ITS");
