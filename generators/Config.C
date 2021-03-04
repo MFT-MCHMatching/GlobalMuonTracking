@@ -298,6 +298,7 @@ void Config() {
 
   if (MCHgen.find("hijing") < MCHgen.length()) { // Hijing generator
     std::cout << " This is hijing generator! " << std::endl;
+    /*
     AliGenHijing *gener = new AliGenHijing(-1);
     // centre of mass energy
     gener->SetEnergyCMS(5500.);
@@ -319,9 +320,15 @@ void Config() {
     // kinematic selection
     gener->SetSelectAll(0);
     // impact parameter range
-    gener->SetImpactParameterRange(
-        0., 5.); // 0. - 5. fm corresponds to ~10% most central
+    gener->SetImpactParameterRange(0., 5.); // 0. - 5. fm corresponds to ~10% most central
     gener->Init();
+    */
+
+    AliGenMimicPbPb *mimic_pbpb = new AliGenMimicPbPb(1);
+    mimic_pbpb->Init();
+    gener->AddGenerator(mimic_pbpb, "MIMIC_PBPB", 1);
+    
+    
   }
   if (MCHgen.find("muoncocktail") < MCHgen.length()) { // Muon cocktail for PbPb
     std::cout << " This is muoncocktail generator! " << std::endl;
