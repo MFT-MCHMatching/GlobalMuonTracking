@@ -79,7 +79,49 @@ class MUONMatcher
   MUONMatcher();
   ~MUONMatcher() = default;
   void Clear();
-  void SetMatchingPlaneZ(double z) { mMatchingPlaneZ = z; }
+  void SetMatchingPlaneZ(double z) {
+    mMatchingPlaneZ = z;
+
+    double SAbsZBeg =  -90.; ///< Position of the begining of the absorber (cm)
+    double SAbsZEnd = -505.; ///< Position of the end of the absorber (cm)   
+    
+    // Check the matching plane position with respect to the absorber (spectro
+    // z<0)
+    if (zMatchingPlane < SAbsZBeg) {
+      if (zMatchingPlane < SAbsZEnd) {
+	LOG(WARNING) << "Ending Z (" << zMatchingPlane
+		     << ") downstream the front absorber (zAbsorberEnd = "
+		     << SAbsZEnd << ")";
+      }
+      else {
+	LOG(WARNING) << "Ending Z (" << zMatchingPlane
+		     << ") inside the front absorber (" << SAbsZBeg << ", "
+		     << SAbsZEnd << ")";
+      }
+    }
+    
+    // Check the track position with respect to the matching plane and the
+    // absorber (spectro z<0)
+    if (trackParam->getZ() > SAbsZEnd) {
+      if (trackParam->getZ() > zMatchingPlane) {
+	LOG(WARNING) << "Starting Z (" << trackParam->getZ()
+		     << ") upstream the matching plane (zMatchingPlane = "
+		     << zMatchingPlane << ")";
+      }
+      else if (trackParam->getZ() > SAbsZBeg) {
+	LOG(WARNING) << "Starting Z (" << trackParam->getZ()
+		     << ") upstream the front absorber (zAbsorberBegin = "
+		     << SAbsZBeg << ")";
+      }
+      else {
+	LOG(WARNING) << "Starting Z (" << trackParam->getZ()
+		     << ") inside the front absorber (" << SAbsZBeg << ", "
+		     << SAbsZEnd << ")";
+      }
+    }
+
+
+  }
   void SetVerbosity(bool v = true) { mVerbose = v; }
   void LoadAbsorber();
 
