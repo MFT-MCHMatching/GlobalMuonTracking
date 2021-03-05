@@ -268,7 +268,7 @@ bool TrackExtrap::extrapToMatchingPlane(TrackParam *trackParam,
   if (trackParam->getZ() == zMatchingPlane) {
     return true; // nothing to be done if already at matching plane
   }
-
+  /*
   // Check the matching plane position with respect to the absorber (spectro
   // z<0)
   if (zMatchingPlane < SAbsZBeg) {
@@ -305,7 +305,17 @@ bool TrackExtrap::extrapToMatchingPlane(TrackParam *trackParam,
       return false;
     }
   }
+  */
 
+  if (zMatchingPlane < SAbsZEnd) {
+    if (!extrapToZCov(trackParam, zMatchingPlane)) {
+      return false;
+    }
+    
+    return true;
+  }
+
+  
   // Extrapolate track parameters (and covariances if any) to the end of the
   // absorber
   if ((trackParam->hasCovariances() && !extrapToZCov(trackParam, SAbsZEnd)) ||
