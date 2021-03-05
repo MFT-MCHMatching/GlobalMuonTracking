@@ -284,7 +284,7 @@ bool TrackExtrap::extrapToMatchingPlane(TrackParam *trackParam,
       return false;
     }
   }
-
+  
   // Check the track position with respect to the matching plane and the
   // absorber (spectro z<0)
   if (trackParam->getZ() > SAbsZEnd) {
@@ -312,10 +312,9 @@ bool TrackExtrap::extrapToMatchingPlane(TrackParam *trackParam,
       (!trackParam->hasCovariances() && !extrapToZ(trackParam, SAbsZEnd))) {
     return false;
   }
-
+  
   // Get absorber correction parameters assuming linear propagation in absorber
-  double trackXYZOut[3] = {trackParam->getNonBendingCoor(),
-                           trackParam->getBendingCoor(), trackParam->getZ()};
+  double trackXYZOut[3] = {trackParam->getNonBendingCoor(),trackParam->getBendingCoor(), trackParam->getZ()};
   double trackXYZIn[3] = {0., 0., 0.};
 
   TrackParam trackParamIn(*trackParam);
