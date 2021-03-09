@@ -81,34 +81,14 @@ class MUONMatcher
     
     // Check the matching plane position with respect to the absorber (spectro
     // z<0)
-    if (zMatchingPlane < SAbsZBeg) {
-      if (zMatchingPlane < SAbsZEnd) {
-	LOG(WARNING) << "Ending Z (" << zMatchingPlane
+    if (mMatchingPlaneZ < SAbsZBeg) {
+      if (mMatchingPlaneZ < SAbsZEnd) {
+	LOG(WARNING) << "Ending Z (" << mMatchingPlaneZ
 		     << ") downstream the front absorber (zAbsorberEnd = "
 		     << SAbsZEnd << ")";
       }
       else {
-	LOG(WARNING) << "Ending Z (" << zMatchingPlane
-		     << ") inside the front absorber (" << SAbsZBeg << ", "
-		     << SAbsZEnd << ")";
-      }
-    }
-    
-    // Check the track position with respect to the matching plane and the
-    // absorber (spectro z<0)
-    if (trackParam->getZ() > SAbsZEnd) {
-      if (trackParam->getZ() > zMatchingPlane) {
-	LOG(WARNING) << "Starting Z (" << trackParam->getZ()
-		     << ") upstream the matching plane (zMatchingPlane = "
-		     << zMatchingPlane << ")";
-      }
-      else if (trackParam->getZ() > SAbsZBeg) {
-	LOG(WARNING) << "Starting Z (" << trackParam->getZ()
-		     << ") upstream the front absorber (zAbsorberBegin = "
-		     << SAbsZBeg << ")";
-      }
-      else {
-	LOG(WARNING) << "Starting Z (" << trackParam->getZ()
+	LOG(WARNING) << "Ending Z (" << mMatchingPlaneZ
 		     << ") inside the front absorber (" << SAbsZBeg << ", "
 		     << SAbsZEnd << ")";
       }
@@ -226,6 +206,10 @@ class MUONMatcher
               << "] = " << param << std::endl;
   };
 
+
+  // ML interface
+  void interfaceML(const GlobalMuonTrack&, const MFTTrack&);
+  
  private:
   // Private IO methods
   void loadMFTClusters();
