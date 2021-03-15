@@ -1810,7 +1810,8 @@ void MUONMatcher::exportTrainingDataRoot(int nMCHTracks)
         auto mftTrackID = 0;
         for (auto mftTrack : mSortedMFTTracks[event]) {
           auto MFTlabel = mftTrackLabels.getLabels(mftTrackLabelsIDx[event][mftTrackID]);
-          if (matchingCut(mchTrack, mftTrack)) {
+          Truth = (int)(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID());
+          if (Truth || matchingCut(mchTrack, mftTrack)) {
 
             MFT_X = mftTrack.getX();
             MFT_Y = mftTrack.getY();
@@ -1852,7 +1853,7 @@ void MUONMatcher::exportTrainingDataRoot(int nMCHTracks)
             MCH_Cov24 = mchTrack.getCovariances()(2, 4);
             MCH_Cov34 = mchTrack.getCovariances()(3, 4);
             MCH_Cov44 = mchTrack.getCovariances()(4, 4);
-            Truth = (int)(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID());
+
             Truth ? nCorrectPairs++ : nFakesPairs++;
             pairID++;
             matchTree->Fill();

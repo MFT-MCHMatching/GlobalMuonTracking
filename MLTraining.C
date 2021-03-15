@@ -25,7 +25,7 @@
 
 using namespace TMVA;
 
-string DNN_read(const std::string& MLLayout, const std::string& MLStrat, const std::string& MLOpt, const char* filename = "MLConfigs.xml")
+string DNN_read(const std::string& MLLayout, const std::string& MLStrat, const std::string& MLOpt, const char* filename = "../MLConfigs.xml")
 {
   // First create engine
   TXMLEngine xml;
@@ -110,16 +110,16 @@ void DLRegression(std::string input_name, std::string trainingfile, std::string 
 
   TString methodname = input_name.c_str();
 
-  std::size_t pos1 = trainingfile.find("MLTraining_");
+  std::size_t rpos = trainingfile.rfind('/');
   std::size_t pos = trainingfile.find(".root");
-  methodname += "_" + trainingfile.substr(pos1, pos);
+  methodname += "_" + trainingfile.substr(rpos+1, (pos-(rpos+1)));
   TString outfileName(methodname + ".root");
   TFile* outputFile = TFile::Open(outfileName, "RECREATE");
   TMVA::Factory* factory = new TMVA::Factory("Trained_ML", outputFile,
                                              "!V:!Silent:Color:DrawProgressBar:AnalysisType=Regression");
 
   // Dataloader object - this will handle the data (The argument also defines the name of the directory containing the weights' file)
-  TMVA::DataLoader* dataloader = new TMVA::DataLoader("trainedMLs");
+  TMVA::DataLoader* dataloader = new TMVA::DataLoader("trainedML");
 
   // Define the input variables that shall be used for the MVA training
   // note that you may also use variable expressions, such as: "3*var1/var2*abs(var3)"
