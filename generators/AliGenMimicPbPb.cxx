@@ -190,7 +190,7 @@ void AliGenMimicPbPb::Init() {
 
   AliPDG::AddParticlesToPdgDataBase();
 
-  TFile* inFile = TFile::Open("./inputHijingParam.root");
+  TFile* inFile = TFile::Open("../generators/inputHijingParam.root");
 
   fNum[0] = (TH1F*)inFile->Get("fHistNumFwdPrimePion")     -> Clone();
   fNum[1] = (TH1F*)inFile->Get("fHistNumFwdPrimeKaon")     -> Clone();

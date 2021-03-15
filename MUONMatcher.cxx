@@ -180,20 +180,24 @@ void MUONMatcher::loadMFTTracksOut()
             << " MFT Tracks. Label info:" << std::endl;
   mcLabels->print(std::cout);
   auto mftTrackID = 0;
+  auto nInvalidMFTLabels = 0;
   for (auto& track : mMFTTracks) {
     auto MFTlabel = mftTrackLabels.getLabels(mftTrackID);
-    auto event = MFTlabel[0].getEventID();
-    track.setParameters(track.getOutParam().getParameters());
-    track.setCovariances(track.getOutParam().getCovariances());
-    track.setZ(track.getOutParam().getZ());
-    track.propagateToZhelix(mMatchingPlaneZ, mField_z);
+	if (MFTlabel[0].isValid()) {    
+      auto event = MFTlabel[0].getEventID();
+      track.setParameters(track.getOutParam().getParameters());
+      track.setCovariances(track.getOutParam().getCovariances());
+      track.setZ(track.getOutParam().getZ());
+      track.propagateToZhelix(mMatchingPlaneZ, mField_z);
 
-    mSortedMFTTracks[event].push_back(track);
-    mftTrackLabelsIDx[event].push_back(mftTrackID);
-
+      mSortedMFTTracks[event].push_back(track);
+      mftTrackLabelsIDx[event].push_back(mftTrackID);
+    } else {
+      nInvalidMFTLabels++;
+    }
     mftTrackID++;
   }
-
+  std::cout << " Dropped " << nInvalidMFTLabels << " MFT Tracks with invalid labels (noise)." << std::endl;
   loadMFTClusters();
 }
 
