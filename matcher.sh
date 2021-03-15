@@ -294,12 +294,12 @@ exportMLTrainningData()
 trainML()
 {
 
-  if ! [ -f "${OUTDIR}/MLConfigs.xml" ]; then
-    echo " Machine Learning configuration file absent...copying from script directory to ${OUTDIR}" #TODO option to create configuration file
+  if ! [ -f "MLConfigs.xml" ]; then
+    echo " Machine Learning configuration file absent..." #TODO option to create configuration file
     cp MLConfigs.xml "${OUTDIR}"
   fi
 
-  if ! [ -f "${OUTDIR}/${ML_TRAINING_FILE}" ]; then
+  if ! [ -f "${ML_TRAINING_FILE}" ]; then
     echo " ERROR: could not open data file! "
     exit
   fi
@@ -430,11 +430,11 @@ while [ $# -gt 0 ] ; do
     shift 1
     ;;
     --exportTrainingData)
-    export ML_EXPORTTRAINDATA="$2";
+    export ML_EXPORTTRAINDATA="`realpath $2`";
     shift 2
     ;;
     --weightfile)
-    export ML_WEIGHTFILE="$2";
+    export ML_WEIGHTFILE="`realpath $2`";
     shift 2
     ;;
     --MLScoreCut)
