@@ -267,6 +267,7 @@ class MUONMatcher
   bool matchCutDistanceAndAngles(const GlobalMuonTrack&, const MFTTrack&);
   bool matchCutDistanceSigma(const GlobalMuonTrack&, const MFTTrack&);
   bool matchCut3SigmaXYAngles(const GlobalMuonTrack&, const MFTTrack&);
+  bool matchCutVarXYAngles(const GlobalMuonTrack&, const MFTTrack&);
   void setCutParam(int index, double param)
   {
     if (index > ((int)mCutParams.size() - 1))

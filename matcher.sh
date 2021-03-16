@@ -94,6 +94,8 @@ Usage()
 
         cutDistanceAndAngles3Sigma - MFT TDR cut (Section 6.5)
 
+        cutDistanceAndAnglesVar - Cut based on observed MCH residuals variances
+
      --cutParam0 <val0>
        Sets mCutParams[0]=val0; (double)
 
@@ -279,7 +281,7 @@ exportMLTrainningData()
     echo "Exporting ML Traning data file on `pwd` ..."
     ## MFT MCH track matching & global muon track fitting:
     alienv setenv ${O2ENV} -c root.exe -e 'gSystem->Load("libO2MCHTracking")' -l -q -b runMatching.C+ | tee training_data_gen.log
-    RESULTSDIR="MLTraning`cat MatchingConfig.txt`"
+    RESULTSDIR="MLTraining`cat MatchingConfig.txt`"
     mkdir -p ${RESULTSDIR}
     cp training_data_gen.log MLTraining_*.root "${RESULTSDIR}"
 
