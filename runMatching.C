@@ -123,8 +123,8 @@ void loadAndSetMatchingConfig()
     }
   }
 
-  if (gSystem->Getenv("DISABLECHARGEMATCHCUT")) {
-    matcher.disableChargeMatchCut();
+  if (gSystem->Getenv("ENABLECHARGEMATCHCUT")) {
+    matcher.enableChargeMatchCut();
   }
 
   if (gSystem->Getenv("MATCHING_CUTPARAM0")) {

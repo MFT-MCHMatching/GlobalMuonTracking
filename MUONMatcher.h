@@ -199,7 +199,7 @@ class MUONMatcher
   void exportTrainingDataRoot(int nMCHTracks = -1);
 
   // Matching cuts
-  void disableChargeMatchCut() { mChargeCutEnabled = false; }
+  void enableChargeMatchCut() { mChargeCutEnabled = true; }
   bool matchingCut(const GlobalMuonTrack&,
                    const MFTTrack&); // Calls configured cut function
 
@@ -332,7 +332,7 @@ class MUONMatcher
   bool mVerbose = false;
   TGeoManager* mGeoManager;
   bool mMatchSaveAll = false;
-  bool mChargeCutEnabled = true;
+  bool mChargeCutEnabled = false;
 
   // TMVA interface
   std::string mTMVAWeightFileName;

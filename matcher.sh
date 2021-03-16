@@ -105,8 +105,8 @@ Usage()
      --cutParam2 <val2>
        Sets mCutParams[2]=val2; (double)
 
-     --disableChargeMatchCut
-        Disables charge match cut (which is enabled by default on all built-in cut functions but cutDisabled)
+     --enableChargeMatchCut
+        Enables charge match cut (which is disabled by default)
 
      Example:
      ${0##*/} --match --matchFcn matchXYPhiTanl --cutFcn cutDistance --cutParam0 2.0 -o sampletest
@@ -427,8 +427,8 @@ while [ $# -gt 0 ] ; do
     export MATCHING_CUTPARAM2="$2";
     shift 2
     ;;
-    --disableChargeMatchCut)
-    export DISABLECHARGEMATCHCUT="1";
+    --enableChargeMatchCut)
+    export ENABLECHARGEMATCHCUT="1";
     shift 1
     ;;
     --exportTrainingData)
