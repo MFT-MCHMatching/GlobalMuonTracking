@@ -358,6 +358,8 @@ void MUONMatcher::initGlobalTracks()
       helper.MatchingCutFunc = "_cutDistanceAndAngles";
     if (mCutFunc == &MUONMatcher::matchCut3SigmaXYAngles)
       helper.MatchingCutFunc = "_cutDistanceAndAngles3Sigma";
+    if (mCutFunc == &MUONMatcher::matchCutVarXYAngles)
+      helper.MatchingCutFunc = "_cutDistanceAndAnglesVar";
   }
 }
 
@@ -868,6 +870,27 @@ bool MUONMatcher::matchCut3SigmaXYAngles(const GlobalMuonTrack& mchTrack,
     3 * TMath::Sqrt(mchTrack.getSigma2X() + mchTrack.getSigma2Y());
   auto cutPhi = 3 * TMath::Sqrt(mchTrack.getSigma2Phi());
   auto cutTanl = 3 * TMath::Sqrt(mchTrack.getSigma2Tanl());
+  return (distance < cutDistance) and (dPhi < cutPhi) and (dTheta < cutTanl);
+}
+
+//_________________________________________________________________________________________________
+bool MUONMatcher::matchCutVarXYAngles(const GlobalMuonTrack& mchTrack,
+                                         const MFTTrack& mftTrack)
+{
+
+  if (mChargeCutEnabled && (mchTrack.getCharge() != mftTrack.getCharge()))
+    return false;
+
+  auto dx = mchTrack.getX() - mftTrack.getX();
+  auto dy = mchTrack.getY() - mftTrack.getY();
+  auto dPhi = mchTrack.getPhi() - mftTrack.getPhi();
+  auto dTheta =
+    TMath::Abs(EtaToTheta(mchTrack.getEta()) - EtaToTheta(mftTrack.getEta()));
+  auto distance = TMath::Sqrt(dx * dx + dy * dy);
+  auto cutDistance =
+    3 * 1.3 * TMath::Sqrt(mchTrack.getSigma2X() + mchTrack.getSigma2Y());
+  auto cutPhi = 3 * 1.15 * TMath::Sqrt(mchTrack.getSigma2Phi());
+  auto cutTanl = 3 * 1.22 * TMath::Sqrt(mchTrack.getSigma2Tanl());
   return (distance < cutDistance) and (dPhi < cutPhi) and (dTheta < cutTanl);
 }
 
