@@ -432,7 +432,7 @@ while [ $# -gt 0 ] ; do
     shift 1
     ;;
     --exportTrainingData)
-    export ML_EXPORTTRAINDATA="`realpath $2`";
+    export ML_EXPORTTRAINDATA="$2";
     shift 2
     ;;
     --weightfile)
@@ -460,7 +460,7 @@ while [ $# -gt 0 ] ; do
     shift 2
     ;;
     --trainingdata)
-    export ML_TRAINING_FILE="$2";
+    export ML_TRAINING_FILE="`realpath $2`";
     shift 2
     ;;
     --convert)
