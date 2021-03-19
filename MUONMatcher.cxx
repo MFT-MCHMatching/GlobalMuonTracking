@@ -183,7 +183,7 @@ void MUONMatcher::loadMFTTracksOut()
   auto nInvalidMFTLabels = 0;
   for (auto& track : mMFTTracks) {
     auto MFTlabel = mftTrackLabels.getLabels(mftTrackID);
-	if (MFTlabel[0].isValid()) {    
+    if (MFTlabel[0].isValid()) {
       auto event = MFTlabel[0].getEventID();
       track.setParameters(track.getOutParam().getParameters());
       track.setCovariances(track.getOutParam().getCovariances());
@@ -452,13 +452,6 @@ void MUONMatcher::runEventMatching()
   if (mTMVAReader)
     EvaluateML();
 }
-
-void MUONMatcher::interfaceML(const GlobalMuonTrack&, const MFTTrack&){
-
-
-
-}
-  
 
 //_________________________________________________________________________________________________
 bool MUONMatcher::printMatchingPlaneView(int event, int MCHTrackID)
