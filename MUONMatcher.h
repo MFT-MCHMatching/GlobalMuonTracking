@@ -83,8 +83,8 @@ class MUONMatcher
     mMatchingPlaneZ = z;
 
     double SAbsZBeg =  -90.; ///< Position of the begining of the absorber (cm)
-    double SAbsZEnd = -505.; ///< Position of the end of the absorber (cm)   
-    
+    double SAbsZEnd = -505.; ///< Position of the end of the absorber (cm)
+
     // Check the matching plane position with respect to the absorber (spectro
     // z<0)
     if (mMatchingPlaneZ < SAbsZBeg) {
@@ -277,10 +277,6 @@ class MUONMatcher
               << "] = " << param << std::endl;
   };
 
-
-  // ML interface
-  void interfaceML(const GlobalMuonTrack&, const MFTTrack&);
-  
  private:
   // Private IO methods
   void loadMFTClusters();

@@ -511,7 +511,7 @@ GENERATOR=${GENERATOR:-"gun0_100GeV"}
 CUSTOM_SHM="--shm-segment-size 5000000000"
 
 export MCHGENERATOR=${GENERATOR}
-export ALIROOT_OCDB_ROOT=${ALIROOT_OCDB_ROOT:-"~/alice/OCDB"}
+export ALIROOT_OCDB_ROOT=${ALIROOT_OCDB_ROOT:-$HOME/alice/OCDB}
 
 ALIROOTENV=${ALIROOTENV:-"AliRoot/latest-master-next-root6"}
 O2ENV=${O2ENV:-"O2/latest-dev-o2"}
