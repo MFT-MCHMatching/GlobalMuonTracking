@@ -186,6 +186,12 @@ int runMatching()
     return 0;
   }
 
+  // Runs track matching event-by-event or generate training data
+  if (gSystem->Getenv("TRAIN_ML")) {
+    matcher.MLTraining();
+    return 0;
+  }
+
   matcher.runEventMatching();
 
   // Kalman filter

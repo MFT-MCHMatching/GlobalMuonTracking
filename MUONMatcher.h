@@ -32,6 +32,12 @@
 #include "TTree.h"
 #include "TSystem.h"
 #include "TROOT.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Reader.h"
+#include "TMVA/Factory.h"
+#include "TMVA/DataLoader.h"
+#include "TMVA/TMVARegGui.h"
+#include "TStopwatch.h"
 #endif
 
 #include "MCHTracking/TrackParam.h"
@@ -41,15 +47,16 @@
 #include "include/GlobalMuonTrack.h"
 #include "include/TrackExtrap.h"
 #include "include/tempMCHTrack.h"
+#include "include/MLHelpers.h"
 
-#include "TMVA/Tools.h"
-#include "TMVA/Reader.h"
-#include "TMVA/DataLoader.h"
+using namespace TMVA;
 
 #include <iostream>
 
 using MCHTrack = o2::mch::TrackParam;
 using MFTTrack = o2::mft::TrackMFT;
+using MCHTrackConv = o2::track::GlobalMuonTrack; // MCHTracks converted to the Fwd coordinate system
+
 using GlobalMuonTrack = o2::track::GlobalMuonTrack;
 using GlobalMuonTrackExt = o2::track::GlobalMuonTrackExt;
 using MCLabels = o2::dataformats::MCTruthContainer<o2::MCCompLabel>;
@@ -127,38 +134,40 @@ class MUONMatcher
   // Matching methods
   // Position
   double
-    matchMFT_MCH_TracksXY(const GlobalMuonTrack& mchTrack,
+    matchMFT_MCH_TracksXY(const MCHTrackConv& mchTrack,
                           const MFTTrack& mftTrack); // Compute track matching
   //// Position & Angles
-  double matchMFT_MCH_TracksXYPhiTanl(const GlobalMuonTrack& mchTrack,
+  double matchMFT_MCH_TracksXYPhiTanl(const MCHTrackConv& mchTrack,
                                       const MFTTrack& mftTrack);
   //// Position, Angles & Charged Momentum
-  double matchMFT_MCH_TracksAllParam(const GlobalMuonTrack& mchTrack,
+  double matchMFT_MCH_TracksAllParam(const MCHTrackConv& mchTrack,
                                      const MFTTrack& mftTrack);
 
   //// Matching using trained ML
-  double matchTrainedML(const GlobalMuonTrack& mchTrack,
+  double matchTrainedML(const MCHTrackConv& mchTrack,
                         const MFTTrack& mftTrack);
 
-  void EvaluateML();
-
-  void setMatchingFunction(double (MUONMatcher::*func)(const GlobalMuonTrack&,
+  void setMatchingFunction(double (MUONMatcher::*func)(const MCHTrackConv&,
                                                        const MFTTrack&))
   {
     mMatchFunc = func;
-    if (func == &MUONMatcher::matchMFT_MCH_TracksXY)
+    if (func == &MUONMatcher::matchMFT_MCH_TracksXY) {
       mMatchingHelper.MatchingFunction = "_matchXY";
-    if (func == &MUONMatcher::matchMFT_MCH_TracksXYPhiTanl)
+    }
+    if (func == &MUONMatcher::matchMFT_MCH_TracksXYPhiTanl) {
       mMatchingHelper.MatchingFunction = "_matchXYPhiTanl";
-    if (func == &MUONMatcher::matchMFT_MCH_TracksAllParam)
+    }
+    if (func == &MUONMatcher::matchMFT_MCH_TracksAllParam) {
       mMatchingHelper.MatchingFunction = "_matchAllParams";
-    if (func == &MUONMatcher::matchTrainedML)
+    }
+    if (func == &MUONMatcher::matchTrainedML) {
       mMatchingHelper.MatchingFunction = "_matchML";
+    }
 
     std::cout << " ** MUONMATCHER: Setting matching function => "
               << mMatchingHelper.MatchingFunction << std::endl;
   }
-  void setCustomMatchingFunction(double (*func)(const GlobalMuonTrack&,
+  void setCustomMatchingFunction(double (*func)(const MCHTrackConv&,
                                                 const MFTTrack&),
                                  std::string nickname)
   {
@@ -172,7 +181,7 @@ class MUONMatcher
     runHeavyMatching();    // Finds best match (no search cut, no event separation)
   void runEventMatching(); // Finds best match event-per-event
   bool printMatchingPlaneView(int event, int MCHTrackID = 0);
-  void exportNMatchingPlaneViews(int nTracks = -1)
+  void exportNMatchingPlaneViews(int nTracks)
   {
     if (mMatchSaveAll) {
       std::cout << " ** exportNMatchingPlaneViews disabled for option --matchSaveAll" << std::endl;
@@ -181,22 +190,23 @@ class MUONMatcher
     loadMCHTracks();
     initGlobalTracks();
     auto event = 0;
-    if (nTracks < 0 or nTracks > mMatchingHelper.nMCHTracks)
+    if (nTracks > mMatchingHelper.nMCHTracks)
       nTracks = mMatchingHelper.nMCHTracks;
-    while (nTracks > 0 or event < mNEvents) {
-      for (auto& mchTracks : mSortedGlobalMuonTracks) {
-        auto MCHTrackID = 0;
-        for (auto& mchTrack : mchTracks) {
+    std::cout << " ** exportNMatchingPlaneViews: " << nTracks << std::endl;
+    for (auto& mchTracks : mSortedGlobalMuonTracks) {
+      auto MCHTrackID = 0;
+      for (auto& mchTrack : mchTracks) {
+        if (nTracks > 0)
           printMatchingPlaneView(event, MCHTrackID);
-          nTracks--;
-          MCHTrackID++;
-        }
-        event++;
+        nTracks--;
+        MCHTrackID++;
       }
+      event++;
     }
   };
 
   void exportTrainingDataRoot(int nMCHTracks = -1);
+
   void exportTrainingDataCsv(int nMCHTracks = -1);
 
   // Matching cuts
@@ -204,71 +214,63 @@ class MUONMatcher
   bool matchingCut(const GlobalMuonTrack&,
                    const MFTTrack&); // Calls configured cut function
 
-  double matchingEval(const GlobalMuonTrack&,
+  double matchingEval(const MCHTrackConv&,
                       const MFTTrack&); // Calls configured cut function
-  void setCutFunction(bool (MUONMatcher::*func)(const GlobalMuonTrack&,
+  void setCutFunction(bool (MUONMatcher::*func)(const MCHTrackConv&,
                                                 const MFTTrack&));
-  void setCustomCutFunction(bool (*func)(const GlobalMuonTrack&,
+  void setCustomCutFunction(bool (*func)(const MCHTrackConv&,
                                          const MFTTrack&))
   {
     mCustomCutFunc = func;
   }
+
+  // Machine Learning Methods
+  void initMLFeatures()
+  {
+    MCHTrackConv mchTrk;
+    MFTTrack mftTrk;
+    setMLFeatures(mchTrk, mftTrk);
+  }
+  void EvaluateML();
+  virtual void buildMLFeatures(const MCHTrackConv& mchTrack, const MFTTrack& mftTrack);
+  void setMLFeatures(const MCHTrackConv& mchTr, const MFTTrack& mftTr) { buildMLFeatures(mchTr, mftTr); }
+
   void configureTMVA(std::string filename, float scorecut)
   {
+    initMLFeatures();
     mTMVAWeightFileName = filename;
     mMLScoreCut = scorecut;
     mTMVAReader = new TMVA::Reader("!Color:!Silent");
-
-    mTMVAReader->AddVariable("MFT_X", &mMCH_MFT_pair[0]);
-    mTMVAReader->AddVariable("MFT_Y", &mMCH_MFT_pair[1]);
-    mTMVAReader->AddVariable("MFT_Phi", &mMCH_MFT_pair[2]);
-    mTMVAReader->AddVariable("MFT_Tanl", &mMCH_MFT_pair[3]);
-    mTMVAReader->AddVariable("MFT_InvQPt", &mMCH_MFT_pair[4]);
-    mTMVAReader->AddVariable("MFT_Cov00", &mMCH_MFT_pair[5]);
-    mTMVAReader->AddVariable("MFT_Cov01", &mMCH_MFT_pair[6]);
-    mTMVAReader->AddVariable("MFT_Cov11", &mMCH_MFT_pair[7]);
-    mTMVAReader->AddVariable("MFT_Cov02", &mMCH_MFT_pair[8]);
-    mTMVAReader->AddVariable("MFT_Cov12", &mMCH_MFT_pair[9]);
-    mTMVAReader->AddVariable("MFT_Cov22", &mMCH_MFT_pair[10]);
-    mTMVAReader->AddVariable("MFT_Cov03", &mMCH_MFT_pair[11]);
-    mTMVAReader->AddVariable("MFT_Cov13", &mMCH_MFT_pair[12]);
-    mTMVAReader->AddVariable("MFT_Cov23", &mMCH_MFT_pair[13]);
-    mTMVAReader->AddVariable("MFT_Cov33", &mMCH_MFT_pair[14]);
-    mTMVAReader->AddVariable("MFT_Cov04", &mMCH_MFT_pair[15]);
-    mTMVAReader->AddVariable("MFT_Cov14", &mMCH_MFT_pair[16]);
-    mTMVAReader->AddVariable("MFT_Cov24", &mMCH_MFT_pair[17]);
-    mTMVAReader->AddVariable("MFT_Cov34", &mMCH_MFT_pair[18]);
-    mTMVAReader->AddVariable("MFT_Cov44", &mMCH_MFT_pair[19]);
-    mTMVAReader->AddVariable("MCH_X", &mMCH_MFT_pair[20]);
-    mTMVAReader->AddVariable("MCH_Y", &mMCH_MFT_pair[21]);
-    mTMVAReader->AddVariable("MCH_Phi", &mMCH_MFT_pair[22]);
-    mTMVAReader->AddVariable("MCH_Tanl", &mMCH_MFT_pair[23]);
-    mTMVAReader->AddVariable("MCH_InvQPt", &mMCH_MFT_pair[24]);
-    mTMVAReader->AddVariable("MCH_Cov00", &mMCH_MFT_pair[25]);
-    mTMVAReader->AddVariable("MCH_Cov01", &mMCH_MFT_pair[26]);
-    mTMVAReader->AddVariable("MCH_Cov11", &mMCH_MFT_pair[27]);
-    mTMVAReader->AddVariable("MCH_Cov02", &mMCH_MFT_pair[28]);
-    mTMVAReader->AddVariable("MCH_Cov12", &mMCH_MFT_pair[29]);
-    mTMVAReader->AddVariable("MCH_Cov22", &mMCH_MFT_pair[30]);
-    mTMVAReader->AddVariable("MCH_Cov03", &mMCH_MFT_pair[31]);
-    mTMVAReader->AddVariable("MCH_Cov13", &mMCH_MFT_pair[32]);
-    mTMVAReader->AddVariable("MCH_Cov23", &mMCH_MFT_pair[33]);
-    mTMVAReader->AddVariable("MCH_Cov33", &mMCH_MFT_pair[34]);
-    mTMVAReader->AddVariable("MCH_Cov04", &mMCH_MFT_pair[35]);
-    mTMVAReader->AddVariable("MCH_Cov14", &mMCH_MFT_pair[36]);
-    mTMVAReader->AddVariable("MCH_Cov24", &mMCH_MFT_pair[37]);
-    mTMVAReader->AddVariable("MCH_Cov34", &mMCH_MFT_pair[38]);
-    mTMVAReader->AddVariable("MCH_Cov44", &mMCH_MFT_pair[39]);
+    for (int i = 0; i < mNInputFeatures; i++) {
+      mTMVAReader->AddVariable(Form("Feature_%d", i), &mMLInputFeatures[i]);
+    }
 
     mTMVAReader->BookMVA("MUONMatcherML", mTMVAWeightFileName);
   }
+  void DLRegression(std::string input_name, std::string trainingfile, std::string trainingstr);
+
+  void MLTraining()
+  {
+    std::string MLLayout = gSystem->Getenv("ML_LAYOUT");
+    std::string MLStrat = gSystem->Getenv("ML_TRAINING_STRAT");
+    std::string MLOpt = gSystem->Getenv("ML_GENERAL_OPT");
+    std::string training_file = gSystem->Getenv("ML_TRAINING_FILE");
+
+    std::string training_string(DNN_read(MLLayout, MLStrat, MLOpt));
+    std::string network_ID(MLLayout + "_" + MLStrat + "_" + MLOpt);
+    std::cout << " Network name: " << network_ID << "\n"
+              << std::endl;
+    //	std::cout<<" Training file "<< training_file<< "\n"<<std::endl;
+    DLRegression(network_ID, training_file, training_string);
+  }
+
   //  Built-in cut functions
-  bool matchCutDisabled(const GlobalMuonTrack&, const MFTTrack&);
-  bool matchCutDistance(const GlobalMuonTrack&, const MFTTrack&);
-  bool matchCutDistanceAndAngles(const GlobalMuonTrack&, const MFTTrack&);
-  bool matchCutDistanceSigma(const GlobalMuonTrack&, const MFTTrack&);
-  bool matchCut3SigmaXYAngles(const GlobalMuonTrack&, const MFTTrack&);
-  bool matchCutVarXYAngles(const GlobalMuonTrack&, const MFTTrack&);
+  bool matchCutDisabled(const MCHTrackConv&, const MFTTrack&);
+  bool matchCutDistance(const MCHTrackConv&, const MFTTrack&);
+  bool matchCutDistanceAndAngles(const MCHTrackConv&, const MFTTrack&);
+  bool matchCutDistanceSigma(const MCHTrackConv&, const MFTTrack&);
+  bool matchCut3SigmaXYAngles(const MCHTrackConv&, const MFTTrack&);
+  bool matchCutVarXYAngles(const MCHTrackConv&, const MFTTrack&);
   void setCutParam(int index, double param)
   {
     if (index > ((int)mCutParams.size() - 1))
@@ -290,10 +292,10 @@ class MUONMatcher
   // Global Muon Track Methods
   void fitGlobalMuonTrack(GlobalMuonTrack&); // Kalman filter
   bool computeCluster(GlobalMuonTrack&, MFTCluster&);
-  double (MUONMatcher::*mMatchFunc)(const GlobalMuonTrack&, const MFTTrack&);
-  double (*mCustomMatchFunc)(const GlobalMuonTrack&,
+  double (MUONMatcher::*mMatchFunc)(const MCHTrackConv&, const MFTTrack&);
+  double (*mCustomMatchFunc)(const MCHTrackConv&,
                              const MFTTrack&) = nullptr;
-  bool (MUONMatcher::*mCutFunc)(const GlobalMuonTrack&, const MFTTrack&);
+  bool (MUONMatcher::*mCutFunc)(const MCHTrackConv&, const MFTTrack&);
   bool (*mCustomCutFunc)(const GlobalMuonTrack&, const MFTTrack&) = nullptr;
 
   // Data Members
@@ -334,8 +336,9 @@ class MUONMatcher
   // TMVA interface
   std::string mTMVAWeightFileName;
   TMVA::Reader* mTMVAReader;
-  float_t mMCH_MFT_pair[40];
   float_t mMLScoreCut;
+  float_t mMLInputFeatures[50];
+  std::size_t mNInputFeatures = -1;
 };
 
 //_________________________________________________________________________________________________
