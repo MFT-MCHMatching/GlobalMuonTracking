@@ -176,8 +176,14 @@ int runMatching()
   // Runs track matching event-by-event or generate training data
   if (gSystem->Getenv("ML_EXPORTTRAINDATA")) {
     int nMCHTracks = atoi(gSystem->Getenv("ML_EXPORTTRAINDATA"));
-    std::cout << " Generate ML traning data file for " << nMCHTracks << " MCH tracks." << std::endl;
-    matcher.exportTrainingDataRoot(nMCHTracks);
+    std::cout << " Generate ML traning data file for " << nMCHTracks << " MCH tracks." << std::endl;    
+    if (gSystem->Getenv("ML_FORMAT_CSV")){
+      std::cout<<"Python switch:  ON"<<endl;
+      matcher.exportTrainingDataCsv(nMCHTracks);
+    }
+    else{
+      matcher.exportTrainingDataRoot(nMCHTracks);
+    }
     return 0;
   }
 
