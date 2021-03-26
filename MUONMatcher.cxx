@@ -454,10 +454,159 @@ void MUONMatcher::runEventMatching()
 }
 
 //_________________________________________________________________________________________________
+void MUONMatcher::buildMLFeatures(const MCHTrackConv& mchTrack, const MFTTrack& mftTrack)
+{
+
+  float* features = &mMLInputFeatures[0];
+  features[0] = mftTrack.getX();
+  features[1] = mftTrack.getY();
+  features[2] = mftTrack.getPhi(),
+  features[3] = mftTrack.getTanl();
+  features[4] = mftTrack.getInvQPt();
+  features[5] = mftTrack.getCovariances()(0, 0);
+  features[6] = mftTrack.getCovariances()(0, 1);
+  features[7] = mftTrack.getCovariances()(1, 1);
+  features[8] = mftTrack.getCovariances()(0, 2);
+  features[9] = mftTrack.getCovariances()(1, 2);
+  features[10] = mftTrack.getCovariances()(2, 2);
+  features[11] = mftTrack.getCovariances()(0, 3);
+  features[12] = mftTrack.getCovariances()(1, 3);
+  features[13] = mftTrack.getCovariances()(2, 3);
+  features[14] = mftTrack.getCovariances()(3, 3);
+  features[15] = mftTrack.getCovariances()(0, 4);
+  features[16] = mftTrack.getCovariances()(1, 4);
+  features[17] = mftTrack.getCovariances()(2, 4);
+  features[18] = mftTrack.getCovariances()(3, 4);
+  features[19] = mftTrack.getCovariances()(4, 4);
+  features[20] = mchTrack.getX();
+  features[21] = mchTrack.getY();
+  features[22] = mchTrack.getPhi(),
+  features[23] = mchTrack.getTanl();
+  features[24] = mchTrack.getInvQPt();
+  features[25] = mchTrack.getCovariances()(0, 0);
+  features[26] = mchTrack.getCovariances()(0, 1);
+  features[27] = mchTrack.getCovariances()(1, 1);
+  features[28] = mchTrack.getCovariances()(0, 2);
+  features[29] = mchTrack.getCovariances()(1, 2);
+  features[30] = mchTrack.getCovariances()(2, 2);
+  features[31] = mchTrack.getCovariances()(0, 3);
+  features[32] = mchTrack.getCovariances()(1, 3);
+  features[33] = mchTrack.getCovariances()(2, 3);
+  features[34] = mchTrack.getCovariances()(3, 3);
+  features[35] = mchTrack.getCovariances()(0, 4);
+  features[36] = mchTrack.getCovariances()(1, 4);
+  features[37] = mchTrack.getCovariances()(2, 4);
+  features[38] = mchTrack.getCovariances()(3, 4);
+  features[39] = mchTrack.getCovariances()(4, 4);
+  mNInputFeatures = 40;
+}
+
+//_________________________________________________________________________________________________
+void MUONMatcher::DLRegression(std::string input_name, std::string trainingfile, std::string trainingstr)
+{
+
+  TMVA::Tools::Instance();
+
+  std::cout << "==> Start TMVARegression" << std::endl;
+
+  TFile* input(0);
+  if (!gSystem->AccessPathName(trainingfile.c_str())) {
+    input = TFile::Open(trainingfile.c_str());
+  }
+  if (!input) {
+    std::cout << "ERROR: could not open data file" << std::endl;
+    exit(1);
+  }
+  std::cout << "--- TMVARegression           : Using training input file: " << input->GetName() << std::endl;
+
+  // Register the regression tree
+  TTree* regTree = (TTree*)input->Get("matchTree");
+
+  // Let's initialize the factory object (analysis class)...:
+  // The first argument is the base of the name of all the
+  // weightfiles in the directory weight/
+  //
+  // The second argument is the output file for the training results.
+  // The weightfile name will be the the combined strings of the two arguments
+  //
+  // In the third argument we can set the analysis type: classification or regression
+
+  TString methodname = input_name.c_str();
+
+  std::size_t rpos = trainingfile.rfind('/');
+  std::size_t pos = trainingfile.find(".root");
+  methodname += "_" + trainingfile.substr(rpos + 1, (pos - (rpos + 1)));
+  TString outfileName(methodname + ".root");
+  TFile* outputFile = TFile::Open(outfileName, "RECREATE");
+  TMVA::Factory* factory = new TMVA::Factory("Trained_ML", outputFile,
+                                             "!V:!Silent:Color:DrawProgressBar:AnalysisType=Regression");
+
+  // Dataloader object - this will handle the data (The argument also defines the name of the directory containing the weights' file)
+  TMVA::DataLoader* dataloader = new TMVA::DataLoader("trainedML");
+
+  initMLFeatures();
+  for (int i = 0; i < mNInputFeatures; i++) {
+    dataloader->AddVariable(Form("Feature_%d", i), Form("Feature_%d", i), "units", 'F');
+  }
+
+  // Add the variable carrying the regression target
+  dataloader->AddTarget("Truth");
+
+  // global event weights per tree (see below for setting event-wise weights)
+  Double_t regWeight = 1.0;
+
+  // You can now add the tree to the dataloader:
+  dataloader->AddRegressionTree(regTree, regWeight, Types::kTraining);
+  // ** In case we need some data for test, we shoudl use:
+  //  dataloader->AddRegressionTree( testTree, regWeight, Types::kTesting);
+
+  // Last, but not least, lets set the options for training (and testing):
+
+  // Apply additional cuts on the signal and background samples (can be different)
+  TCut mycut = ""; // for example: TCut mycut = "abs(var1)<0.5 && abs(var2-0.5)<1";
+
+  dataloader->PrepareTrainingAndTestTree(mycut,
+                                         "SplitMode=Random:NormMode=NumEvents:!V");
+
+  // Book (SAVE) the method
+  factory->BookMethod(dataloader, TMVA::Types::kDL, methodname, trainingstr);
+
+  // --------------------------------------------------------------------------------------------------
+  std::ofstream info("time_" + methodname + ".txt");
+  TStopwatch* timewatch = new TStopwatch();
+  // Train MVAs using the set of training events
+  factory->TrainAllMethods();
+
+  // Evaluate all MVAs using the set of test events
+  //   factory->TestAllMethods();
+
+  // Evaluate and compare performance of all configured MVAs
+  //   factory->EvaluateAllMethods();
+
+  info << "\n END OF THE TRAINING \n";
+  info << " ~CPU time (s): " << timewatch->CpuTime() << "\n\n"
+       << " ~Real time(s): " << timewatch->RealTime() << "\n\n";
+  // --------------------------------------------------------------
+
+  // Save the output
+  outputFile->Close();
+
+  std::cout << "==> Wrote root file: " << outputFile->GetName() << std::endl;
+  std::cout << "==> TMVARegression is done!" << std::endl;
+
+  delete factory;
+  delete dataloader;
+
+  // Launch the GUI for the root macros
+  if (!gROOT->IsBatch())
+    TMVA::TMVARegGui(outfileName);
+}
+
+//_________________________________________________________________________________________________
 bool MUONMatcher::printMatchingPlaneView(int event, int MCHTrackID)
 {
 
-  if (MCHTrackID > mSortedGlobalMuonTracks[event].size() or event >= mSortedGlobalMuonTracks.size()) {
+  if (MCHTrackID > mSortedGlobalMuonTracks[event].size() or event >= (int)mSortedGlobalMuonTracks.size()) {
     // Out of range
     return false;
   }
@@ -538,7 +687,7 @@ bool MUONMatcher::printMatchingPlaneView(int event, int MCHTrackID)
     std::cout << " printMatchingPlaneView: " << std::endl;
   }
 
-  for (int i = 0; i < pointsColors.size(); i++) {
+  for (std::size_t i = 0; i < pointsColors.size(); i++) {
     auto x = xPositions[i];
     auto y = yPositions[i];
     auto color = pointsColors[i];
@@ -774,7 +923,7 @@ bool MUONMatcher::printMatchingPlaneView(int event, int MCHTrackID)
 }
 
 //_________________________________________________________________________________________________
-bool MUONMatcher::matchingCut(const GlobalMuonTrack& mchTrack,
+bool MUONMatcher::matchingCut(const MCHTrackConv& mchTrack,
                               const MFTTrack& mftTrack)
 {
 
@@ -786,7 +935,7 @@ bool MUONMatcher::matchingCut(const GlobalMuonTrack& mchTrack,
 }
 
 //_________________________________________________________________________________________________
-double MUONMatcher::matchingEval(const GlobalMuonTrack& mchTrack,
+double MUONMatcher::matchingEval(const MCHTrackConv& mchTrack,
                                  const MFTTrack& mftTrack)
 {
 
@@ -798,7 +947,7 @@ double MUONMatcher::matchingEval(const GlobalMuonTrack& mchTrack,
 }
 
 //_________________________________________________________________________________________________
-bool MUONMatcher::matchCutDistance(const GlobalMuonTrack& mchTrack,
+bool MUONMatcher::matchCutDistance(const MCHTrackConv& mchTrack,
                                    const MFTTrack& mftTrack)
 {
 
@@ -812,7 +961,7 @@ bool MUONMatcher::matchCutDistance(const GlobalMuonTrack& mchTrack,
 }
 
 //_________________________________________________________________________________________________
-bool MUONMatcher::matchCutDistanceAndAngles(const GlobalMuonTrack& mchTrack,
+bool MUONMatcher::matchCutDistanceAndAngles(const MCHTrackConv& mchTrack,
                                             const MFTTrack& mftTrack)
 {
 
@@ -830,7 +979,7 @@ bool MUONMatcher::matchCutDistanceAndAngles(const GlobalMuonTrack& mchTrack,
 }
 
 //_________________________________________________________________________________________________
-bool MUONMatcher::matchCutDistanceSigma(const GlobalMuonTrack& mchTrack,
+bool MUONMatcher::matchCutDistanceSigma(const MCHTrackConv& mchTrack,
                                         const MFTTrack& mftTrack)
 {
 
@@ -846,7 +995,7 @@ bool MUONMatcher::matchCutDistanceSigma(const GlobalMuonTrack& mchTrack,
 }
 
 //_________________________________________________________________________________________________
-bool MUONMatcher::matchCut3SigmaXYAngles(const GlobalMuonTrack& mchTrack,
+bool MUONMatcher::matchCut3SigmaXYAngles(const MCHTrackConv& mchTrack,
                                          const MFTTrack& mftTrack)
 {
 
@@ -867,8 +1016,8 @@ bool MUONMatcher::matchCut3SigmaXYAngles(const GlobalMuonTrack& mchTrack,
 }
 
 //_________________________________________________________________________________________________
-bool MUONMatcher::matchCutVarXYAngles(const GlobalMuonTrack& mchTrack,
-                                         const MFTTrack& mftTrack)
+bool MUONMatcher::matchCutVarXYAngles(const MCHTrackConv& mchTrack,
+                                      const MFTTrack& mftTrack)
 {
 
   if (mChargeCutEnabled && (mchTrack.getCharge() != mftTrack.getCharge()))
@@ -888,7 +1037,7 @@ bool MUONMatcher::matchCutVarXYAngles(const GlobalMuonTrack& mchTrack,
 }
 
 //_________________________________________________________________________________________________
-bool MUONMatcher::matchCutDisabled(const GlobalMuonTrack& mchTrack,
+bool MUONMatcher::matchCutDisabled(const MCHTrackConv& mchTrack,
                                    const MFTTrack& mftTrack)
 {
   return true;
@@ -896,7 +1045,7 @@ bool MUONMatcher::matchCutDisabled(const GlobalMuonTrack& mchTrack,
 
 //_________________________________________________________________________________________________
 void MUONMatcher::setCutFunction(
-  bool (MUONMatcher::*func)(const GlobalMuonTrack&, const MFTTrack&))
+  bool (MUONMatcher::*func)(const MCHTrackConv&, const MFTTrack&))
 {
   mCutFunc = func;
   auto npars = 0;
@@ -1424,7 +1573,7 @@ GlobalMuonTrack MUONMatcher::MCHtoGlobal(MCHTrack& mchTrack)
 }
 
 //_________________________________________________________________________________________________
-double MUONMatcher::matchMFT_MCH_TracksXY(const GlobalMuonTrack& mchTrack,
+double MUONMatcher::matchMFT_MCH_TracksXY(const MCHTrackConv& mchTrack,
                                           const MFTTrack& mftTrack)
 {
   // Calculate Matching Chi2 - X and Y positions
@@ -1469,7 +1618,7 @@ double MUONMatcher::matchMFT_MCH_TracksXY(const GlobalMuonTrack& mchTrack,
 
 //_________________________________________________________________________________________________
 double
-  MUONMatcher::matchMFT_MCH_TracksXYPhiTanl(const GlobalMuonTrack& mchTrack,
+  MUONMatcher::matchMFT_MCH_TracksXYPhiTanl(const MCHTrackConv& mchTrack,
                                             const MFTTrack& mftTrack)
 {
   // Match two tracks evaluating positions & angles
@@ -1519,7 +1668,7 @@ double
 }
 
 //_________________________________________________________________________________________________
-double MUONMatcher::matchMFT_MCH_TracksAllParam(const GlobalMuonTrack& mchTrack,
+double MUONMatcher::matchMFT_MCH_TracksAllParam(const MCHTrackConv& mchTrack,
                                                 const MFTTrack& mftTrack)
 {
   // Match two tracks evaluating all parameters: X,Y, phi, tanl & q/pt
@@ -1569,50 +1718,11 @@ double MUONMatcher::matchMFT_MCH_TracksAllParam(const GlobalMuonTrack& mchTrack,
 }
 
 //_________________________________________________________________________________________________
-double MUONMatcher::matchTrainedML(const GlobalMuonTrack& mchTrack,
+double MUONMatcher::matchTrainedML(const MCHTrackConv& mchTrack,
                                    const MFTTrack& mftTrack)
 {
 
-  mMCH_MFT_pair[0] = mftTrack.getX();
-  mMCH_MFT_pair[1] = mftTrack.getY();
-  mMCH_MFT_pair[2] = mftTrack.getPhi(),
-  mMCH_MFT_pair[3] = mftTrack.getTanl();
-  mMCH_MFT_pair[4] = mftTrack.getInvQPt();
-  mMCH_MFT_pair[5] = mftTrack.getCovariances()(0, 0);
-  mMCH_MFT_pair[6] = mftTrack.getCovariances()(0, 1);
-  mMCH_MFT_pair[7] = mftTrack.getCovariances()(1, 1);
-  mMCH_MFT_pair[8] = mftTrack.getCovariances()(0, 2);
-  mMCH_MFT_pair[9] = mftTrack.getCovariances()(1, 2);
-  mMCH_MFT_pair[10] = mftTrack.getCovariances()(2, 2);
-  mMCH_MFT_pair[11] = mftTrack.getCovariances()(0, 3);
-  mMCH_MFT_pair[12] = mftTrack.getCovariances()(1, 3);
-  mMCH_MFT_pair[13] = mftTrack.getCovariances()(2, 3);
-  mMCH_MFT_pair[14] = mftTrack.getCovariances()(3, 3);
-  mMCH_MFT_pair[15] = mftTrack.getCovariances()(0, 4);
-  mMCH_MFT_pair[16] = mftTrack.getCovariances()(1, 4);
-  mMCH_MFT_pair[17] = mftTrack.getCovariances()(2, 4);
-  mMCH_MFT_pair[18] = mftTrack.getCovariances()(3, 4);
-  mMCH_MFT_pair[19] = mftTrack.getCovariances()(4, 4);
-  mMCH_MFT_pair[20] = mchTrack.getX();
-  mMCH_MFT_pair[21] = mchTrack.getY();
-  mMCH_MFT_pair[22] = mchTrack.getPhi(),
-  mMCH_MFT_pair[23] = mchTrack.getTanl();
-  mMCH_MFT_pair[24] = mchTrack.getInvQPt();
-  mMCH_MFT_pair[25] = mchTrack.getCovariances()(0, 0);
-  mMCH_MFT_pair[26] = mchTrack.getCovariances()(0, 1);
-  mMCH_MFT_pair[27] = mchTrack.getCovariances()(1, 1);
-  mMCH_MFT_pair[28] = mchTrack.getCovariances()(0, 2);
-  mMCH_MFT_pair[29] = mchTrack.getCovariances()(1, 2);
-  mMCH_MFT_pair[30] = mchTrack.getCovariances()(2, 2);
-  mMCH_MFT_pair[31] = mchTrack.getCovariances()(0, 3);
-  mMCH_MFT_pair[32] = mchTrack.getCovariances()(1, 3);
-  mMCH_MFT_pair[33] = mchTrack.getCovariances()(2, 3);
-  mMCH_MFT_pair[34] = mchTrack.getCovariances()(3, 3);
-  mMCH_MFT_pair[35] = mchTrack.getCovariances()(0, 4);
-  mMCH_MFT_pair[36] = mchTrack.getCovariances()(1, 4);
-  mMCH_MFT_pair[37] = mchTrack.getCovariances()(2, 4);
-  mMCH_MFT_pair[38] = mchTrack.getCovariances()(3, 4);
-  mMCH_MFT_pair[39] = mchTrack.getCovariances()(4, 4);
+  setMLFeatures(mchTrack, mftTrack);
 
   double matchingscore =
     mTMVAReader->EvaluateRegression(0, "MUONMatcherML");
@@ -1763,51 +1873,15 @@ void MUONMatcher::exportTrainingDataRoot(int nMCHTracks)
   auto fT = TFile::Open(outputfile.c_str(), "RECREATE");
   std::cout << " Exporting training data to TTree. Pairing MFT tracks with " << nMCHTracks << " MCH Tracks" << std::endl;
 
-  Float_t MFT_X, MFT_Y, MFT_Phi, MFT_Tanl, MFT_InvQPt, MFT_Cov00, MFT_Cov01, MFT_Cov11, MFT_Cov02, MFT_Cov12, MFT_Cov22, MFT_Cov03, MFT_Cov13, MFT_Cov23, MFT_Cov33, MFT_Cov04, MFT_Cov14, MFT_Cov24, MFT_Cov34, MFT_Cov44, MCH_X, MCH_Y, MCH_Phi, MCH_Tanl, MCH_InvQPt, MCH_Cov00, MCH_Cov01, MCH_Cov11, MCH_Cov02, MCH_Cov12, MCH_Cov22, MCH_Cov03, MCH_Cov13, MCH_Cov23, MCH_Cov33, MCH_Cov04, MCH_Cov14, MCH_Cov24, MCH_Cov34, MCH_Cov44;
   Int_t Truth, track_IDs, nCorrectPairs = 0, nFakesPairs = 0;
   Int_t pairID = 0;
-
+  initMLFeatures();
   TTree* matchTree = new TTree("matchTree", "MatchTree");
-  matchTree->Branch("MFT_X", &MFT_X, "MFT_X/F");
-  matchTree->Branch("MFT_Y", &MFT_Y, "MFT_Y/F");
-  matchTree->Branch("MFT_Phi", &MFT_Phi, "MFT_Phi/F");
-  matchTree->Branch("MFT_Tanl", &MFT_Tanl, "MFT_Tanl/F");
-  matchTree->Branch("MFT_InvQPt", &MFT_InvQPt, "MFT_InvQPt/F");
-  matchTree->Branch("MFT_Cov00", &MFT_Cov00, "MFT_Cov00/F");
-  matchTree->Branch("MFT_Cov01", &MFT_Cov01, "MFT_Cov01/F");
-  matchTree->Branch("MFT_Cov11", &MFT_Cov11, "MFT_Cov11/F");
-  matchTree->Branch("MFT_Cov02", &MFT_Cov02, "MFT_Cov02/F");
-  matchTree->Branch("MFT_Cov12", &MFT_Cov12, "MFT_Cov12/F");
-  matchTree->Branch("MFT_Cov22", &MFT_Cov22, "MFT_Cov22/F");
-  matchTree->Branch("MFT_Cov03", &MFT_Cov03, "MFT_Cov03/F");
-  matchTree->Branch("MFT_Cov13", &MFT_Cov13, "MFT_Cov13/F");
-  matchTree->Branch("MFT_Cov23", &MFT_Cov23, "MFT_Cov23/F");
-  matchTree->Branch("MFT_Cov33", &MFT_Cov33, "MFT_Cov33/F");
-  matchTree->Branch("MFT_Cov04", &MFT_Cov04, "MFT_Cov04/F");
-  matchTree->Branch("MFT_Cov14", &MFT_Cov14, "MFT_Cov14/F");
-  matchTree->Branch("MFT_Cov24", &MFT_Cov24, "MFT_Cov24/F");
-  matchTree->Branch("MFT_Cov34", &MFT_Cov34, "MFT_Cov34/F");
-  matchTree->Branch("MFT_Cov44", &MFT_Cov44, "MFT_Cov44/F");
-  matchTree->Branch("MCH_X", &MCH_X, "MCH_X/F");
-  matchTree->Branch("MCH_Y", &MCH_Y, "MCH_Y/F");
-  matchTree->Branch("MCH_Phi", &MCH_Phi, "MCH_Phi/F");
-  matchTree->Branch("MCH_Tanl", &MCH_Tanl, "MCH_Tanl/F");
-  matchTree->Branch("MCH_InvQPt", &MFT_InvQPt, "MCH_InvQPt/F");
-  matchTree->Branch("MCH_Cov00", &MCH_Cov00, "MCH_Cov00/F");
-  matchTree->Branch("MCH_Cov01", &MCH_Cov01, "MCH_Cov01/F");
-  matchTree->Branch("MCH_Cov11", &MCH_Cov11, "MCH_Cov11/F");
-  matchTree->Branch("MCH_Cov02", &MCH_Cov02, "MCH_Cov02/F");
-  matchTree->Branch("MCH_Cov12", &MCH_Cov12, "MCH_Cov12/F");
-  matchTree->Branch("MCH_Cov22", &MCH_Cov22, "MCH_Cov22/F");
-  matchTree->Branch("MCH_Cov03", &MCH_Cov03, "MCH_Cov03/F");
-  matchTree->Branch("MCH_Cov13", &MCH_Cov13, "MCH_Cov13/F");
-  matchTree->Branch("MCH_Cov23", &MCH_Cov23, "MCH_Cov23/F");
-  matchTree->Branch("MCH_Cov33", &MCH_Cov33, "MCH_Cov33/F");
-  matchTree->Branch("MCH_Cov04", &MCH_Cov04, "MCH_Cov04/F");
-  matchTree->Branch("MCH_Cov14", &MCH_Cov14, "MCH_Cov14/F");
-  matchTree->Branch("MCH_Cov24", &MCH_Cov24, "MCH_Cov24/F");
-  matchTree->Branch("MCH_Cov34", &MCH_Cov34, "MCH_Cov34/F");
-  matchTree->Branch("MCH_Cov44", &MCH_Cov44, "MCH_Cov44/F");
+  for (std::size_t nFeature = 0; nFeature < mNInputFeatures; nFeature++) {
+    std::cout << " Adding branch " << Form("Feature_%d/F", (int)nFeature) << std::endl;
+    matchTree->Branch(Form("Feature_%d", (int)nFeature), &mMLInputFeatures[nFeature], Form("Feature_%d/F", (int)nFeature));
+  }
+
   matchTree->Branch("Truth", &Truth, "Truth/I");
 
   auto event = 0;
@@ -1829,46 +1903,7 @@ void MUONMatcher::exportTrainingDataRoot(int nMCHTracks)
           Truth = (int)(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID());
           if (Truth || matchingCut(mchTrack, mftTrack)) {
 
-            MFT_X = mftTrack.getX();
-            MFT_Y = mftTrack.getY();
-            MFT_Phi = mftTrack.getPhi();
-            MFT_Tanl = mftTrack.getTanl();
-            MFT_InvQPt = mftTrack.getInvQPt();
-            MFT_Cov00 = mftTrack.getCovariances()(0, 0);
-            MFT_Cov01 = mftTrack.getCovariances()(0, 1);
-            MFT_Cov11 = mftTrack.getCovariances()(1, 1);
-            MFT_Cov02 = mftTrack.getCovariances()(0, 2);
-            MFT_Cov12 = mftTrack.getCovariances()(1, 2);
-            MFT_Cov22 = mftTrack.getCovariances()(2, 2);
-            MFT_Cov03 = mftTrack.getCovariances()(0, 3);
-            MFT_Cov13 = mftTrack.getCovariances()(1, 3);
-            MFT_Cov23 = mftTrack.getCovariances()(2, 3);
-            MFT_Cov33 = mftTrack.getCovariances()(3, 3);
-            MFT_Cov04 = mftTrack.getCovariances()(0, 4);
-            MFT_Cov14 = mftTrack.getCovariances()(1, 4);
-            MFT_Cov24 = mftTrack.getCovariances()(2, 4);
-            MFT_Cov34 = mftTrack.getCovariances()(3, 4);
-            MFT_Cov44 = mftTrack.getCovariances()(4, 4);
-            MCH_X = mchTrack.getX();
-            MCH_Y = mchTrack.getY();
-            MCH_Phi = mchTrack.getPhi();
-            MCH_Tanl = mchTrack.getTanl();
-            MCH_InvQPt = mchTrack.getInvQPt();
-            MCH_Cov00 = mchTrack.getCovariances()(0, 0);
-            MCH_Cov01 = mchTrack.getCovariances()(0, 1);
-            MCH_Cov11 = mchTrack.getCovariances()(1, 1);
-            MCH_Cov02 = mchTrack.getCovariances()(0, 2);
-            MCH_Cov12 = mchTrack.getCovariances()(1, 2);
-            MCH_Cov22 = mchTrack.getCovariances()(2, 2);
-            MCH_Cov03 = mchTrack.getCovariances()(0, 3);
-            MCH_Cov13 = mchTrack.getCovariances()(1, 3);
-            MCH_Cov23 = mchTrack.getCovariances()(2, 3);
-            MCH_Cov33 = mchTrack.getCovariances()(3, 3);
-            MCH_Cov04 = mchTrack.getCovariances()(0, 4);
-            MCH_Cov14 = mchTrack.getCovariances()(1, 4);
-            MCH_Cov24 = mchTrack.getCovariances()(2, 4);
-            MCH_Cov34 = mchTrack.getCovariances()(3, 4);
-            MCH_Cov44 = mchTrack.getCovariances()(4, 4);
+            setMLFeatures(mchTrack, mftTrack);
 
             Truth ? nCorrectPairs++ : nFakesPairs++;
             pairID++;

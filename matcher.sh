@@ -173,7 +173,7 @@ Usage()
      Creates a traning data root file. Each entry o on the tree contains
        40 parameters and 1 truth.
      Track-pairs can be selected by the matching cut functions. See option --cutFcn.
-     
+
      This mode creates csv file using many python ML modules
 
      Example:
@@ -189,7 +189,7 @@ END
 }
 
 updatecode() {
-  cp -r ${SCRIPTDIR}/generators/* ${SCRIPTDIR}/*.bin ${SCRIPTDIR}/include ${SCRIPTDIR}/*.C ${SCRIPTDIR}/*.h ${SCRIPTDIR}/*.cxx ${SCRIPTDIR}/*.py ${SCRIPTDIR}/macrohelpers ${OUTDIR}
+  cp -r ${SCRIPTDIR}/generators/* ${SCRIPTDIR}/*.bin ${SCRIPTDIR}/*.xml ${SCRIPTDIR}/include ${SCRIPTDIR}/*.C ${SCRIPTDIR}/*.h ${SCRIPTDIR}/*.cxx ${SCRIPTDIR}/*.py ${SCRIPTDIR}/macrohelpers ${OUTDIR}
 }
 
 generateMCHTracks()
@@ -314,7 +314,7 @@ trainML()
 {
 
   if ! [ -f "MLConfigs.xml" ]; then
-    echo " Machine Learning configuration file absent..." #TODO option to create configuration file                                                                                                                                                                                                                                                                                                                                                                                            
+    echo " Machine Learning configuration file absent..."
     cp MLConfigs.xml "${OUTDIR}"
   fi
 
@@ -326,14 +326,14 @@ trainML()
   if [ -d "${OUTDIR}" ]; then
       if ! [ -z ${UPDATECODE+x} ]; then updatecode ; fi
       pushd ${OUTDIR}
-      
+
       if ! [ -z ${ML_FORMAT_CSV+x} ]; then
-	  alienv setenv ${O2ENV} -c python3 python_training.py
+	      alienv setenv ${O2ENV} -c python3 python_training.py
       else
-	  alienv setenv ${O2ENV} -c root -l -b -q MLTraining.C
+	      alienv setenv ${O2ENV} -c root.exe -e 'gSystem->Load("libO2MCHTracking")' -l -q -b runMatching.C+ | tee MLtraining.log
       fi
   fi
-  
+
 }
 
 
@@ -469,7 +469,7 @@ while [ $# -gt 0 ] ; do
     shift 2
     ;;
     --train)
-    TRAIN_ML="1";
+    export TRAIN_ML="1";
     shift 1
     ;;
     --layout)
