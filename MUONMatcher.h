@@ -197,6 +197,7 @@ class MUONMatcher
   };
 
   void exportTrainingDataRoot(int nMCHTracks = -1);
+  void exportTrainingDataCsv(int nMCHTracks = -1);
 
   // Matching cuts
   void enableChargeMatchCut() { mChargeCutEnabled = true; }

@@ -165,14 +165,31 @@ Usage()
      ${0##*/} --match --matchFcn trainedML --weightfile trainedMLs/weights/Trained_ML_DNN13.0_ts2_oo1_MLTraining_1000_MCHTracks.weights.xml -o outputdir
 
 
+ ======================================================================================
+  Machine learning interface - Python
 
+  1) Generate training data file:
+     {0##*/} --onPythonML --exportTrainingData NMCH_Tracks -o <outputdir>
+     Creates a traning data root file. Each entry o on the tree contains
+       40 parameters and 1 truth.
+     Track-pairs can be selected by the matching cut functions. See option --cutFcn.
+     
+     This mode creates csv file using many python ML modules
 
+     Example:
+     matcher.sh --onPythonML --exportTrainingData 42 --cutFcn cutDistance --cutParam0 2.0 -o outputdir
+
+  2) Train XGBoost:
+     {0##*/} --train --OnPythonML --trainingdata <training_data_file.root>
+
+     Example:
+     matcher.sh --train --onPythonML --trainingdata MLTraining_1000_MCHTracks.root -o outputdir
 END
   exit
 }
 
 updatecode() {
-  cp -r ${SCRIPTDIR}/generators/* ${SCRIPTDIR}/*.bin ${SCRIPTDIR}/include ${SCRIPTDIR}/*.C ${SCRIPTDIR}/*.h ${SCRIPTDIR}/*.cxx ${SCRIPTDIR}/macrohelpers ${OUTDIR}
+  cp -r ${SCRIPTDIR}/generators/* ${SCRIPTDIR}/*.bin ${SCRIPTDIR}/include ${SCRIPTDIR}/*.C ${SCRIPTDIR}/*.h ${SCRIPTDIR}/*.cxx ${SCRIPTDIR}/*.py ${SCRIPTDIR}/macrohelpers ${OUTDIR}
 }
 
 generateMCHTracks()
@@ -297,7 +314,7 @@ trainML()
 {
 
   if ! [ -f "MLConfigs.xml" ]; then
-    echo " Machine Learning configuration file absent..." #TODO option to create configuration file
+    echo " Machine Learning configuration file absent..." #TODO option to create configuration file                                                                                                                                                                                                                                                                                                                                                                                            
     cp MLConfigs.xml "${OUTDIR}"
   fi
 
@@ -306,15 +323,19 @@ trainML()
     exit
   fi
 
-
   if [ -d "${OUTDIR}" ]; then
-    if ! [ -z ${UPDATECODE+x} ]; then updatecode ; fi
-    pushd ${OUTDIR}
-   	alienv setenv ${O2ENV} -c root -l -b -q MLTraining.C
-
+      if ! [ -z ${UPDATECODE+x} ]; then updatecode ; fi
+      pushd ${OUTDIR}
+      
+      if ! [ -z ${ML_FORMAT_CSV+x} ]; then
+	  alienv setenv ${O2ENV} -c python3 python_training.py
+      else
+	  alienv setenv ${O2ENV} -c root -l -b -q MLTraining.C
+      fi
   fi
-
+  
 }
+
 
 runChecks()
 {
@@ -434,6 +455,10 @@ while [ $# -gt 0 ] ; do
     --exportTrainingData)
     export ML_EXPORTTRAINDATA="$2";
     shift 2
+    ;;
+    --onPythonML)
+    export ML_FORMAT_CSV="1";
+    shift 1
     ;;
     --weightfile)
     export ML_WEIGHTFILE="`realpath $2`";
