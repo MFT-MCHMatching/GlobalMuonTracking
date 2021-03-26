@@ -300,7 +300,7 @@ class MUONMatcher
   std::vector<MFTTrack> mMFTTracks;
   std::vector<std::vector<MFTTrack>> mSortedMFTTracks;
 
-  std::vector<std::vector<MCHTrack>> mSortedMCHTracks;
+  std::vector<std::list<MCHTrack>> mSortedMCHTracks;
 
   std::vector<std::vector<GlobalMuonTrack>> mSortedGlobalMuonTracks;
 
