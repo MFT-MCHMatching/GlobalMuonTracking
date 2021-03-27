@@ -186,7 +186,7 @@ int runMatching()
   // "_aliasForMyMatchingFunction");
 
   // Define ML input features
-  // ML Features defined by lambda function
+  // ML Features defined by lambda expression
   //matcher.setMLFeatureFunction([](const MCHTrackConv& mchTrack, const MFTTrack& mftTrack, float* features) {
   //  features[0] = mftTrack.getX() - mchTrack.getX();
   //  features[1] = mftTrack.getY() - mchTrack.getY();
@@ -197,7 +197,8 @@ int runMatching()
   //                             5, "ML5ParDeltas");
 
   // ML Features defined by separete function
-  matcher.setMLFeatureFunction(ML40ParCovFeatures, 40, "ML40ParCovFeatures");
+  matcher.setMLFeatureFunction(MLParCov40Features, 40, "MLParCov40Features");
+  //matcher.setMLFeatureFunction(MLParCovChiNPts42Features, 42, "MLParCovChiNPts42Features");
 
   // Configure matcher according command line options
   loadAndSetMatchingConfig();
