@@ -152,6 +152,31 @@ void loadAndSetMatchingConfig()
 }
 
 //_________________________________________________________________________________________________
+int evalMLExportOrTrain()
+{
+
+  // Runs track matching event-by-event or generate training data
+  if (gSystem->Getenv("ML_EXPORTTRAINDATA")) {
+    int nMCHTracks = atoi(gSystem->Getenv("ML_EXPORTTRAINDATA"));
+    std::cout << " Generate ML traning data file for " << nMCHTracks << " MCH tracks." << std::endl;
+    if (gSystem->Getenv("ML_FORMAT_CSV")) {
+      std::cout << "Python switch:  ON" << endl;
+      matcher.exportTrainingDataCsv(nMCHTracks);
+    } else {
+      matcher.exportTrainingDataRoot(nMCHTracks);
+    }
+    exit(0);
+  }
+
+  // Runs track matching event-by-event or generate training data
+  if (gSystem->Getenv("TRAIN_ML")) {
+    matcher.MLTraining();
+    exit(0);
+  }
+  return 0;
+}
+
+//_________________________________________________________________________________________________
 int runMatching()
 {
 
@@ -160,6 +185,18 @@ int runMatching()
   // matcher.setCustomMatchingFunction(&MyMatchingFunc,
   // "_aliasForMyMatchingFunction");
 
+  // Define ML input features
+  // ML Features defined by lambda function
+  //matcher.setMLFeatureFunction([](const MCHTrackConv& mchTrack, const MFTTrack& mftTrack, float* features) {
+  //  features[0] = mftTrack.getX() - mchTrack.getX();
+  //  features[1] = mftTrack.getY() - mchTrack.getY();
+  //  features[2] = mftTrack.getPhi() - mchTrack.getPhi();
+  //  features[3] = mftTrack.getTanl() - mchTrack.getTanl();
+  //  features[4] = mftTrack.getInvQPt() - mchTrack.getInvQPt();
+  //},
+  //                             5, "ML5ParDeltas");
+
+  // ML Features defined by separete function
   matcher.setMLFeatureFunction(ML40ParCovFeatures, 40, "ML40ParCovFeatures");
 
   // Configure matcher according command line options
@@ -175,24 +212,7 @@ int runMatching()
   // covariances matrix to MFT coordinate system
   matcher.initGlobalTracks();
 
-  // Runs track matching event-by-event or generate training data
-  if (gSystem->Getenv("ML_EXPORTTRAINDATA")) {
-    int nMCHTracks = atoi(gSystem->Getenv("ML_EXPORTTRAINDATA"));
-    std::cout << " Generate ML traning data file for " << nMCHTracks << " MCH tracks." << std::endl;
-    if (gSystem->Getenv("ML_FORMAT_CSV")) {
-      std::cout << "Python switch:  ON" << endl;
-      matcher.exportTrainingDataCsv(nMCHTracks);
-    } else {
-      matcher.exportTrainingDataRoot(nMCHTracks);
-    }
-    return 0;
-  }
-
-  // Runs track matching event-by-event or generate training data
-  if (gSystem->Getenv("TRAIN_ML")) {
-    matcher.MLTraining();
-    return 0;
-  }
+  evalMLExportOrTrain();
 
   matcher.runEventMatching();
 

@@ -250,7 +250,7 @@ void MUONMatcher::loadMFTClusters()
 
   clsTree->GetEntry(0);
 
-  int nClusters = clsVec.size();
+  int nClusters = (int)clsVec.size();
   printf("Number of clusters %d \n", nClusters);
 
   auto clusterId = 0;
@@ -377,7 +377,7 @@ void MUONMatcher::runEventMatching()
   auto nMCHTracks = 0;
   auto nGlobalMuonTracksExt = 0;
   for (int event = 0; event < mNEvents; event++) {
-    nMCHTracks += mSortedGlobalMuonTracks[event].size();
+    nMCHTracks += (int)mSortedGlobalMuonTracks[event].size();
     if (mVerbose)
       std::cout << "Matching event # " << event << ": " << mSortedGlobalMuonTracks[event].size() << " MCH Tracks" << std::endl;
     GTrackID = 0;
@@ -438,7 +438,7 @@ void MUONMatcher::runEventMatching()
         GTrackID++;
       } // end loop MCH tracks
     }   // end match save all
-    nGlobalMuonTracksExt += mSortedGlobalMuonTracksExt[event].size();
+    nGlobalMuonTracksExt += (int)mSortedGlobalMuonTracksExt[event].size();
   }     // /loop over events
 
   if (!mMatchSaveAll) {
@@ -497,8 +497,8 @@ void MUONMatcher::DLRegression(std::string input_name, std::string trainingfile,
   TMVA::DataLoader* dataloader = new TMVA::DataLoader("trainedML");
 
   //initMLFeatures();
-  for (int i = 0; i < mNInputFeatures; i++) {
-    dataloader->AddVariable(Form("Feature_%d", i), Form("Feature_%d", i), "units", 'F');
+  for (std::size_t i = 0; i < mNInputFeatures; i++) {
+    dataloader->AddVariable(Form("Feature_%d", (int)i), Form("Feature_%d", (int)i), "units", 'F');
   }
 
   // Add the variable carrying the regression target
@@ -558,7 +558,7 @@ void MUONMatcher::DLRegression(std::string input_name, std::string trainingfile,
 bool MUONMatcher::printMatchingPlaneView(int event, int MCHTrackID)
 {
 
-  if (MCHTrackID > mSortedGlobalMuonTracks[event].size() or event >= (int)mSortedGlobalMuonTracks.size()) {
+  if (MCHTrackID > (int)mSortedGlobalMuonTracks[event].size() or event >= (int)mSortedGlobalMuonTracks.size()) {
     // Out of range
     return false;
   }
@@ -1000,7 +1000,7 @@ void MUONMatcher::setCutFunction(
   bool (MUONMatcher::*func)(const MCHTrackConv&, const MFTTrack&))
 {
   mCutFunc = func;
-  auto npars = 0;
+  std::size_t npars = 0;
   // Setting default parameters
   if (func == &MUONMatcher::matchCutDistance)
     npars = 1;
@@ -1026,7 +1026,7 @@ void MUONMatcher::finalize()
   for (int event = 0; event < mNEvents; event++) {
     if (!mMatchSaveAll) {
       GTrackID = 0;
-      nMCHTracks += mSortedGlobalMuonTracks[event].size();
+      nMCHTracks += (int)mSortedGlobalMuonTracks[event].size();
       for (auto& gTrack : mSortedGlobalMuonTracks[event]) {
         if (gTrack.closeMatch())
           nCloseMatches++;
@@ -1073,7 +1073,7 @@ void MUONMatcher::finalize()
       }
     } else { // if matchSaveAll is set
       GTrackID = 0;
-      nMCHTracks += mSortedGlobalMuonTracksExt[event].size();
+      nMCHTracks += (int)mSortedGlobalMuonTracksExt[event].size();
       for (auto& gTrack : mSortedGlobalMuonTracksExt[event]) {
         if (gTrack.closeMatch())
           nCloseMatches++;
@@ -1816,7 +1816,7 @@ void MUONMatcher::EvaluateML()
 //_________________________________________________________________________________________________
 void MUONMatcher::exportTrainingDataRoot(int nMCHTracks)
 {
-
+  mMatchingHelper.MatchingFunction = "";
   if (nMCHTracks < 0 or nMCHTracks > mMatchingHelper.nMCHTracks)
     nMCHTracks = mMatchingHelper.nMCHTracks;
 
@@ -1873,6 +1873,7 @@ void MUONMatcher::exportTrainingDataRoot(int nMCHTracks)
   fT->Write();
   auto nPairs = nCorrectPairs + nFakesPairs;
   std::cout << "Exported training data: " << nPairs << " pairs (" << nCorrectPairs << " correct pairs ; " << nFakesPairs << " fake pairs)" << std::endl;
+  std::cout << "   Exported file name: " << outputfile << std::endl;
 
   std::ofstream matcherConfig("MatchingConfig.txt");
   matcherConfig << mMatchingHelper.MatchingConfig() << std::endl;
@@ -1888,8 +1889,6 @@ void MUONMatcher::exportTrainingDataCsv(int nMCHTracks)
 
   std::string outputfile("MLTraining_" + std::to_string(nMCHTracks) + "_MCHTracks.csv");
 
-  //auto fT = TFile::Open(outputfile.c_str(), "RECREATE");
-
   std::ofstream of(outputfile.c_str());
   std::cout << " Exporting training data to TTree. Pairing MFT tracks with " << nMCHTracks << " MCH Tracks" << std::endl;
 
@@ -1900,50 +1899,7 @@ void MUONMatcher::exportTrainingDataCsv(int nMCHTracks)
 
   Int_t Truth, track_IDs, nCorrectPairs = 0, nFakesPairs = 0;
   Int_t pairID = 0;
-  /*
-  TTree* matchTree = new TTree("matchTree", "MatchTree");
-  matchTree->Branch("MFT_X", &MFT_X, "MFT_X/F");
-  matchTree->Branch("MFT_Y", &MFT_Y, "MFT_Y/F");
-  matchTree->Branch("MFT_Phi", &MFT_Phi, "MFT_Phi/F");
-  matchTree->Branch("MFT_Tanl", &MFT_Tanl, "MFT_Tanl/F");
-  matchTree->Branch("MFT_InvQPt", &MFT_InvQPt, "MFT_InvQPt/F");
-  matchTree->Branch("MFT_Cov00", &MFT_Cov00, "MFT_Cov00/F");
-  matchTree->Branch("MFT_Cov01", &MFT_Cov01, "MFT_Cov01/F");
-  matchTree->Branch("MFT_Cov11", &MFT_Cov11, "MFT_Cov11/F");
-  matchTree->Branch("MFT_Cov02", &MFT_Cov02, "MFT_Cov02/F");
-  matchTree->Branch("MFT_Cov12", &MFT_Cov12, "MFT_Cov12/F");
-  matchTree->Branch("MFT_Cov22", &MFT_Cov22, "MFT_Cov22/F");
-  matchTree->Branch("MFT_Cov03", &MFT_Cov03, "MFT_Cov03/F");
-  matchTree->Branch("MFT_Cov13", &MFT_Cov13, "MFT_Cov13/F");
-  matchTree->Branch("MFT_Cov23", &MFT_Cov23, "MFT_Cov23/F");
-  matchTree->Branch("MFT_Cov33", &MFT_Cov33, "MFT_Cov33/F");
-  matchTree->Branch("MFT_Cov04", &MFT_Cov04, "MFT_Cov04/F");
-  matchTree->Branch("MFT_Cov14", &MFT_Cov14, "MFT_Cov14/F");
-  matchTree->Branch("MFT_Cov24", &MFT_Cov24, "MFT_Cov24/F");
-  matchTree->Branch("MFT_Cov34", &MFT_Cov34, "MFT_Cov34/F");
-  matchTree->Branch("MFT_Cov44", &MFT_Cov44, "MFT_Cov44/F");
-  matchTree->Branch("MCH_X", &MCH_X, "MCH_X/F");
-  matchTree->Branch("MCH_Y", &MCH_Y, "MCH_Y/F");
-  matchTree->Branch("MCH_Phi", &MCH_Phi, "MCH_Phi/F");
-  matchTree->Branch("MCH_Tanl", &MCH_Tanl, "MCH_Tanl/F");
-  matchTree->Branch("MCH_InvQPt", &MFT_InvQPt, "MCH_InvQPt/F");
-  matchTree->Branch("MCH_Cov00", &MCH_Cov00, "MCH_Cov00/F");
-  matchTree->Branch("MCH_Cov01", &MCH_Cov01, "MCH_Cov01/F");
-  matchTree->Branch("MCH_Cov11", &MCH_Cov11, "MCH_Cov11/F");
-  matchTree->Branch("MCH_Cov02", &MCH_Cov02, "MCH_Cov02/F");
-  matchTree->Branch("MCH_Cov12", &MCH_Cov12, "MCH_Cov12/F");
-  matchTree->Branch("MCH_Cov22", &MCH_Cov22, "MCH_Cov22/F");
-  matchTree->Branch("MCH_Cov03", &MCH_Cov03, "MCH_Cov03/F");
-  matchTree->Branch("MCH_Cov13", &MCH_Cov13, "MCH_Cov13/F");
-  matchTree->Branch("MCH_Cov23", &MCH_Cov23, "MCH_Cov23/F");
-  matchTree->Branch("MCH_Cov33", &MCH_Cov33, "MCH_Cov33/F");
-  matchTree->Branch("MCH_Cov04", &MCH_Cov04, "MCH_Cov04/F");
-  matchTree->Branch("MCH_Cov14", &MCH_Cov14, "MCH_Cov14/F");
-  matchTree->Branch("MCH_Cov24", &MCH_Cov24, "MCH_Cov24/F");
-  matchTree->Branch("MCH_Cov34", &MCH_Cov34, "MCH_Cov34/F");
-  matchTree->Branch("MCH_Cov44", &MCH_Cov44, "MCH_Cov44/F");
-  matchTree->Branch("Truth", &Truth, "Truth/I");
-  */
+
   auto event = 0;
   while (nMCHTracks > 0 or event < mNEvents) {
     for (auto& mchTracks : mSortedGlobalMuonTracks) {
