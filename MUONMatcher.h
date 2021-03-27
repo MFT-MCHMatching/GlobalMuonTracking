@@ -106,8 +106,6 @@ class MUONMatcher
 		     << SAbsZEnd << ")";
       }
     }
-
-
   }
   void SetVerbosity(bool v = true) { mVerbose = v; }
   void LoadAbsorber();
@@ -162,6 +160,8 @@ class MUONMatcher
     }
     if (func == &MUONMatcher::matchTrainedML) {
       mMatchingHelper.MatchingFunction = "_matchML";
+    } else { // Clear MLFeaturesFunction string if not using ML
+      mMatchingHelper.MLFeaturesFunction = "";
     }
 
     std::cout << " ** MUONMATCHER: Setting matching function => "
@@ -175,6 +175,15 @@ class MUONMatcher
     mMatchingHelper.MatchingFunction = nickname;
     std::cout << " ** MUONMATCHER: Setting custom matching function => "
               << mMatchingHelper.MatchingFunction << std::endl;
+  }
+  void setMLFeatureFunction(void (*func)(const MCHTrackConv&,
+                                         const MFTTrack&,
+                                         float*),
+                            int nFeatures, std::string nickname)
+  {
+    mMLFeaturesFunc = func;
+    mNInputFeatures = nFeatures;
+    mMatchingHelper.MLFeaturesFunction = nickname;
   }
   void setMatchSaveAll(bool val) { mMatchSaveAll = val; }
   void
@@ -225,19 +234,18 @@ class MUONMatcher
   }
 
   // Machine Learning Methods
-  void initMLFeatures()
+  /*void initMLFeatures()
   {
     MCHTrackConv mchTrk;
     MFTTrack mftTrk;
     setMLFeatures(mchTrk, mftTrk);
-  }
+  }*/
   void EvaluateML();
-  virtual void buildMLFeatures(const MCHTrackConv& mchTrack, const MFTTrack& mftTrack);
-  void setMLFeatures(const MCHTrackConv& mchTr, const MFTTrack& mftTr) { buildMLFeatures(mchTr, mftTr); }
+  void setMLFeatures(const MCHTrackConv& mchTr, const MFTTrack& mftTr) { (*mMLFeaturesFunc)(mchTr, mftTr, &mMLInputFeatures[0]); }
 
   void configureTMVA(std::string filename, float scorecut)
   {
-    initMLFeatures();
+    //initMLFeatures();
     mTMVAWeightFileName = filename;
     mMLScoreCut = scorecut;
     mTMVAReader = new TMVA::Reader("!Color:!Silent");
@@ -297,6 +305,8 @@ class MUONMatcher
                              const MFTTrack&) = nullptr;
   bool (MUONMatcher::*mCutFunc)(const MCHTrackConv&, const MFTTrack&);
   bool (*mCustomCutFunc)(const GlobalMuonTrack&, const MFTTrack&) = nullptr;
+
+  void (*mMLFeaturesFunc)(const MCHTrackConv&, const MFTTrack&, float*);
 
   // Data Members
   std::vector<MFTTrack> mMFTTracks;
@@ -363,6 +373,52 @@ std::string getCovString(o2::track::TrackParCovFwd t)
           std::to_string(t.getCovariances()(3, 3)) + " ; " +
           std::to_string(t.getCovariances()(4, 4)) + ")";
   return param;
+}
+
+//_________________________________________________________________________________________________
+void ML40ParCovFeatures(const MCHTrackConv& mchTrack, const MFTTrack& mftTrack, float* features)
+{
+
+  features[0] = mftTrack.getX();
+  features[1] = mftTrack.getY();
+  features[2] = mftTrack.getPhi(),
+  features[3] = mftTrack.getTanl();
+  features[4] = mftTrack.getInvQPt();
+  features[5] = mftTrack.getCovariances()(0, 0);
+  features[6] = mftTrack.getCovariances()(0, 1);
+  features[7] = mftTrack.getCovariances()(1, 1);
+  features[8] = mftTrack.getCovariances()(0, 2);
+  features[9] = mftTrack.getCovariances()(1, 2);
+  features[10] = mftTrack.getCovariances()(2, 2);
+  features[11] = mftTrack.getCovariances()(0, 3);
+  features[12] = mftTrack.getCovariances()(1, 3);
+  features[13] = mftTrack.getCovariances()(2, 3);
+  features[14] = mftTrack.getCovariances()(3, 3);
+  features[15] = mftTrack.getCovariances()(0, 4);
+  features[16] = mftTrack.getCovariances()(1, 4);
+  features[17] = mftTrack.getCovariances()(2, 4);
+  features[18] = mftTrack.getCovariances()(3, 4);
+  features[19] = mftTrack.getCovariances()(4, 4);
+  features[20] = mchTrack.getX();
+  features[21] = mchTrack.getY();
+  features[22] = mchTrack.getPhi(),
+  features[23] = mchTrack.getTanl();
+  features[24] = mchTrack.getInvQPt();
+  features[25] = mchTrack.getCovariances()(0, 0);
+  features[26] = mchTrack.getCovariances()(0, 1);
+  features[27] = mchTrack.getCovariances()(1, 1);
+  features[28] = mchTrack.getCovariances()(0, 2);
+  features[29] = mchTrack.getCovariances()(1, 2);
+  features[30] = mchTrack.getCovariances()(2, 2);
+  features[31] = mchTrack.getCovariances()(0, 3);
+  features[32] = mchTrack.getCovariances()(1, 3);
+  features[33] = mchTrack.getCovariances()(2, 3);
+  features[34] = mchTrack.getCovariances()(3, 3);
+  features[35] = mchTrack.getCovariances()(0, 4);
+  features[36] = mchTrack.getCovariances()(1, 4);
+  features[37] = mchTrack.getCovariances()(2, 4);
+  features[38] = mchTrack.getCovariances()(3, 4);
+  features[39] = mchTrack.getCovariances()(4, 4);
 }
 
 #include "MUONMatcher.cxx"

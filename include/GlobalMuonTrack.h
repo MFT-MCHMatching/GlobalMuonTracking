@@ -127,6 +127,7 @@ struct MatchingHelper {
   std::string MatchingFunction;
   std::string MatchingCutFunc;
   std::string MatchingCutConfig;
+  std::string MLFeaturesFunction;
   int nMCHTracks = -1;
   int nCorrectMatches = -1;
   int nFakes = -1;
@@ -139,12 +140,12 @@ struct MatchingHelper {
   double getPairingEfficiency() { return 1.f * nGMTracks() / nMCHTracks; }
   std::string Annotation()
   {
-    return Generator + GeneratorConfig + MatchingFunction + "_Z" +
+    return Generator + GeneratorConfig + MatchingFunction + "_" + MLFeaturesFunction + "_Z" +
            std::to_string(matchingPlaneZ) + MatchingCutFunc + MatchingCutConfig;
   }
   std::string MatchingConfig()
   {
-    return MatchingFunction + "_Z" + std::to_string(matchingPlaneZ) +
+    return MatchingFunction + "_" + MLFeaturesFunction + "_Z" + std::to_string(matchingPlaneZ) +
            MatchingCutFunc + MatchingCutConfig;
   }
 };
