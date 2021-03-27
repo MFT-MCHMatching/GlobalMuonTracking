@@ -160,6 +160,8 @@ int runMatching()
   // matcher.setCustomMatchingFunction(&MyMatchingFunc,
   // "_aliasForMyMatchingFunction");
 
+  matcher.setMLFeatureFunction(ML40ParCovFeatures, 40, "ML40ParCovFeatures");
+
   // Configure matcher according command line options
   loadAndSetMatchingConfig();
 

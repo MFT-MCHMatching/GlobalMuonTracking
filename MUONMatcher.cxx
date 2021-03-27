@@ -454,54 +454,6 @@ void MUONMatcher::runEventMatching()
 }
 
 //_________________________________________________________________________________________________
-void MUONMatcher::buildMLFeatures(const MCHTrackConv& mchTrack, const MFTTrack& mftTrack)
-{
-
-  float* features = &mMLInputFeatures[0];
-  features[0] = mftTrack.getX();
-  features[1] = mftTrack.getY();
-  features[2] = mftTrack.getPhi(),
-  features[3] = mftTrack.getTanl();
-  features[4] = mftTrack.getInvQPt();
-  features[5] = mftTrack.getCovariances()(0, 0);
-  features[6] = mftTrack.getCovariances()(0, 1);
-  features[7] = mftTrack.getCovariances()(1, 1);
-  features[8] = mftTrack.getCovariances()(0, 2);
-  features[9] = mftTrack.getCovariances()(1, 2);
-  features[10] = mftTrack.getCovariances()(2, 2);
-  features[11] = mftTrack.getCovariances()(0, 3);
-  features[12] = mftTrack.getCovariances()(1, 3);
-  features[13] = mftTrack.getCovariances()(2, 3);
-  features[14] = mftTrack.getCovariances()(3, 3);
-  features[15] = mftTrack.getCovariances()(0, 4);
-  features[16] = mftTrack.getCovariances()(1, 4);
-  features[17] = mftTrack.getCovariances()(2, 4);
-  features[18] = mftTrack.getCovariances()(3, 4);
-  features[19] = mftTrack.getCovariances()(4, 4);
-  features[20] = mchTrack.getX();
-  features[21] = mchTrack.getY();
-  features[22] = mchTrack.getPhi(),
-  features[23] = mchTrack.getTanl();
-  features[24] = mchTrack.getInvQPt();
-  features[25] = mchTrack.getCovariances()(0, 0);
-  features[26] = mchTrack.getCovariances()(0, 1);
-  features[27] = mchTrack.getCovariances()(1, 1);
-  features[28] = mchTrack.getCovariances()(0, 2);
-  features[29] = mchTrack.getCovariances()(1, 2);
-  features[30] = mchTrack.getCovariances()(2, 2);
-  features[31] = mchTrack.getCovariances()(0, 3);
-  features[32] = mchTrack.getCovariances()(1, 3);
-  features[33] = mchTrack.getCovariances()(2, 3);
-  features[34] = mchTrack.getCovariances()(3, 3);
-  features[35] = mchTrack.getCovariances()(0, 4);
-  features[36] = mchTrack.getCovariances()(1, 4);
-  features[37] = mchTrack.getCovariances()(2, 4);
-  features[38] = mchTrack.getCovariances()(3, 4);
-  features[39] = mchTrack.getCovariances()(4, 4);
-  mNInputFeatures = 40;
-}
-
-//_________________________________________________________________________________________________
 void MUONMatcher::DLRegression(std::string input_name, std::string trainingfile, std::string trainingstr)
 {
 
@@ -544,7 +496,7 @@ void MUONMatcher::DLRegression(std::string input_name, std::string trainingfile,
   // Dataloader object - this will handle the data (The argument also defines the name of the directory containing the weights' file)
   TMVA::DataLoader* dataloader = new TMVA::DataLoader("trainedML");
 
-  initMLFeatures();
+  //initMLFeatures();
   for (int i = 0; i < mNInputFeatures; i++) {
     dataloader->AddVariable(Form("Feature_%d", i), Form("Feature_%d", i), "units", 'F');
   }
@@ -1875,7 +1827,7 @@ void MUONMatcher::exportTrainingDataRoot(int nMCHTracks)
 
   Int_t Truth, track_IDs, nCorrectPairs = 0, nFakesPairs = 0;
   Int_t pairID = 0;
-  initMLFeatures();
+  //initMLFeatures();
   TTree* matchTree = new TTree("matchTree", "MatchTree");
   for (std::size_t nFeature = 0; nFeature < mNInputFeatures; nFeature++) {
     std::cout << " Adding branch " << Form("Feature_%d/F", (int)nFeature) << std::endl;
