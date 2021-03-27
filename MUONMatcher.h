@@ -249,8 +249,8 @@ class MUONMatcher
     mTMVAWeightFileName = filename;
     mMLScoreCut = scorecut;
     mTMVAReader = new TMVA::Reader("!Color:!Silent");
-    for (int i = 0; i < mNInputFeatures; i++) {
-      mTMVAReader->AddVariable(Form("Feature_%d", i), &mMLInputFeatures[i]);
+    for (std::size_t i = 0; i < mNInputFeatures; i++) {
+      mTMVAReader->AddVariable(Form("Feature_%d", (int)i), &mMLInputFeatures[i]);
     }
 
     mTMVAReader->BookMVA("MUONMatcherML", mTMVAWeightFileName);
