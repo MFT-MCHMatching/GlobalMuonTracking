@@ -140,12 +140,12 @@ struct MatchingHelper {
   double getPairingEfficiency() { return 1.f * nGMTracks() / nMCHTracks; }
   std::string Annotation()
   {
-    return Generator + GeneratorConfig + MatchingFunction + "_" + MLFeaturesFunction + "_Z" +
+    return Generator + GeneratorConfig + MatchingFunction + (MLFeaturesFunction == "" ? "" : "_") + MLFeaturesFunction + "_Z" +
            std::to_string(matchingPlaneZ) + MatchingCutFunc + MatchingCutConfig;
   }
   std::string MatchingConfig()
   {
-    return MatchingFunction + "_" + MLFeaturesFunction + "_Z" + std::to_string(matchingPlaneZ) +
+    return MatchingFunction + (MLFeaturesFunction == "" ? "" : "_") + MLFeaturesFunction + "_Z" + std::to_string(matchingPlaneZ) +
            MatchingCutFunc + MatchingCutConfig;
   }
 };

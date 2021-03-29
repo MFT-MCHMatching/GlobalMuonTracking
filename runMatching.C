@@ -81,6 +81,9 @@ void loadAndSetMatchingConfig()
         exit(1);
       }
     }
+  } else {
+    std::cout << " Setting " << matching_fcn << std::endl;
+    matcher.setMatchingFunction(&MUONMatcher::matchMFT_MCH_TracksAllParam);
   }
 
   if (gSystem->Getenv("MATCHING_PLANEZ")) {
