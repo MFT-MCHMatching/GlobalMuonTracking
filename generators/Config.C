@@ -268,84 +268,49 @@ void Config() {
     gener->AddGenerator(gPions, "PIONS", 1);
   }
 
-  if (MCHgen.find("JPsiParam") < MCHgen.length()) {
-    std::cout << " This is JPsiParam generator! " << std::endl;
-
-    Int_t nJPsi;
-    if (gSystem->Getenv("NJPSI")) {
-      nJPsi = atoi(gSystem->Getenv("NJPSI"));
-      std::cout << " Defined nJPsi =  " << nJPsi << std::endl;
-
-    } else {
-      std::cout << " Default nJPsi = 1 " << std::endl;
-      nJPsi = 1;
-    }
-
-    genMatcherLog << "_" << nJPsi << "jpsi";
-
-    AliGenParam *gJPsi = new AliGenParam(nJPsi, AliGenMUONlib::kJpsi);
-    gJPsi->SetMomentumRange(0, 999);
-    gJPsi->SetPtRange(0, 100.);
-    gJPsi->SetPhiRange(0., 360.);
-    gJPsi->SetCutOnChild(1);
-    gJPsi->SetChildPhiRange(0., 360.);
-    gJPsi->SetChildThetaRange(171.0, 178.0);
-    gJPsi->SetOrigin(0, 0, 0);
-    gJPsi->SetForceDecay(kDiMuon);
-    gJPsi->SetTrackingFlag(1);
-    gener->AddGenerator(gJPsi, "JPSI", 1);
-  }
-
   if (MCHgen.find("hijing") < MCHgen.length()) { // Hijing generator
-    std::cout << " This is hijing generator! " << std::endl;
-    /*
-    AliGenHijing *gener = new AliGenHijing(-1);
-    // centre of mass energy
-    gener->SetEnergyCMS(5500.);
-    // reference frame
-    gener->SetReferenceFrame("CMS");
-    // projectile
-    gener->SetProjectile("A", 208, 82);
-    gener->SetTarget("A", 208, 82);
-    // tell hijing to keep the full parent child chain
-    gener->KeepFullEvent();
-    // enable jet quenching
-    gener->SetJetQuenching(1);
-    // enable shadowing
-    gener->SetShadowing(1);
-    // neutral pion and heavy particle decays switched off
-    gener->SetDecaysOff(1);
-    // Don't track spectators
-    gener->SetSpectators(0);
-    // kinematic selection
-    gener->SetSelectAll(0);
-    // impact parameter range
-    gener->SetImpactParameterRange(0., 5.); // 0. - 5. fm corresponds to ~10% most central
-    gener->Init();
-    */
-
-    AliGenMimicPbPb *mimic_pbpb = new AliGenMimicPbPb(1);
+    std::cout << " This is mimic hijing 0-10 generator! " << std::endl;
+    AliGenMimicPbPb* mimic_pbpb = new AliGenMimicPbPb(1);
     mimic_pbpb->Init();
     gener->AddGenerator(mimic_pbpb, "MIMIC_PBPB", 1);
-    
-    
   }
-  if (MCHgen.find("muoncocktail") < MCHgen.length()) { // Muon cocktail for PbPb
-    std::cout << " This is muoncocktail generator! " << std::endl;
-    AliGenMUONCocktail *generMUONCocktail = new AliGenMUONCocktail();
-    generMUONCocktail->SetPtRange(1., 100.);  // Transverse momentum range
-    generMUONCocktail->SetPhiRange(0., 360.); // Azimuthal angle range
-    generMUONCocktail->SetYRange(-4.0, -2.5);
-    generMUONCocktail->SetMuonPtCut(0.5);
-    generMUONCocktail->SetMuonThetaCut(171., 178.);
-    generMUONCocktail->SetMuonMultiplicity(2);
-    generMUONCocktail->SetImpactParameterRange(
-        0., 5.); // 10% most centra PbPb collisions
-    generMUONCocktail->SetVertexSmear(kPerTrack);
-    generMUONCocktail->SetOrigin(0, 0, 0); // Vertex position
-    generMUONCocktail->SetSigma(0, 0,
-                                0.0); // Sigma in (X,Y,Z) (cm) on IP position
-    gener->AddGenerator(generMUONCocktail, "MUONCocktail", 1);
+
+  if (MCHgen.find("dimuon") < MCHgen.length()) { // Dimuon generator
+    std::cout << " This is dimuon generator! " << std::endl;
+
+    Int_t nJPsi = 0;
+    if (gSystem->Getenv("NJPSI")) {
+      nJPsi = atoi(gSystem->Getenv("NJPSI"));
+      std::cout << " nJPsi =  " << nJPsi << std::endl;
+      genMatcherLog << "_" << nJPsi << "JPsi";
+    }
+
+    Int_t nUpsilon = 0;
+    if (gSystem->Getenv("NUPSILON")) {
+      nUpsilon = atoi(gSystem->Getenv("NUPSILON"));
+      std::cout << " nUpsilon =  " << nUpsilon << std::endl;
+      genMatcherLog << "_" << nUpsilon << "Upsilon";
+    }
+
+    for (int i_jpsi = 0; i_jpsi < nJPsi; i_jpsi++) {
+      AliGenDimuon* dimuonJPsiGen = new AliGenDimuon(1);
+      dimuonJPsiGen->SetGenerateParticle(443);
+      dimuonJPsiGen->SetPtRange(1., 100.);  // Transverse momentum range
+      dimuonJPsiGen->SetPhiRange(0., 360.); // Azimuthal angle range
+      dimuonJPsiGen->SetThetaRange(thmin, thmax);
+      dimuonJPsiGen->Init();
+      gener->AddGenerator(dimuonJPsiGen, Form("JPSI_%d", i_jpsi), 1);
+    }
+
+    for (int i_upsilon = 0; i_upsilon < nUpsilon; i_upsilon++) {
+      AliGenDimuon* dimuonUpsilonGen = new AliGenDimuon(1);
+      dimuonUpsilonGen->SetGenerateParticle(553);
+      dimuonUpsilonGen->SetPtRange(1., 100.);  // Transverse momentum range
+      dimuonUpsilonGen->SetPhiRange(0., 360.); // Azimuthal angle range
+      dimuonUpsilonGen->SetThetaRange(thmin, thmax);
+      dimuonUpsilonGen->Init();
+      gener->AddGenerator(dimuonUpsilonGen, Form("UPSILON_%d", i_upsilon), 1);
+    }
   }
 
   Int_t nEvts;

@@ -17,7 +17,7 @@ Usage()
   ${0##*/} --genMCH -n <number_of_events> -o <outputdir> -g <generator> <generator options>
 
     -g
-     Sets the generator for MCH and MFT tracks. Options:
+     Sets one or more generators for MCH and MFT simulations. Options:
 
       gun0_100GeV - Box generator for pions and muons with total momentum 0 to 100 GeV. (default)
                     Set number of pions and muons on each event:
@@ -28,9 +28,6 @@ Usage()
                        Set number of muons on each event:
            --nmuons <number_of_muons>
 
-      Other tentative generators added to Config.C (not validated):
-
-
       PiMuParam - AliGenParam pions and muons generator with realistic parametrized distributions.
                   Set number of pions and muons on each event:
           --npions <number_of_pions>
@@ -40,17 +37,16 @@ Usage()
                   Set number of pions and muons on each event:
           --npions <number_of_pions>
 
+      hijing  - Mimic Hijing generator for particle background corresponding to the 0-10 most central PbPb collisions
 
-     JPsiParam - add J/Psi's to the cocktail (WARNING: current approach does not handle decays correctly in O2)
-                 Set number of J/Psi's on each event:
-         --njpsis <number_of_njpsis>
+      dimuon  - Generate dimuons decays from J/Psi and/or Upsilon. At least one kind of mother particle must be defined.
+                 To set the number of mother particles on each event:
+         --njpsis <number of J/Psis>
+         --nupsilons <number of Upsilons>
 
-
-      hijing    - ?
-      muoncocktail - ?
-
-    Example:
+    Examples:
     ${0##*/} --genMCH -g gun0_100GeV -n 20 --nmuons 4 --npions 20 -o sampletest
+    ${0##*/} --genMCH -g hijing -g dimuon --njpsis 10 --nupsilons 10 -n 20 -o sampletest
 
   2) Generate MFT Tracks:
      ${0##*/} --genMFT -o <outputdir> -j <jobs>
@@ -393,6 +389,10 @@ while [ $# -gt 0 ] ; do
     ;;
     --njpsis)
     export NJPSI="$2";
+    shift 2
+    ;;
+    --nupsilons)
+    export NUPSILON="$2";
     shift 2
     ;;
     -g)
