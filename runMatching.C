@@ -171,7 +171,7 @@ int evalMLExportOrTrain()
   }
 
   // Runs track matching event-by-event or generate training data
-  if (gSystem->Getenv("TRAIN_ML")) {
+  if (gSystem->Getenv("TRAIN_ML_METHOD")) {
     matcher.MLTraining();
     exit(0);
   }

@@ -142,13 +142,14 @@ Usage()
      ${0##*/} --exportTrainingData 42 --cutFcn cutDistance --cutParam0 2.0 -o outputdir
 
   2) Train neural network:
-     {0##*/} --train <config_alias/es> --trainingdata <training_data_file.root>
+     {0##*/} --train <Training_Method> <config_alias/es> --trainingdata <training_data_file.root>
 
      Example:
-     ${0##*/} --train --layout DNN4.2 --strategy ts1 --MLoptions oo1 --trainingdata MLTraining_1000_MCHTracks.root -o outputdir
+     ${0##*/} --train DNN --layout DL4.2 --strategy ts1 --MLoptions oo1 --trainingdata MLTraining_1000_MCHTracks.root -o outputdir
 
       This creates the Trained Network file "Trained_ML_<config_alias>_<training_data_file>.weights.xml" in the folder "outputdir/trainedMLs/weights/"
-      Existing aliases are in ML configuration file "MLConfigs.xml"
+      Existing aliases are in ML configuration file "MLConfigs.xml". One can use any number of the three available. If none are set, then default values from TMVA will be used. The only restrition is that within the options of a method, options cannot have the same name, e.g., a layout and a strategy called "example1".  
+      Training method is mandatory.
 
   3) Run track-matching using trained network:
      {0##*/} --match --matchFcn trainedML --weightfile weightfilename.xml -o outputdir
@@ -321,6 +322,8 @@ trainML()
     exit
   fi
 
+  export ML_TYPE="Regression" #${ML_TYPE:-"Regression"}
+
   if [ -d "${OUTDIR}" ]; then
       if ! [ -z ${UPDATECODE+x} ]; then updatecode ; fi
       pushd ${OUTDIR}
@@ -475,8 +478,12 @@ while [ $# -gt 0 ] ; do
     shift 2
     ;;
     --train)
-    export TRAIN_ML="1";
-    shift 1
+    export TRAIN_ML_METHOD="$2";
+    shift 2
+    ;;
+    --type)
+    export ML_TYPE="$2";
+    shift 2
     ;;
     --layout)
     export ML_LAYOUT="$2";
@@ -527,7 +534,7 @@ if ! [[ -z "$LOADEDMODULES" ]]
  fi
 
 
-if [ -z ${GENERATEMCH+x} ] && [ -z ${GENERATEMFT+x} ] && [ -z ${MATCHING+x} ] && [ -z ${CHECKS+x} ] && [ -z ${ML_EXPORTTRAINDATA+x} ] && [ -z ${TRAIN_ML+x} ]
+if [ -z ${GENERATEMCH+x} ] && [ -z ${GENERATEMFT+x} ] && [ -z ${MATCHING+x} ] && [ -z ${CHECKS+x} ] && [ -z ${ML_EXPORTTRAINDATA+x} ] && [ -z ${TRAIN_ML_METHOD+x} ]
 then
   echo "Missing use mode!"
   echo " "
@@ -568,5 +575,5 @@ fi
 
 if ! [ -z ${MATCHING+x} ]; then runMatching ; fi
 if ! [ -z ${ML_EXPORTTRAINDATA+x} ]; then exportMLTrainningData ; fi
-if ! [ -z ${TRAIN_ML+x} ]; then trainML ; fi
+if ! [ -z ${TRAIN_ML_METHOD+x} ]; then trainML ; fi
 if ! [ -z ${CHECKS+x} ]; then runChecks ; fi
