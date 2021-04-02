@@ -1,9 +1,25 @@
 <?xml version="1.0"?>
-<DNN_options>
-  <DNN_layouts>
-    <DNN4.2>Layout=RELU|30,RELU|20,RELU|15,RELU|5,LINEAR</DNN4.2>
-    <DNN13.0>Layout=RELU|35,RELU|33,RELU|30,RELU|28,RELU|25,RELU|23,RELU|20,RELU|18,RELU|15,RELU|12,RELU|10,RELU|8,RELU|5,LINEAR</DNN13.0>
-  </DNN_layouts>
+<BDT>
+  <Options>
+    <tuto>!H:!V:NTrees=100:MinNodeSize=1.0%:BoostType=AdaBoostR2:SeparationType=RegressionVariance:nCuts=20:PruneMethod=CostComplexity:PruneStrength=30</tuto>
+  </Options>
+</BDT>
+
+<MLP>
+  <layouts>
+     <ml4.2>HiddenLayers=30,20,15,5</ml4.2>
+  </layouts>
+  <options>
+     <ex1>!H:!V:VarTransform=Norm:NCycles=500:HiddenLayers=15,10:TestRate=10:TrainingMethod=BFGS:Sampling=0.3:SamplingEpoch=0.8:ConvergenceImprove=1e-4:ConvergenceTests=10:UseRegulator:BatchSize=50:LearningRate=1e-4</ex1>
+     <ex4.2>!H:!V:VarTransform=Norm:NCycles=500:TestRate=10:TrainingMethod=BFGS:Sampling=0.3:SamplingEpoch=0.8:ConvergenceImprove=1e-4:ConvergenceTests=10:UseRegulator:BatchSize=50:LearningRate=1e-4</ex4.2>
+  </options>
+</MLP>
+
+<DNN>
+  <layouts>
+    <DL4.2>Layout=RELU|30,RELU|20,RELU|15,RELU|5,LINEAR</DL4.2>
+    <DL13.0>Layout=RELU|35,RELU|33,RELU|30,RELU|28,RELU|25,RELU|23,RELU|20,RELU|18,RELU|15,RELU|12,RELU|10,RELU|8,RELU|5,LINEAR</DL13.0>
+  </layouts>
   <Training_Strategies>
     <ts1>TrainingStrategy=LearningRate=1e-3,ConvergenceSteps=50,BatchSize=50,TestRepetitions=10,Regularization=L2,MaxEpochs=2000,Repetitions=1</ts1>
     <ts2>TrainingStrategy=LearningRate=1e-3,ConvergenceSteps=300,BatchSize=50,TestRepetitions=10,Regularization=L2,MaxEpochs=2000,Repetitions=1</ts2>
@@ -11,4 +27,5 @@
   <Other_Options>
     <oo1>H:V:ErrorStrategy=SUMOFSQUARES:VarTransform=G:WeightInitialization=XAVIERUNIFORM:Architecture=CPU:ValidationSize=0.2:RandomSeed=42</oo1>
   </Other_Options>
-</DNN_options>
+</DNN>
+

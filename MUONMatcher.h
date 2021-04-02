@@ -264,13 +264,27 @@ class MUONMatcher
 
   void MLTraining()
   {
-    std::string MLLayout = gSystem->Getenv("ML_LAYOUT");
-    std::string MLStrat = gSystem->Getenv("ML_TRAINING_STRAT");
-    std::string MLOpt = gSystem->Getenv("ML_GENERAL_OPT");
+    std::string network_ID;
+    std::string MLLayout("");
+    std::string MLStrat("");
+    std::string MLOpt("");
     std::string training_file = gSystem->Getenv("ML_TRAINING_FILE");
 
-    std::string training_string(DNN_read(MLLayout, MLStrat, MLOpt));
-    std::string network_ID(MLLayout + "_" + MLStrat + "_" + MLOpt);
+    if (gSystem->Getenv("ML_LAYOUT")) {
+      MLLayout = gSystem->Getenv("ML_LAYOUT");
+      network_ID += MLLayout + "_";
+    }
+    if (gSystem->Getenv("ML_TRAINING_STRAT")) {
+      MLStrat = gSystem->Getenv(
+          "ML_TRAINING_STRAT"); //#TODO reorganize these strings in MLHelpers
+      network_ID += MLStrat + "_";
+    }
+    if (gSystem->Getenv("ML_GENERAL_OPT")) {
+      MLOpt = gSystem->Getenv("ML_GENERAL_OPT");
+      network_ID += MLOpt + "_";
+    }
+
+    std::string training_string(opt_reader());
     std::cout << " Network name: " << network_ID << "\n"
               << std::endl;
     //	std::cout<<" Training file "<< training_file<< "\n"<<std::endl;

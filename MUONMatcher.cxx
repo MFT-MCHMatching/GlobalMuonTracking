@@ -490,8 +490,21 @@ void MUONMatcher::DLRegression(std::string input_name, std::string trainingfile,
   methodname += "_" + trainingfile.substr(rpos + 1, (pos - (rpos + 1)));
   TString outfileName(methodname + ".root");
   TFile* outputFile = TFile::Open(outfileName, "RECREATE");
-  TMVA::Factory* factory = new TMVA::Factory("Trained_ML", outputFile,
-                                             "!V:!Silent:Color:DrawProgressBar:AnalysisType=Regression");
+
+  std::string MLAnalysisType = gSystem->Getenv("ML_TYPE");
+  std::string MLMethodType = gSystem->Getenv("TRAIN_ML_METHOD");
+  TMVA::Factory *factory = new TMVA::Factory(
+      MLAnalysisType + "_" + MLMethodType, outputFile,
+      "!V:!Silent:Color:DrawProgressBar:AnalysisType=" + MLAnalysisType);
+
+  if (MLMethodType == "DNN") {
+    MLMethodType = "DL";
+  } else if (MLMethodType == "BDTG" or MLMethodType == "BDT") {
+    MLMethodType = "BDT";
+  } else if (MLMethodType == "FDA_GA" or MLMethodType == "FDA_GAMT" or
+             MLMethodType == "FDA_MC" or MLMethodType == "FDA_MT") {
+    MLMethodType = "FDA";
+  }
 
   // Dataloader object - this will handle the data (The argument also defines the name of the directory containing the weights' file)
   TMVA::DataLoader* dataloader = new TMVA::DataLoader("trainedML");
@@ -520,8 +533,9 @@ void MUONMatcher::DLRegression(std::string input_name, std::string trainingfile,
                                          "SplitMode=Random:NormMode=NumEvents:!V");
 
   // Book (SAVE) the method
-  factory->BookMethod(dataloader, TMVA::Types::kDL, methodname, trainingstr);
-
+  factory->BookMethod(dataloader,
+                      TMVA::Types::Instance().GetMethodType(MLMethodType),
+                      methodname, trainingstr);
   // --------------------------------------------------------------------------------------------------
   std::ofstream info("time_" + methodname + ".txt");
   TStopwatch* timewatch = new TStopwatch();
