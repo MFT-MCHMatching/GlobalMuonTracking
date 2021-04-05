@@ -1669,6 +1669,71 @@ double MUONMatcher::matchMFT_MCH_TracksAllParam(const MCHTrackConv& mchTrack,
 }
 
 //_________________________________________________________________________________________________
+double MUONMatcher::Hiroshima(const GlobalMuonTrack &mchTrack,
+			      const MFTTrack &mftTrack) {
+
+  //Hiroshima's Matching function
+
+  //Matching constants
+  Double_t LAbs = 415.;  //Absorber Length[cm]
+  Double_t mumass = 0.106; //mass of muon [GeV/c^2]
+  Double_t l;  //the length that extrapolated MCHtrack passes through absorber
+
+  if (mMatchingPlaneZ >= -90.0){
+    l = LAbs;
+  }
+  else{
+    l = 505.0 + mMatchingPlaneZ;
+  }
+
+  //defference between MFTtrack and MCHtrack
+
+  auto dx = mftTrack.getX() - mchTrack.getX();
+  auto dy = mftTrack.getY() - mchTrack.getY();
+  auto dthetax = TMath::ATan(mftTrack.getPx() / TMath::Abs(mftTrack.getPz())) - TMath::ATan(mchTrack.getPx() / TMath::Abs(mchTrack.getPz()));
+  auto dthetay = TMath::ATan(mftTrack.getPy() / TMath::Abs(mftTrack.getPz())) - TMath::ATan(mchTrack.getPy() / TMath::Abs(mchTrack.getPz()));
+
+  //Multiple Scattering(=MS)
+
+  auto pMCH = mchTrack.getP();
+  auto lorentzbeta = pMCH/TMath::Sqrt(mumass*mumass+pMCH*pMCH);
+  auto zMS = copysign(1.0,mchTrack.getCharge());
+  auto thetaMS = 13.6/(1000.0*pMCH*lorentzbeta*1.0)*zMS*TMath::Sqrt(60.0*l/LAbs)*(1.0+0.038*TMath::Log(60.0*l/LAbs));
+  auto xMS = thetaMS*l/TMath::Sqrt(3.0);
+
+  //normalize by theoritical Multiple Coulomb Scattering width to be momentum-independent
+  //make the dx and dtheta dimensionless
+
+  auto dxnorm = dx/xMS;
+  auto dynorm = dy/xMS;
+  auto dthetaxnorm = dthetax/thetaMS;
+  auto dthetaynorm = dthetay/thetaMS;
+
+  //rotate distribution
+
+  auto dxrot = dxnorm*TMath::Cos(TMath::Pi()/4.0)-dthetaxnorm*TMath::Sin(TMath::Pi()/4.0);
+  auto dthetaxrot = dxnorm*TMath::Sin(TMath::Pi()/4.0)+dthetaxnorm*TMath::Cos(TMath::Pi()/4.0);
+  auto dyrot = dynorm*TMath::Cos(TMath::Pi()/4.0)-dthetaynorm*TMath::Sin(TMath::Pi()/4.0);
+  auto dthetayrot = dynorm*TMath::Sin(TMath::Pi()/4.0)+dthetaynorm*TMath::Cos(TMath::Pi()/4.0);
+
+  //convert ellipse to circle
+
+  auto k = 0.7;  //need to optimize!!
+  auto dxcircle = dxrot;
+  auto dycircle = dyrot;
+  auto dthetaxcircle = dthetaxrot/k;
+  auto dthetaycircle = dthetayrot/k;
+
+  //score
+
+  auto scoreX = TMath::Sqrt( dxcircle*dxcircle + dthetaxcircle*dthetaxcircle );
+  auto scoreY = TMath::Sqrt( dycircle*dycircle + dthetaycircle*dthetaycircle );
+  auto score = TMath::Sqrt( scoreX*scoreX + scoreY*scoreY );
+
+  return score;
+};
+
+//_________________________________________________________________________________________________
 double MUONMatcher::matchTrainedML(const MCHTrackConv& mchTrack,
                                    const MFTTrack& mftTrack)
 {
