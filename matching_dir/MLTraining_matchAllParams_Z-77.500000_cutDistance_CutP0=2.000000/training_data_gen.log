@@ -1,0 +1,63 @@
+
+(int) 0
+Processing runMatching.C+...
+[INFO] MagneticField::Print: MagneticFieldMap:
+[INFO] MagneticField::Print: Solenoid (-1*)5 kG, Dipole ON (-1) 
+[INFO] MagneticField::Print: Machine B fields for p-p  beam (7000 GeV): QGrad: 22.0002 Dipole: 37.8781
+[INFO] MagneticField::Print: Uses Sol30_Dip6_Hole  of /opt/alice/sw/slc7_x86-64/O2/v1.3.0-3/share/Common/maps/mfchebKGI_sym.root
+B field z = -5.001880 [kGauss]
+[INFO] Track extrapolation with magnetic field ON
+ MATCHING_CUTFCN: cutDistance_
+ Setting cutDistance_
+ ** MUONMATCHER: Setting matching cutParam[0] = 1
+ MATCHING_CUTPARAM0: 2
+ ** MUONMATCHER: Setting matching cutParam[0] = 2
+Loaded 10 MCH Tracks in 5 events
+Generator: gun0_100GeV_20pi_4mu__5evts
+Loaded 111 MFT Tracks. Label info:
+MCTruthContainer index = 111 for 111 elements(s), flat buffer size 0
+ Dropped 0 MFT Tracks with invalid labels (noise).
+[INFO] Loading geometry FAIRGeom from o2sim_geometry.root
+[INFO] MFT GeometryTGeo::Build total number of sensors 936
+[INFO] Loading MFT L2G matrices from TGeo
+Running with dictionary: MFTdictionary.bin 
+Number of entries in clusters tree 1 
+Number of clusters 1714 
+[INFO] No magnetic field found; using default tracking values 2 10 to initialize media
+
+[INFO] Field in CAVE: 2
+[INFO] Setting up CAVE to host ZDC
+[INFO] No magnetic field found; using default tracking values 2 10 to initialize media
+
+[INFO] No magnetic field found; using default tracking values 2 10 to initialize media
+
+ Generate ML traning data file for -1 MCH tracks.
+Python switch:  1
+ Exporting training data to TTree. Pairing MFT tracks with 10 MCH Tracks
+ Event #0
+  MCHTracks in this event = 3
+  nMFTTracks = 22
+  MCHTrack #0 (10 left)
+  MCHTrack #1 (9 left)
+  MCHTrack #2 (8 left)
+ Event #1
+  MCHTracks in this event = 2
+  nMFTTracks = 20
+  MCHTrack #0 (7 left)
+  MCHTrack #1 (6 left)
+ Event #2
+  MCHTracks in this event = 2
+  nMFTTracks = 23
+  MCHTrack #0 (5 left)
+  MCHTrack #1 (4 left)
+ Event #3
+  MCHTracks in this event = 1
+  nMFTTracks = 23
+  MCHTrack #0 (3 left)
+ Event #4
+  MCHTracks in this event = 2
+  nMFTTracks = 23
+  MCHTrack #0 (2 left)
+  MCHTrack #1 (1 left)
+Exported training data: 14 pairs (10 correct pairs ; 4 fake pairs)
+(int) 0

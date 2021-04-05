@@ -216,8 +216,6 @@ class MUONMatcher
 
   void exportTrainingDataRoot(int nMCHTracks = -1);
 
-  void exportTrainingDataCsv(int nMCHTracks = -1);
-
   // Matching cuts
   void enableChargeMatchCut() { mChargeCutEnabled = true; }
   bool matchingCut(const GlobalMuonTrack&,
@@ -343,6 +341,9 @@ class MUONMatcher
   float_t mMLScoreCut;
   float_t mMLInputFeatures[sMaxMLFeatures];
   std::size_t mNInputFeatures = -1;
+  
+  string mMLInputFeaturesName[sMaxMLFeatures];
+
 };
 
 //_________________________________________________________________________________________________
@@ -418,7 +419,7 @@ void MLParCov40Features(const MCHTrackConv& mchTrack, const MFTTrack& mftTrack, 
 //_________________________________________________________________________________________________
 void MLParCovChiNPts42Features(const MCHTrackConv& mchTrack, const MFTTrack& mftTrack, float* features)
 {
-
+  
   features[0] = mftTrack.getX();
   features[1] = mftTrack.getY();
   features[2] = mftTrack.getPhi(),
@@ -440,29 +441,29 @@ void MLParCovChiNPts42Features(const MCHTrackConv& mchTrack, const MFTTrack& mft
   features[18] = mftTrack.getCovariances()(3, 4);
   features[19] = mftTrack.getCovariances()(4, 4);
 
-  features[20] = mftTrack.getTrackChi2();
-  features[21] = mftTrack.getNumberOfPoints();
+  features[20] = mchTrack.getX();
+  features[21] = mchTrack.getY();
+  features[22] = mchTrack.getPhi(),
+  features[23] = mchTrack.getTanl();
+  features[24] = mchTrack.getInvQPt();
+  features[25] = mchTrack.getCovariances()(0, 0);
+  features[26] = mchTrack.getCovariances()(0, 1);
+  features[27] = mchTrack.getCovariances()(1, 1);
+  features[28] = mchTrack.getCovariances()(0, 2);
+  features[29] = mchTrack.getCovariances()(1, 2);
+  features[30] = mchTrack.getCovariances()(2, 2);
+  features[31] = mchTrack.getCovariances()(0, 3);
+  features[32] = mchTrack.getCovariances()(1, 3);
+  features[33] = mchTrack.getCovariances()(2, 3);
+  features[34] = mchTrack.getCovariances()(3, 3);
+  features[35] = mchTrack.getCovariances()(0, 4);
+  features[36] = mchTrack.getCovariances()(1, 4);
+  features[37] = mchTrack.getCovariances()(2, 4);
+  features[38] = mchTrack.getCovariances()(3, 4);
+  features[39] = mchTrack.getCovariances()(4, 4);
 
-  features[22] = mchTrack.getX();
-  features[23] = mchTrack.getY();
-  features[24] = mchTrack.getPhi(),
-  features[25] = mchTrack.getTanl();
-  features[26] = mchTrack.getInvQPt();
-  features[27] = mchTrack.getCovariances()(0, 0);
-  features[28] = mchTrack.getCovariances()(0, 1);
-  features[29] = mchTrack.getCovariances()(1, 1);
-  features[30] = mchTrack.getCovariances()(0, 2);
-  features[31] = mchTrack.getCovariances()(1, 2);
-  features[32] = mchTrack.getCovariances()(2, 2);
-  features[33] = mchTrack.getCovariances()(0, 3);
-  features[34] = mchTrack.getCovariances()(1, 3);
-  features[35] = mchTrack.getCovariances()(2, 3);
-  features[36] = mchTrack.getCovariances()(3, 3);
-  features[37] = mchTrack.getCovariances()(0, 4);
-  features[38] = mchTrack.getCovariances()(1, 4);
-  features[39] = mchTrack.getCovariances()(2, 4);
-  features[40] = mchTrack.getCovariances()(3, 4);
-  features[41] = mchTrack.getCovariances()(4, 4);
+  features[40] = mftTrack.getTrackChi2();
+  features[41] = mftTrack.getNumberOfPoints();
 }
 
 #include "MUONMatcher.cxx"

@@ -1,0 +1,387 @@
+[WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[WARN] We support at most 1 dimensional arrays in ConfigurableParams: float pidCuts
+Run: 1616729563
+Fill:      0
+Period: 
+LHC State: 
+Start: Fri Mar 26 12:32:55 2021
+End  : Fri Mar 26 12:32:56 2021
+Beam0: Z:A =   0:  0, Energy = 0.000
+Beam1: Z:A =   0:  0, Energy = 0.000
+sqrt[s]    = 0.000
+crossing angle (radian) = 0.000000e+00
+magnet currents (A) L3 = -30000.000, Dipole = -6000
+Detectors: Cont.RO Triggers
+      ITS:    -       -    
+      MFT:    -       -    
+[INFO] MC-TRUTH 1
+[WARN] We support at most 1 dimensional arrays in ConfigurableParams: float pidCuts
+[INFO] TPC: GEM setup - initialization from scratch
+[INFO] TPC: GEM setup (polya) took 13.69
+[INFO] TPC is in grp? no; is skipped? yes
+[INFO] ITS is in grp? yes; is skipped? yes
+[INFO] MFT is in grp? yes; is skipped? no
+[INFO] TOF is in grp? no; is skipped? yes
+[INFO] FT0 is in grp? no; is skipped? yes
+[INFO] FV0 is in grp? no; is skipped? yes
+[INFO] EMC is in grp? no; is skipped? yes
+[INFO] HMP is in grp? no; is skipped? yes
+[INFO] ZDC is in grp? no; is skipped? yes
+[INFO] TRD is in grp? no; is skipped? yes
+[INFO] MCH is in grp? no; is skipped? yes
+[INFO] MID is in grp? no; is skipped? yes
+[INFO] FDD is in grp? no; is skipped? yes
+[INFO] PHS is in grp? no; is skipped? yes
+[INFO] CPV is in grp? no; is skipped? yes
+[INFO] Initialising O2 Data Processing Layer
+[INFO] O2 Data Processing Layer initialised. We brake for nobody.
+[INFO] Optimised build. O2DEBUG / LOG(DEBUG) / LOGF(DEBUG) / assert statement will not be shown.
+[INFO] Redeployment of configuration asked.
+[INFO] Starting internal-dpl-clock on pid 3160149
+[INFO] Starting SimReader on pid 3160150
+[INFO] Starting MFTDigitizer on pid 3160151
+[INFO] Starting GRPUpdater on pid 3160152
+[INFO] Starting MFTDigitWriter on pid 3160153
+[INFO] Redeployment of configuration done.
+[3160151:MFTDigitizer]: [WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[3160153:MFTDigitWriter]: [WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[3160152:GRPUpdater]: [WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[3160150:SimReader]: [WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[3160149:internal-dpl-clock]: [WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[3160152:GRPUpdater]: [WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[3160153:MFTDigitWriter]: [WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[3160151:MFTDigitizer]: [WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[3160150:SimReader]: [WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[3160149:internal-dpl-clock]: [WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[3160149:internal-dpl-clock]: [WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[3160153:MFTDigitWriter]: [WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[3160152:GRPUpdater]: [WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[3160151:MFTDigitizer]: [WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[3160150:SimReader]: [WARN] CCDB: Did not find an alien token; Cannot serve objects located on alien://
+[3160150:SimReader]: [WARN] We support at most 1 dimensional arrays in ConfigurableParams: float pidCuts
+[3160152:GRPUpdater]: [WARN] We support at most 1 dimensional arrays in ConfigurableParams: float pidCuts
+[3160149:internal-dpl-clock]: [WARN] We support at most 1 dimensional arrays in ConfigurableParams: float pidCuts
+[3160153:MFTDigitWriter]: [WARN] We support at most 1 dimensional arrays in ConfigurableParams: float pidCuts
+[3160151:MFTDigitizer]: [WARN] We support at most 1 dimensional arrays in ConfigurableParams: float pidCuts
+[3160149:internal-dpl-clock]: [INFO] MC-TRUTH 1
+[3160150:SimReader]: [INFO] MC-TRUTH 1
+[3160152:GRPUpdater]: [INFO] MC-TRUTH 1
+[3160153:MFTDigitWriter]: [INFO] MC-TRUTH 1
+[3160151:MFTDigitizer]: [INFO] MC-TRUTH 1
+[3160149:internal-dpl-clock]: [INFO] Spawing new device internal-dpl-clock in process with pid 3160149
+[3160152:GRPUpdater]: [INFO] Spawing new device GRPUpdater in process with pid 3160152
+[3160150:SimReader]: [INFO] Spawing new device SimReader in process with pid 3160150
+[3160153:MFTDigitWriter]: [INFO] Spawing new device MFTDigitWriter in process with pid 3160153
+[3160151:MFTDigitizer]: [INFO] Spawing new device MFTDigitizer in process with pid 3160151
+[3160149:internal-dpl-clock]: [12:34:10][INFO] 
+[3160149:internal-dpl-clock]:       ______      _    _______  _________ 
+[3160149:internal-dpl-clock]:      / ____/___ _(_)_______   |/  /_  __ \    version 1.4.28
+[3160149:internal-dpl-clock]:     / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+[3160149:internal-dpl-clock]:    / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+[3160149:internal-dpl-clock]:   /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2020 GSI
+[3160149:internal-dpl-clock]: 
+[3160150:SimReader]: [12:34:10][INFO] 
+[3160150:SimReader]:       ______      _    _______  _________ 
+[3160150:SimReader]:      / ____/___ _(_)_______   |/  /_  __ \    version 1.4.28
+[3160150:SimReader]:     / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+[3160150:SimReader]:    / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+[3160150:SimReader]:   /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2020 GSI
+[3160150:SimReader]: 
+[3160151:MFTDigitizer]: [12:34:10][INFO] 
+[3160151:MFTDigitizer]:       ______      _    _______  _________ 
+[3160151:MFTDigitizer]:      / ____/___ _(_)_______   |/  /_  __ \    version 1.4.28
+[3160151:MFTDigitizer]:     / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+[3160151:MFTDigitizer]:    / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+[3160151:MFTDigitizer]:   /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2020 GSI
+[3160151:MFTDigitizer]: 
+[3160152:GRPUpdater]: [12:34:10][INFO] 
+[3160152:GRPUpdater]:       ______      _    _______  _________ 
+[3160152:GRPUpdater]:      / ____/___ _(_)_______   |/  /_  __ \    version 1.4.28
+[3160152:GRPUpdater]:     / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+[3160152:GRPUpdater]:    / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+[3160152:GRPUpdater]:   /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2020 GSI
+[3160152:GRPUpdater]: 
+[3160153:MFTDigitWriter]: [12:34:10][INFO] 
+[3160153:MFTDigitWriter]:       ______      _    _______  _________ 
+[3160153:MFTDigitWriter]:      / ____/___ _(_)_______   |/  /_  __ \    version 1.4.28
+[3160153:MFTDigitWriter]:     / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+[3160153:MFTDigitWriter]:    / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+[3160153:MFTDigitWriter]:   /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2020 GSI
+[3160153:MFTDigitWriter]: 
+[3160149:internal-dpl-clock]: [12:34:10][STATE] Starting FairMQ state machine --> IDLE
+[3160152:GRPUpdater]: [12:34:10][STATE] Starting FairMQ state machine --> IDLE
+[3160153:MFTDigitWriter]: [12:34:10][STATE] Starting FairMQ state machine --> IDLE
+[3160150:SimReader]: [12:34:10][STATE] Starting FairMQ state machine --> IDLE
+[3160151:MFTDigitizer]: [12:34:10][STATE] Starting FairMQ state machine --> IDLE
+[3160153:MFTDigitWriter]: 2021-03-26 12:34:10	[1;49mStdOut backend initialized[0m
+[3160149:internal-dpl-clock]: 2021-03-26 12:34:10	[1;49mStdOut backend initialized[0m
+[3160150:SimReader]: 2021-03-26 12:34:10	[1;49mStdOut backend initialized[0m
+[3160151:MFTDigitizer]: 2021-03-26 12:34:10	[1;49mStdOut backend initialized[0m
+[3160152:GRPUpdater]: 2021-03-26 12:34:10	[1;49mStdOut backend initialized[0m
+[3160153:MFTDigitWriter]: [12:34:10][STATE] IDLE ---> INITIALIZING DEVICE
+[3160149:internal-dpl-clock]: [12:34:10][STATE] IDLE ---> INITIALIZING DEVICE
+[3160150:SimReader]: [12:34:10][STATE] IDLE ---> INITIALIZING DEVICE
+[3160150:SimReader]: 2021-03-26 12:34:10	[1;49mBuffering enabled (100)[0m
+[3160150:SimReader]: [12:34:10][INFO] adding o2sim
+[3160150:SimReader]: 
+[3160150:SimReader]: [12:34:10][INFO] INCONTEXTSTRING 
+[3160150:SimReader]: [12:34:10][INFO] Imposing hadronic interaction rate 50000Hz
+[3160150:SimReader]: [12:34:10][WARN] No bunch filling provided, impose default one
+[3160151:MFTDigitizer]: [12:34:10][STATE] IDLE ---> INITIALIZING DEVICE
+[3160152:GRPUpdater]: [12:34:10][STATE] IDLE ---> INITIALIZING DEVICE
+[3160150:SimReader]: [12:34:10][INFO] Deducing mu=0.00771915 per BC from IR=50000 with 576 BCs
+[3160150:SimReader]: [12:34:10][INFO] InteractionSampler with 576 colliding BCs, mu(BC)= 0.00771915 -> total IR= 50000
+[3160150:SimReader]: [12:34:10][INFO] Current BCid:    0 Orbit:      1 |T in BC(ns): 0.000(0 coll left)
+[3160150:SimReader]: [12:34:10][INFO] setting up 1 chains
+[3160151:MFTDigitizer]: 2021-03-26 12:34:10	[1;49mBuffering enabled (100)[0m
+[3160151:MFTDigitizer]: [12:34:11][INFO] Initializing geometry service
+[3160151:MFTDigitizer]: [12:34:11][INFO] Loading geometry FAIRGeom from o2sim_geometry.root
+[3160149:internal-dpl-clock]: 2021-03-26 12:34:10	[1;49mBuffering enabled (100)[0m
+[3160149:internal-dpl-clock]: [12:34:11][STATE] INITIALIZING DEVICE ---> INITIALIZED
+[3160149:internal-dpl-clock]: [12:34:11][STATE] INITIALIZED ---> BINDING
+[3160152:GRPUpdater]: 2021-03-26 12:34:10	[1;49mBuffering enabled (100)[0m
+[3160152:GRPUpdater]: [12:34:11][STATE] INITIALIZING DEVICE ---> INITIALIZED
+[3160152:GRPUpdater]: [12:34:11][STATE] INITIALIZED ---> BINDING
+[3160152:GRPUpdater]: [12:34:11][STATE] BINDING ---> BOUND
+[3160152:GRPUpdater]: [12:34:11][STATE] BOUND ---> CONNECTING
+[3160149:internal-dpl-clock]: [12:34:11][STATE] BINDING ---> BOUND
+[3160149:internal-dpl-clock]: [12:34:11][STATE] BOUND ---> CONNECTING
+[3160149:internal-dpl-clock]: [12:34:11][STATE] CONNECTING ---> DEVICE READY
+[3160149:internal-dpl-clock]: [12:34:11][STATE] DEVICE READY ---> INITIALIZING TASK
+[3160152:GRPUpdater]: [12:34:11][STATE] CONNECTING ---> DEVICE READY
+[3160152:GRPUpdater]: [12:34:11][STATE] DEVICE READY ---> INITIALIZING TASK
+[3160152:GRPUpdater]: [12:34:11][STATE] INITIALIZING TASK ---> READY
+[3160152:GRPUpdater]: [12:34:11][STATE] READY ---> RUNNING
+[3160152:GRPUpdater]: [12:34:11][INFO] DEVICE: Running...
+[3160149:internal-dpl-clock]: [12:34:11][STATE] INITIALIZING TASK ---> READY
+[3160149:internal-dpl-clock]: [12:34:11][STATE] READY ---> RUNNING
+[3160149:internal-dpl-clock]: [12:34:11][INFO] DEVICE: Running...
+[3160153:MFTDigitWriter]: 2021-03-26 12:34:10	[1;49mBuffering enabled (100)[0m
+[3160153:MFTDigitWriter]: [12:34:11][INFO] 0: branch  MFTDigitMCTruth set up
+[3160153:MFTDigitWriter]: [12:34:11][INFO] 1: branch  MFTDigitMC2ROF set up
+[3160153:MFTDigitWriter]: [12:34:11][INFO] 2: branch  MFTDigit set up
+[3160153:MFTDigitWriter]: [12:34:11][INFO] 3: branch  MFTDigitROF set up
+[3160153:MFTDigitWriter]: [12:34:11][STATE] INITIALIZING DEVICE ---> INITIALIZED
+[3160153:MFTDigitWriter]: [12:34:11][STATE] INITIALIZED ---> BINDING
+[3160153:MFTDigitWriter]: [12:34:11][STATE] BINDING ---> BOUND
+[3160153:MFTDigitWriter]: [12:34:11][STATE] BOUND ---> CONNECTING
+[3160153:MFTDigitWriter]: [12:34:11][STATE] CONNECTING ---> DEVICE READY
+[3160153:MFTDigitWriter]: [12:34:11][STATE] DEVICE READY ---> INITIALIZING TASK
+[3160153:MFTDigitWriter]: [12:34:11][STATE] INITIALIZING TASK ---> READY
+[3160153:MFTDigitWriter]: [12:34:11][STATE] READY ---> RUNNING
+[3160153:MFTDigitWriter]: [12:34:11][INFO] DEVICE: Running...
+[3160151:MFTDigitizer]: Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+[3160151:MFTDigitizer]: Info in <TGeoManager::SetTopVolume>: Top volume is cave. Master volume is cave
+[3160151:MFTDigitizer]: Info in <TGeoNavigator::BuildCache>: --- Maximum geometry depth set to 100
+[3160151:MFTDigitizer]: Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+[3160151:MFTDigitizer]: Info in <TGeoManager::CountLevels>: max level = 9, max placements = 138
+[3160151:MFTDigitizer]: Info in <TGeoManager::CloseGeometry>: 229647 nodes/ 24603 volume UID's in FAIR geometry
+[3160151:MFTDigitizer]: Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+[3160151:MFTDigitizer]: [12:34:25][INFO] Initializing field service
+[3160150:SimReader]: [12:34:30][INFO] Automatic deduction of number of collisions ... will just take number of background entries 5
+[3160150:SimReader]: Summary of DigitizationContext --
+[3160150:SimReader]: Parts per collision 1
+[3160150:SimReader]: Collision parts taken from simulations specified by prefix:
+[3160150:SimReader]: Number of Collisions 5
+[3160150:SimReader]: Collision 0 TIME BCid:  472 Orbit:      1 |T in BC(ns): -0.171 (0 , 0)
+[3160150:SimReader]: Collision 1 TIME BCid: 1962 Orbit:      1 |T in BC(ns): 0.011 (0 , 1)
+[3160150:SimReader]: Collision 2 TIME BCid: 2006 Orbit:      1 |T in BC(ns): -0.028 (0 , 2)
+[3160150:SimReader]: Collision 3 TIME BCid: 2148 Orbit:      1 |T in BC(ns): 0.070 (0 , 3)
+[3160150:SimReader]: Collision 4 TIME BCid: 1372 Orbit:      2 |T in BC(ns): -0.015 (0 , 4)
+[3160150:SimReader]: [12:34:31][INFO] Initializing Spec ... have 5 times 
+[3160150:SimReader]: [12:34:31][INFO] Serializing Context for later reuse
+[3160150:SimReader]: [12:34:38][STATE] INITIALIZING DEVICE ---> INITIALIZED
+[3160150:SimReader]: [12:34:38][STATE] INITIALIZED ---> BINDING
+[3160150:SimReader]: [12:34:39][STATE] BINDING ---> BOUND
+[3160150:SimReader]: [12:34:39][STATE] BOUND ---> CONNECTING
+[3160150:SimReader]: [12:34:39][STATE] CONNECTING ---> DEVICE READY
+[3160150:SimReader]: [12:34:39][STATE] DEVICE READY ---> INITIALIZING TASK
+[3160150:SimReader]: [12:34:39][STATE] INITIALIZING TASK ---> READY
+[3160150:SimReader]: [12:34:39][STATE] READY ---> RUNNING
+[3160150:SimReader]: [12:34:39][INFO] DEVICE: Running...
+[3160150:SimReader]: [12:34:39][INFO] SENDING SOMETHING TO OTHERS
+[3160151:MFTDigitizer]: [12:34:44][INFO] MagneticField::Print: MagneticFieldMap:
+[3160151:MFTDigitizer]: [12:34:44][INFO] MagneticField::Print: Solenoid (-1*)5 kG, Dipole ON (-1) 
+[3160151:MFTDigitizer]: [12:34:44][INFO] MagneticField::Print: Machine B fields for p-p  beam (7000 GeV): QGrad: 22.0002 Dipole: 37.8781
+[3160151:MFTDigitizer]: [12:34:44][INFO] MagneticField::Print: Uses Sol30_Dip6_Hole  of /opt/alice/sw/slc7_x86-64/O2/v1.3.0-3/share/Common/maps/mfchebKGI_sym.root
+[3160151:MFTDigitizer]: Info in <TGeoGlobalMagField::SetField>: Global magnetic field set to <MagneticFieldMap>
+[3160151:MFTDigitizer]: Info in <TGeoGlobalMagField::Lock>: Global magnetic field <MagneticFieldMap> is now locked
+[3160151:MFTDigitizer]: [12:34:44][INFO] Set Alpide charge threshold to 150, single hit will be accounted from 15 electrons
+[3160151:MFTDigitizer]: [12:34:44][INFO] MFT simulated in CONTINUOUS RO mode
+[3160151:MFTDigitizer]: [12:34:45][INFO] MFT GeometryTGeo::Build total number of sensors 936
+[3160151:MFTDigitizer]: [12:34:45][INFO] Loading MFT L2G matrices from TGeo
+[3160151:MFTDigitizer]: Alpide response object of 40500 matrices to map chagre in xyz to 5x5 pixels
+[3160151:MFTDigitizer]: X(col) range: +0.000000e+00 : +1.462000e-03 | step: 5.000000e-05 | Nbins: 30
+[3160151:MFTDigitizer]: Y(row) range: +0.000000e+00 : +1.344000e-03 | step: 5.000000e-05 | Nbins: 27
+[3160151:MFTDigitizer]: Z(dpt) range: -2.000000e-03 : +2.500000e-03 | step: 8.999999e-05 | Nbins: 50
+[3160151:MFTDigitizer]: Alpide digitization params:
+[3160151:MFTDigitizer]: Continuous readout             : ON
+[3160151:MFTDigitizer]: Readout Frame Length(ns)       : 9880.510742
+[3160151:MFTDigitizer]: Strobe delay (ns)              : 99.803139
+[3160151:MFTDigitizer]: Strobe length (ns)             : 9780.708008
+[3160151:MFTDigitizer]: Threshold (N electrons)        : 150
+[3160151:MFTDigitizer]: Min N electrons to accoint     : 15
+[3160151:MFTDigitizer]: Number of charge sharing steps : 7
+[3160151:MFTDigitizer]: ELoss to N electrons factor    : 2.777778e+08
+[3160151:MFTDigitizer]: Noise level per pixel          : 1.000000e-07
+[3160151:MFTDigitizer]: Charge time-response:
+[3160151:MFTDigitizer]: o2::itsmft::AlpideSignalTrapezoid | Duration: 7500.0 MaxRiseTime: 1100.0 (RiseTime=0 at q=450.0) (ns)
+[3160151:MFTDigitizer]: [12:34:46][STATE] INITIALIZING DEVICE ---> INITIALIZED
+[3160151:MFTDigitizer]: [12:34:46][STATE] INITIALIZED ---> BINDING
+[3160151:MFTDigitizer]: [12:34:46][STATE] BINDING ---> BOUND
+[3160151:MFTDigitizer]: [12:34:46][STATE] BOUND ---> CONNECTING
+[3160151:MFTDigitizer]: [12:34:46][STATE] CONNECTING ---> DEVICE READY
+[3160151:MFTDigitizer]: [12:34:46][STATE] DEVICE READY ---> INITIALIZING TASK
+[3160151:MFTDigitizer]: [12:34:46][STATE] INITIALIZING TASK ---> READY
+[3160151:MFTDigitizer]: [12:34:46][STATE] READY ---> RUNNING
+[3160151:MFTDigitizer]: [12:34:46][INFO] DEVICE: Running...
+[3160151:MFTDigitizer]: [12:34:49][INFO] GOT 5 COLLISSION TIMES
+[3160151:MFTDigitizer]: [12:34:49][INFO] SIMCHAINS 1
+[3160151:MFTDigitizer]: [12:34:49][INFO]  CALLING ITS DIGITIZATION 
+[3160151:MFTDigitizer]: [12:34:54][INFO] Digitizing MFT hits of entry 0 from source 0 at time BCid:  472 Orbit:      1 |T in BC(ns): -0.171 ROFrame= 10) cont.mode: 1 Min/Max ROFrames 0/9
+[3160151:MFTDigitizer]: [12:34:54][INFO] Filling MFT digits output for RO frames 0:9
+[3160151:MFTDigitizer]: ROF: 0 | 58 entries starting from 0
+[3160151:MFTDigitizer]: BCid:    0 Orbit:      0
+[3160151:MFTDigitizer]: ROF: 1 | 50 entries starting from 58
+[3160151:MFTDigitizer]: BCid:  396 Orbit:      0
+[3160151:MFTDigitizer]: ROF: 2 | 42 entries starting from 108
+[3160151:MFTDigitizer]: BCid:  792 Orbit:      0
+[3160151:MFTDigitizer]: ROF: 3 | 50 entries starting from 150
+[3160151:MFTDigitizer]: BCid: 1188 Orbit:      0
+[3160151:MFTDigitizer]: ROF: 4 | 58 entries starting from 200
+[3160151:MFTDigitizer]: BCid: 1584 Orbit:      0
+[3160151:MFTDigitizer]: ROF: 5 | 51 entries starting from 258
+[3160151:MFTDigitizer]: BCid: 1980 Orbit:      0
+[3160151:MFTDigitizer]: ROF: 6 | 50 entries starting from 309
+[3160151:MFTDigitizer]: BCid: 2376 Orbit:      0
+[3160151:MFTDigitizer]: ROF: 7 | 44 entries starting from 359
+[3160151:MFTDigitizer]: BCid: 2772 Orbit:      0
+[3160151:MFTDigitizer]: ROF: 8 | 44 entries starting from 403
+[3160151:MFTDigitizer]: BCid: 3168 Orbit:      0
+[3160151:MFTDigitizer]: ROF: 9 | 64 entries starting from 447
+[3160151:MFTDigitizer]: BCid:    0 Orbit:      1
+[3160151:MFTDigitizer]: [12:34:54][INFO] Added 511 digits 
+[3160151:MFTDigitizer]: [12:34:54][INFO] Digitizing MFT hits of entry 1 from source 0 at time BCid: 1962 Orbit:      1 |T in BC(ns): 0.011 ROFrame= 13) cont.mode: 1 Min/Max ROFrames 10/12
+[3160151:MFTDigitizer]: [12:34:54][INFO] Filling MFT digits output for RO frames 10:12
+[3160151:MFTDigitizer]: ROF: 10 | 478 entries starting from 511
+[3160151:MFTDigitizer]: BCid:  396 Orbit:      1
+[3160151:MFTDigitizer]: MCEventID: 0 ROFs: 10-10 Entry in ROFRecords: 10
+[3160151:MFTDigitizer]: ROF: 11 | 51 entries starting from 989
+[3160151:MFTDigitizer]: BCid:  792 Orbit:      1
+[3160151:MFTDigitizer]: ROF: 12 | 45 entries starting from 1040
+[3160151:MFTDigitizer]: BCid: 1188 Orbit:      1
+[3160151:MFTDigitizer]: [12:34:54][INFO] Added 574 digits 
+[3160151:MFTDigitizer]: [12:34:54][INFO] Digitizing MFT hits of entry 2 from source 0 at time BCid: 2006 Orbit:      1 |T in BC(ns): -0.028 ROFrame= 14) cont.mode: 1 Min/Max ROFrames 13/14
+[3160151:MFTDigitizer]: [12:34:54][INFO] Filling MFT digits output for RO frames 13:13
+[3160151:MFTDigitizer]: ROF: 13 | 478 entries starting from 1085
+[3160151:MFTDigitizer]: BCid: 1584 Orbit:      1
+[3160151:MFTDigitizer]: MCEventID: 1 ROFs: 13-14 Entry in ROFRecords: 13
+[3160151:MFTDigitizer]: [12:34:55][INFO] Added 478 digits 
+[3160151:MFTDigitizer]: [12:34:55][INFO] Digitizing MFT hits of entry 3 from source 0 at time BCid: 2148 Orbit:      1 |T in BC(ns): 0.070 ROFrame= 14) cont.mode: 1 Min/Max ROFrames 14/14
+[3160151:MFTDigitizer]: [12:34:55][INFO] Digitizing MFT hits of entry 4 from source 0 at time BCid: 1372 Orbit:      2 |T in BC(ns): -0.015 ROFrame= 21) cont.mode: 1 Min/Max ROFrames 14/20
+[3160151:MFTDigitizer]: [12:34:55][INFO] Filling MFT digits output for RO frames 14:20
+[3160151:MFTDigitizer]: ROF: 14 | 1479 entries starting from 1563
+[3160151:MFTDigitizer]: BCid: 1980 Orbit:      1
+[3160151:MFTDigitizer]: MCEventID: 2 ROFs: 14-14 Entry in ROFRecords: 14
+[3160151:MFTDigitizer]: MCEventID: 3 ROFs: 14-15 Entry in ROFRecords: 14
+[3160151:MFTDigitizer]: ROF: 15 | 513 entries starting from 3042
+[3160151:MFTDigitizer]: BCid: 2376 Orbit:      1
+[3160151:MFTDigitizer]: ROF: 16 | 40 entries starting from 3555
+[3160151:MFTDigitizer]: BCid: 2772 Orbit:      1
+[3160151:MFTDigitizer]: ROF: 17 | 61 entries starting from 3595
+[3160151:MFTDigitizer]: BCid: 3168 Orbit:      1
+[3160151:MFTDigitizer]: ROF: 18 | 42 entries starting from 3656
+[3160151:MFTDigitizer]: BCid:    0 Orbit:      2
+[3160151:MFTDigitizer]: ROF: 19 | 54 entries starting from 3698
+[3160151:MFTDigitizer]: BCid:  396 Orbit:      2
+[3160151:MFTDigitizer]: ROF: 20 | 55 entries starting from 3752
+[3160151:MFTDigitizer]: BCid:  792 Orbit:      2
+[3160151:MFTDigitizer]: [12:34:55][INFO] Added 2244 digits 
+[3160151:MFTDigitizer]: [12:34:55][INFO] Filling MFT digits output for RO frames 21:22
+[3160151:MFTDigitizer]: ROF: 21 | 519 entries starting from 3807
+[3160151:MFTDigitizer]: BCid: 1188 Orbit:      2
+[3160151:MFTDigitizer]: MCEventID: 4 ROFs: 21-22 Entry in ROFRecords: 21
+[3160151:MFTDigitizer]: ROF: 22 | 526 entries starting from 4326
+[3160151:MFTDigitizer]: BCid: 1584 Orbit:      2
+[3160151:MFTDigitizer]: [12:34:55][INFO] Added 1045 digits 
+[3160151:MFTDigitizer]: [12:34:55][INFO] MFT: Sending ROMode= 3 to GRPUpdater
+[3160151:MFTDigitizer]: [12:34:55][INFO] Digitization took 0.39s
+[3160153:MFTDigitWriter]: [12:34:55][INFO] WRITING 4959 LABELS 
+[3160152:GRPUpdater]: [12:34:55][INFO] Updated GRP in o2sim_grp.root for detectors RO mode
+[3160152:GRPUpdater]: Run: 1616729563
+[3160152:GRPUpdater]: Fill:      0
+[3160152:GRPUpdater]: Period: 
+[3160152:GRPUpdater]: LHC State: 
+[3160152:GRPUpdater]: Start: Fri Mar 26 12:32:55 2021
+[3160152:GRPUpdater]: End  : Fri Mar 26 12:32:56 2021
+[3160152:GRPUpdater]: Beam0: Z:A =   0:  0, Energy = 0.000
+[3160152:GRPUpdater]: Beam1: Z:A =   0:  0, Energy = 0.000
+[3160152:GRPUpdater]: sqrt[s]    = 0.000
+[3160152:GRPUpdater]: crossing angle (radian) = 0.000000e+00
+[3160152:GRPUpdater]: magnet currents (A) L3 = -30000.000, Dipole = -6000
+[3160152:GRPUpdater]: Detectors: Cont.RO Triggers
+[3160152:GRPUpdater]:       ITS:    -       -    
+[3160152:GRPUpdater]:       MFT:    +       -    
+[3160153:MFTDigitWriter]: [12:34:57][INFO] RECEIVED DIGITS SIZE 4852
+[INFO] Quitting
+[INFO] QUIT_REQUESTED
+[3160149:internal-dpl-clock]: [12:34:57][INFO] Received device shutdown request (signal 15).
+[3160149:internal-dpl-clock]: [12:34:57][INFO] Waiting for graceful device shutdown. Hit Ctrl-C again to abort immediately.
+[3160153:MFTDigitWriter]: [12:34:57][INFO] Received device shutdown request (signal 15).
+[3160153:MFTDigitWriter]: [12:34:57][INFO] Waiting for graceful device shutdown. Hit Ctrl-C again to abort immediately.
+[3160152:GRPUpdater]: [12:34:57][INFO] Received device shutdown request (signal 15).
+[3160152:GRPUpdater]: [12:34:57][INFO] Waiting for graceful device shutdown. Hit Ctrl-C again to abort immediately.
+[3160150:SimReader]: [12:34:57][INFO] Received device shutdown request (signal 15).
+[3160150:SimReader]: [12:34:57][INFO] Waiting for graceful device shutdown. Hit Ctrl-C again to abort immediately.
+[3160151:MFTDigitizer]: [12:34:57][INFO] Received device shutdown request (signal 15).
+[3160151:MFTDigitizer]: [12:34:57][INFO] Waiting for graceful device shutdown. Hit Ctrl-C again to abort immediately.
+[3160150:SimReader]: [12:34:57][STATE] RUNNING ---> READY
+[3160150:SimReader]: [12:34:57][STATE] READY ---> RESETTING TASK
+[3160150:SimReader]: [12:34:57][STATE] RESETTING TASK ---> DEVICE READY
+[3160150:SimReader]: [12:34:57][STATE] DEVICE READY ---> RESETTING DEVICE
+[3160149:internal-dpl-clock]: [12:34:57][STATE] RUNNING ---> READY
+[3160152:GRPUpdater]: [12:34:57][STATE] RUNNING ---> READY
+[3160151:MFTDigitizer]: [12:34:57][STATE] RUNNING ---> READY
+[3160152:GRPUpdater]: [12:34:57][STATE] READY ---> RESETTING TASK
+[3160151:MFTDigitizer]: [12:34:57][STATE] READY ---> RESETTING TASK
+[3160152:GRPUpdater]: [12:34:57][STATE] RESETTING TASK ---> DEVICE READY
+[3160149:internal-dpl-clock]: [12:34:57][STATE] READY ---> RESETTING TASK
+[3160149:internal-dpl-clock]: [12:34:57][STATE] RESETTING TASK ---> DEVICE READY
+[3160151:MFTDigitizer]: [12:34:57][STATE] RESETTING TASK ---> DEVICE READY
+[3160151:MFTDigitizer]: [12:34:57][STATE] DEVICE READY ---> RESETTING DEVICE
+[3160152:GRPUpdater]: [12:34:57][STATE] DEVICE READY ---> RESETTING DEVICE
+[3160149:internal-dpl-clock]: [12:34:57][STATE] DEVICE READY ---> RESETTING DEVICE
+[3160149:internal-dpl-clock]: [12:34:57][STATE] RESETTING DEVICE ---> IDLE
+[3160152:GRPUpdater]: [12:34:57][STATE] RESETTING DEVICE ---> IDLE
+[3160149:internal-dpl-clock]: [12:34:57][STATE] IDLE ---> EXITING
+[3160150:SimReader]: [12:34:57][STATE] RESETTING DEVICE ---> IDLE
+[3160152:GRPUpdater]: [12:34:57][STATE] IDLE ---> EXITING
+[3160150:SimReader]: [12:34:57][STATE] IDLE ---> EXITING
+[3160151:MFTDigitizer]: [12:34:57][STATE] RESETTING DEVICE ---> IDLE
+[3160151:MFTDigitizer]: [12:34:57][STATE] IDLE ---> EXITING
+[3160149:internal-dpl-clock]: [12:34:57][STATE] Exiting FairMQ state machine
+[3160151:MFTDigitizer]: [12:34:57][STATE] Exiting FairMQ state machine
+[3160152:GRPUpdater]: [12:34:57][STATE] Exiting FairMQ state machine
+[3160150:SimReader]: [12:34:57][STATE] Exiting FairMQ state machine
+[3160149:internal-dpl-clock]: [12:34:58][INFO] Process 3160149 is exiting.
+[3160151:MFTDigitizer]: [12:34:58][INFO] Process 3160151 is exiting.
+[3160152:GRPUpdater]: [12:34:58][INFO] Process 3160152 is exiting.
+[3160150:SimReader]: [12:34:58][INFO] Process 3160150 is exiting.
+[3160153:MFTDigitWriter]: [12:35:30][STATE] RUNNING ---> READY
+[3160153:MFTDigitWriter]: [12:35:30][STATE] READY ---> RESETTING TASK
+[3160153:MFTDigitWriter]: [12:35:30][STATE] RESETTING TASK ---> DEVICE READY
+[3160153:MFTDigitWriter]: [12:35:30][STATE] DEVICE READY ---> RESETTING DEVICE
+[3160153:MFTDigitWriter]: Cleaning up for shared memory id '0995229f'...
+[3160153:MFTDigitWriter]: No region counter found. No regions to cleanup.
+[3160153:MFTDigitWriter]: Successfully removed 'fmq_0995229f_m_0'.
+[3160153:MFTDigitWriter]: Successfully removed 'fmq_0995229f_mng'.
+[3160153:MFTDigitWriter]: Successfully removed 'fmq_0995229f_mtx'.
+[3160153:MFTDigitWriter]: Successfully removed 'fmq_0995229f_cv'.
+[3160153:MFTDigitWriter]: [12:35:30][STATE] RESETTING DEVICE ---> IDLE
+[3160153:MFTDigitWriter]: [12:35:30][STATE] IDLE ---> EXITING
+[3160153:MFTDigitWriter]: [12:35:30][STATE] Exiting FairMQ state machine
+[3160153:MFTDigitWriter]: [12:35:30][INFO] Process 3160153 is exiting.
+[INFO] Dumping used configuration in dpl-config.json
+[INFO] Process 3159998 is exiting.

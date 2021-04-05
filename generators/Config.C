@@ -27,8 +27,7 @@ void Config() {
   // Theta range given through pseudorapidity limits 22/6/2001
 
   // Set Random Number seed
-  gRandom->SetSeed(123456); // Set 0 to use the currecnt time
-
+  gRandom->SetSeed(std::atoi(std::getenv("SEED"))); // Set 0 to use the currecnt time
   // The libraries required by Geant3 are loaded in sim.C
 
   new TGeant3TGeo("C++ Interface to Geant3");
