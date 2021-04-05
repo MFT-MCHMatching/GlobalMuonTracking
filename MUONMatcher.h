@@ -179,11 +179,20 @@ class MUONMatcher
   void setMLFeatureFunction(void (*func)(const MCHTrackConv&,
                                          const MFTTrack&,
                                          float*),
-                            int nFeatures, std::string nickname)
+                            int nFeatures, std::string nickname,
+                            void (*funcNames)(string*) = nullptr)
   {
     mMLFeaturesFunc = func;
     mNInputFeatures = nFeatures;
     mMatchingHelper.MLFeaturesFunction = nickname;
+    if (funcNames) {
+      (*funcNames)(mMLInputFeaturesName);
+    } else {
+      std::cout << "No ML input feature names informed. Setting defaults Feature_N." << std::endl;
+      for (std::size_t nFeature = 0; nFeature < mNInputFeatures; nFeature++) {
+        mMLInputFeaturesName[nFeature] = Form("Feature_%d", (Int_t)nFeature);
+      }
+    }
   }
   void setMatchSaveAll(bool val) { mMatchSaveAll = val; }
   void
@@ -341,9 +350,8 @@ class MUONMatcher
   float_t mMLScoreCut;
   float_t mMLInputFeatures[sMaxMLFeatures];
   std::size_t mNInputFeatures = -1;
-  
-  string mMLInputFeaturesName[sMaxMLFeatures];
 
+  string mMLInputFeaturesName[sMaxMLFeatures];
 };
 
 //_________________________________________________________________________________________________
@@ -417,9 +425,55 @@ void MLParCov40Features(const MCHTrackConv& mchTrack, const MFTTrack& mftTrack, 
 }
 
 //_________________________________________________________________________________________________
+void MLParCov40FeaturesNames(string* featuresNames)
+{
+  std::cout << "Setting features names: MLParCov40FeaturesNames" << std::endl;
+  featuresNames[0] = "MFT_X";
+  featuresNames[1] = "MFT_Y";
+  featuresNames[2] = "MFT_Phi";
+  featuresNames[3] = "MFT_Tanl";
+  featuresNames[4] = "MFT_InvQPt";
+  featuresNames[5] = "MFT_Cov00";
+  featuresNames[6] = "MFT_Cov01";
+  featuresNames[7] = "MFT_Cov11";
+  featuresNames[8] = "MFT_Cov02";
+  featuresNames[9] = "MFT_Cov12";
+  featuresNames[10] = "MFT_Cov22";
+  featuresNames[11] = "MFT_Cov03";
+  featuresNames[12] = "MFT_Cov13";
+  featuresNames[13] = "MFT_Cov23";
+  featuresNames[14] = "MFT_Cov33";
+  featuresNames[15] = "MFT_Cov04";
+  featuresNames[16] = "MFT_Cov14";
+  featuresNames[17] = "MFT_Cov24";
+  featuresNames[18] = "MFT_Cov34";
+  featuresNames[19] = "MFT_Cov44";
+  featuresNames[20] = "MCH_X";
+  featuresNames[21] = "MCH_Y";
+  featuresNames[22] = "MCH_Phi";
+  featuresNames[23] = "MCH_Tanl";
+  featuresNames[24] = "MCH_InvQPt";
+  featuresNames[25] = "MCH_Cov00";
+  featuresNames[26] = "MCH_Cov01";
+  featuresNames[27] = "MCH_Cov11";
+  featuresNames[28] = "MCH_Cov02";
+  featuresNames[29] = "MCH_Cov12";
+  featuresNames[30] = "MCH_Cov22";
+  featuresNames[31] = "MCH_Cov03";
+  featuresNames[32] = "MCH_Cov13";
+  featuresNames[33] = "MCH_Cov23";
+  featuresNames[34] = "MCH_Cov33";
+  featuresNames[35] = "MCH_Cov04";
+  featuresNames[36] = "MCH_Cov14";
+  featuresNames[37] = "MCH_Cov24";
+  featuresNames[38] = "MCH_Cov34";
+  featuresNames[39] = "MCH_Cov44";
+}
+
+//_________________________________________________________________________________________________
 void MLParCovChiNPts42Features(const MCHTrackConv& mchTrack, const MFTTrack& mftTrack, float* features)
 {
-  
+
   features[0] = mftTrack.getX();
   features[1] = mftTrack.getY();
   features[2] = mftTrack.getPhi(),
@@ -464,6 +518,57 @@ void MLParCovChiNPts42Features(const MCHTrackConv& mchTrack, const MFTTrack& mft
 
   features[40] = mftTrack.getTrackChi2();
   features[41] = mftTrack.getNumberOfPoints();
+}
+
+//_________________________________________________________________________________________________
+void MLParCovChiNPts42FeaturesNames(string* featuresNames)
+{
+  std::cout << "Setting features names: MLParCovChiNPts42FeaturesNames" << std::endl;
+
+  featuresNames[0] = "MFT_X";
+  featuresNames[1] = "MFT_Y";
+  featuresNames[2] = "MFT_Phi";
+  featuresNames[3] = "MFT_Tanl";
+  featuresNames[4] = "MFT_InvQPt";
+  featuresNames[5] = "MFT_Cov00";
+  featuresNames[6] = "MFT_Cov01";
+  featuresNames[7] = "MFT_Cov11";
+  featuresNames[8] = "MFT_Cov02";
+  featuresNames[9] = "MFT_Cov12";
+  featuresNames[10] = "MFT_Cov22";
+  featuresNames[11] = "MFT_Cov03";
+  featuresNames[12] = "MFT_Cov13";
+  featuresNames[13] = "MFT_Cov23";
+  featuresNames[14] = "MFT_Cov33";
+  featuresNames[15] = "MFT_Cov04";
+  featuresNames[16] = "MFT_Cov14";
+  featuresNames[17] = "MFT_Cov24";
+  featuresNames[18] = "MFT_Cov34";
+  featuresNames[19] = "MFT_Cov44";
+
+  featuresNames[20] = "MCH_X";
+  featuresNames[21] = "MCH_Y";
+  featuresNames[22] = "MCH_Phi";
+  featuresNames[23] = "MCH_Tanl";
+  featuresNames[24] = "MCH_InvQPt";
+  featuresNames[25] = "MCH_Cov00";
+  featuresNames[26] = "MCH_Cov01";
+  featuresNames[27] = "MCH_Cov11";
+  featuresNames[28] = "MCH_Cov02";
+  featuresNames[29] = "MCH_Cov12";
+  featuresNames[30] = "MCH_Cov22";
+  featuresNames[31] = "MCH_Cov03";
+  featuresNames[32] = "MCH_Cov13";
+  featuresNames[33] = "MCH_Cov23";
+  featuresNames[34] = "MCH_Cov33";
+  featuresNames[35] = "MCH_Cov04";
+  featuresNames[36] = "MCH_Cov14";
+  featuresNames[37] = "MCH_Cov24";
+  featuresNames[38] = "MCH_Cov34";
+  featuresNames[39] = "MCH_Cov44";
+
+  featuresNames[40] = "MFT_TrackChi2";
+  featuresNames[41] = "MFT_NClust";
 }
 
 #include "MUONMatcher.cxx"
