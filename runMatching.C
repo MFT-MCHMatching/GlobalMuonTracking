@@ -82,7 +82,7 @@ void loadAndSetMatchingConfig()
       }
     }
   } else {
-    std::cout << " Setting " << matching_fcn << std::endl;
+    std::cout << " Setting default matching function: ";
     matcher.setMatchingFunction(&MUONMatcher::matchMFT_MCH_TracksAllParam);
   }
 
@@ -162,12 +162,7 @@ int evalMLExportOrTrain()
   if (gSystem->Getenv("ML_EXPORTTRAINDATA")) {
     int nMCHTracks = atoi(gSystem->Getenv("ML_EXPORTTRAINDATA"));
     std::cout << " Generate ML traning data file for " << nMCHTracks << " MCH tracks." << std::endl;
-    if (gSystem->Getenv("ML_FORMAT_CSV")) {
-      std::cout << "Python switch:  ON" << endl;
-      matcher.exportTrainingDataCsv(nMCHTracks);
-    } else {
-      matcher.exportTrainingDataRoot(nMCHTracks);
-    }
+    matcher.exportTrainingDataRoot(nMCHTracks);
     exit(0);
   }
 
@@ -199,9 +194,9 @@ int runMatching()
   //},
   //                             5, "ML5ParDeltas");
 
-  // ML Features defined by separete function
-  matcher.setMLFeatureFunction(MLParCov40Features, 40, "MLParCov40Features");
-  //matcher.setMLFeatureFunction(MLParCovChiNPts42Features, 42, "MLParCovChiNPts42Features");
+  // ML Features and names defined by separete function(s)
+  matcher.setMLFeatureFunction(MLParCov40Features, 40, "MLParCov40Features", MLParCov40FeaturesNames);
+  //matcher.setMLFeatureFunction(MLParCovChiNPts42Features, 42, "MLParCovChiNPts42Features", MLParCovChiNPts42FeaturesNames);
 
   // Configure matcher according command line options
   loadAndSetMatchingConfig();
