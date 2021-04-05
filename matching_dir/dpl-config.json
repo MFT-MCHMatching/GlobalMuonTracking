@@ -1,0 +1,33 @@
+{
+    "internal-dpl-clock": "",
+    "mft-digit-reader": {
+        "mft-digit-infile": "mftdigits.root",
+        "start-value-enumeration": "0",
+        "end-value-enumeration": "-1",
+        "step-value-enumeration": "1"
+    },
+    "mft-clusterer": {
+        "mft-dictionary-path": "",
+        "grp-file": "o2sim_grp.root",
+        "no-patterns": "false",
+        "nthreads": "1"
+    },
+    "mft-cluster-writer": {
+        "outfile": "mftclusters.root",
+        "treename": "o2sim",
+        "treetitle": "Tree",
+        "nevents": "-1",
+        "terminate": "process"
+    },
+    "mft-tracker": {
+        "grp-file": "o2sim_grp.root",
+        "mft-dictionary-path": ""
+    },
+    "mft-track-writer": {
+        "outfile": "mfttracks.root",
+        "treename": "o2sim",
+        "treetitle": "Tree",
+        "nevents": "-1",
+        "terminate": "process"
+    }
+}

@@ -1,0 +1,18 @@
+[INFO] Running with 1 sim workers 
+[INFO] CREATING SIM SHARED MEM SEGMENT FOR 1 WORKERS
+Spawning particle server on PID 3159861; Redirect output to o2sim_serverlog
+Spawning sim worker 0 on PID 3159863; Redirect output to o2sim_workerlog0
+Spawning hit merger on PID 3159864; Redirect output to o2sim_mergerlog
+[INFO] DISTRIBUTING EVENT : 1
+[INFO] DISTRIBUTING EVENT : 2
+[INFO] EVENT FINISHED : 1
+[INFO] DISTRIBUTING EVENT : 3
+[INFO] EVENT FINISHED : 2
+[INFO] DISTRIBUTING EVENT : 4
+[INFO] EVENT FINISHED : 3
+[INFO] DISTRIBUTING EVENT : 5
+[INFO] EVENT FINISHED : 4
+[INFO] EVENT FINISHED : 5
+[INFO] Merger process 3159864 returned
+[INFO] Simulation process took 63.1024 s
+[INFO] SIMULATION RETURNED SUCCESFULLY

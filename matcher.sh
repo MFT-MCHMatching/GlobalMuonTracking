@@ -169,18 +169,17 @@ Usage()
   Machine learning interface - Python
 
   1) Generate training data file:
-     {0##*/} --onPythonML --exportTrainingData NMCH_Tracks -o <outputdir>
+     {0##*/} --exportTrainingData NMCH_Tracks -o <outputdir>
      Creates a traning data root file. Each entry o on the tree contains
        40 parameters and 1 truth.
      Track-pairs can be selected by the matching cut functions. See option --cutFcn.
-
-     This mode creates csv file using many python ML modules
+     TODO: Configurable training data format
 
      Example:
-     matcher.sh --onPythonML --exportTrainingData 42 --cutFcn cutDistance --cutParam0 2.0 -o outputdir
+     ${0##*/} --exportTrainingData 42 --cutFcn cutDistance --cutParam0 2.0 -o outputdir
 
   2) Train XGBoost:
-     {0##*/} --train --OnPythonML --trainingdata <training_data_file.root>
+     {0##*/} --train --onPythonML --trainingdata <training_data_file.root>
 
      Example:
      matcher.sh --train --onPythonML --trainingdata MLTraining_1000_MCHTracks.root -o outputdir
@@ -327,8 +326,8 @@ trainML()
       if ! [ -z ${UPDATECODE+x} ]; then updatecode ; fi
       pushd ${OUTDIR}
 
-      if ! [ -z ${ML_FORMAT_CSV+x} ]; then
-	      alienv setenv ${O2ENV} -c python3 python_training.py
+      if ! [ -z ${ML_PYTHON+x} ]; then
+	      alienv setenv ${O2ENV} -c python3 python_training.py | tee MLtraining.log
       else
 	      alienv setenv ${O2ENV} -c root.exe -e 'gSystem->Load("libO2MCHTracking")' -l -q -b runMatching.C+ | tee MLtraining.log
       fi
@@ -404,6 +403,10 @@ while [ $# -gt 0 ] ; do
     fi
     shift 2
     ;;
+    --seed)
+    export SEED="$2";
+    shift 2
+    ;;
     --genMCH)
     GENERATEMCH="1";
     shift 1
@@ -457,7 +460,7 @@ while [ $# -gt 0 ] ; do
     shift 2
     ;;
     --onPythonML)
-    export ML_FORMAT_CSV="1";
+    export ML_PYTHON="1";
     shift 1
     ;;
     --weightfile)
@@ -540,6 +543,7 @@ export ALIROOT_OCDB_ROOT=${ALIROOT_OCDB_ROOT:-$HOME/alice/OCDB}
 
 ALIROOTENV=${ALIROOTENV:-"AliRoot/latest-master-next-root6"}
 O2ENV=${O2ENV:-"O2/latest-dev-o2"}
+#O2ENV=${O2ENV:-"O2/latest-f754608ed4-o2"}
 
 if ! [ -z ${GENERATEMCH+x} ]; then
   if [ -d "${OUTDIR}" ]; then

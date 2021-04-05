@@ -1,0 +1,323 @@
+[INFO] Initialising O2 Data Processing Layer
+[INFO] O2 Data Processing Layer initialised. We brake for nobody.
+[INFO] Optimised build. O2DEBUG / LOG(DEBUG) / LOGF(DEBUG) / assert statement will not be shown.
+[INFO] Redeployment of configuration asked.
+[INFO] Starting internal-dpl-clock on pid 3160533
+[INFO] Starting mft-digit-reader on pid 3160534
+[INFO] Starting mft-clusterer on pid 3160535
+[INFO] Starting mft-cluster-writer on pid 3160536
+[INFO] Starting mft-tracker on pid 3160537
+[INFO] Starting mft-track-writer on pid 3160538
+[INFO] Redeployment of configuration done.
+[3160535:mft-clusterer]: [INFO] Spawing new device mft-clusterer in process with pid 3160535
+[3160535:mft-clusterer]: [12:35:50][INFO] 
+[3160535:mft-clusterer]:       ______      _    _______  _________ 
+[3160535:mft-clusterer]:      / ____/___ _(_)_______   |/  /_  __ \    version 1.4.28
+[3160535:mft-clusterer]:     / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+[3160535:mft-clusterer]:    / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+[3160535:mft-clusterer]:   /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2020 GSI
+[3160535:mft-clusterer]: 
+[3160535:mft-clusterer]: [12:35:50][STATE] Starting FairMQ state machine --> IDLE
+[3160535:mft-clusterer]: 2021-03-26 12:35:50	[1;49mStdOut backend initialized[0m
+[3160535:mft-clusterer]: [12:35:50][STATE] IDLE ---> INITIALIZING DEVICE
+[3160533:internal-dpl-clock]: [INFO] Spawing new device internal-dpl-clock in process with pid 3160533
+[3160535:mft-clusterer]: 2021-03-26 12:35:50	[1;49mBuffering enabled (100)[0m
+[3160535:mft-clusterer]: [12:35:50][INFO] MFT ClustererDPL::init total number of sensors 936
+[3160535:mft-clusterer]: 
+[3160537:mft-tracker]: [INFO] Spawing new device mft-tracker in process with pid 3160537
+[3160533:internal-dpl-clock]: [12:35:50][INFO] 
+[3160533:internal-dpl-clock]:       ______      _    _______  _________ 
+[3160533:internal-dpl-clock]:      / ____/___ _(_)_______   |/  /_  __ \    version 1.4.28
+[3160533:internal-dpl-clock]:     / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+[3160533:internal-dpl-clock]:    / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+[3160533:internal-dpl-clock]:   /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2020 GSI
+[3160533:internal-dpl-clock]: 
+[3160537:mft-tracker]: [12:35:50][INFO] 
+[3160537:mft-tracker]:       ______      _    _______  _________ 
+[3160537:mft-tracker]:      / ____/___ _(_)_______   |/  /_  __ \    version 1.4.28
+[3160537:mft-tracker]:     / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+[3160537:mft-tracker]:    / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+[3160537:mft-tracker]:   /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2020 GSI
+[3160537:mft-tracker]: 
+[3160533:internal-dpl-clock]: [12:35:50][STATE] Starting FairMQ state machine --> IDLE
+[3160537:mft-tracker]: [12:35:50][STATE] Starting FairMQ state machine --> IDLE
+[3160533:internal-dpl-clock]: 2021-03-26 12:35:50	[1;49mStdOut backend initialized[0m
+[3160537:mft-tracker]: 2021-03-26 12:35:50	[1;49mStdOut backend initialized[0m
+[3160533:internal-dpl-clock]: [12:35:50][STATE] IDLE ---> INITIALIZING DEVICE
+[3160533:internal-dpl-clock]: 2021-03-26 12:35:50	[1;49mBuffering enabled (100)[0m
+[3160533:internal-dpl-clock]: [12:35:50][STATE] INITIALIZING DEVICE ---> INITIALIZED
+[3160533:internal-dpl-clock]: [12:35:50][STATE] INITIALIZED ---> BINDING
+[3160537:mft-tracker]: [12:35:50][STATE] IDLE ---> INITIALIZING DEVICE
+[3160533:internal-dpl-clock]: [12:35:50][STATE] BINDING ---> BOUND
+[3160533:internal-dpl-clock]: [12:35:50][STATE] BOUND ---> CONNECTING
+[3160533:internal-dpl-clock]: [12:35:50][STATE] CONNECTING ---> DEVICE READY
+[3160533:internal-dpl-clock]: [12:35:50][STATE] DEVICE READY ---> INITIALIZING TASK
+[3160533:internal-dpl-clock]: [12:35:50][STATE] INITIALIZING TASK ---> READY
+[3160533:internal-dpl-clock]: [12:35:50][STATE] READY ---> RUNNING
+[3160533:internal-dpl-clock]: [12:35:50][INFO] DEVICE: Running...
+[3160534:mft-digit-reader]: [INFO] Spawing new device mft-digit-reader in process with pid 3160534
+[3160534:mft-digit-reader]: [12:35:50][INFO] 
+[3160534:mft-digit-reader]:       ______      _    _______  _________ 
+[3160534:mft-digit-reader]:      / ____/___ _(_)_______   |/  /_  __ \    version 1.4.28
+[3160534:mft-digit-reader]:     / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+[3160534:mft-digit-reader]:    / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+[3160534:mft-digit-reader]:   /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2020 GSI
+[3160534:mft-digit-reader]: 
+[3160534:mft-digit-reader]: [12:35:50][STATE] Starting FairMQ state machine --> IDLE
+[3160534:mft-digit-reader]: 2021-03-26 12:35:50	[1;49mStdOut backend initialized[0m
+[3160534:mft-digit-reader]: [12:35:50][STATE] IDLE ---> INITIALIZING DEVICE
+[3160536:mft-cluster-writer]: [INFO] Spawing new device mft-cluster-writer in process with pid 3160536
+[3160536:mft-cluster-writer]: [12:35:50][INFO] 
+[3160536:mft-cluster-writer]:       ______      _    _______  _________ 
+[3160536:mft-cluster-writer]:      / ____/___ _(_)_______   |/  /_  __ \    version 1.4.28
+[3160536:mft-cluster-writer]:     / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+[3160536:mft-cluster-writer]:    / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+[3160536:mft-cluster-writer]:   /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2020 GSI
+[3160536:mft-cluster-writer]: 
+[3160536:mft-cluster-writer]: [12:35:50][STATE] Starting FairMQ state machine --> IDLE
+[3160536:mft-cluster-writer]: 2021-03-26 12:35:50	[1;49mStdOut backend initialized[0m
+[3160536:mft-cluster-writer]: [12:35:50][STATE] IDLE ---> INITIALIZING DEVICE
+[3160538:mft-track-writer]: [INFO] Spawing new device mft-track-writer in process with pid 3160538
+[3160538:mft-track-writer]: [12:35:50][INFO] 
+[3160538:mft-track-writer]:       ______      _    _______  _________ 
+[3160538:mft-track-writer]:      / ____/___ _(_)_______   |/  /_  __ \    version 1.4.28
+[3160538:mft-track-writer]:     / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+[3160538:mft-track-writer]:    / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+[3160538:mft-track-writer]:   /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2020 GSI
+[3160538:mft-track-writer]: 
+[3160538:mft-track-writer]: [12:35:50][STATE] Starting FairMQ state machine --> IDLE
+[3160538:mft-track-writer]: 2021-03-26 12:35:50	[1;49mStdOut backend initialized[0m
+[3160538:mft-track-writer]: [12:35:50][STATE] IDLE ---> INITIALIZING DEVICE
+[3160536:mft-cluster-writer]: 2021-03-26 12:35:50	[1;49mBuffering enabled (100)[0m
+[3160536:mft-cluster-writer]: [12:35:50][INFO] 0: branch  MFTClusterComp set up
+[3160536:mft-cluster-writer]: [12:35:50][INFO] 1: branch  MFTClusterPatt set up
+[3160536:mft-cluster-writer]: [12:35:50][INFO] 2: branch  MFTClustersROF set up
+[3160536:mft-cluster-writer]: [12:35:50][INFO] 3: branch  MFTClusterMCTruth set up
+[3160536:mft-cluster-writer]: [12:35:50][INFO] 4: branch  MFTClustersMC2ROF set up
+[3160536:mft-cluster-writer]: [12:35:50][STATE] INITIALIZING DEVICE ---> INITIALIZED
+[3160536:mft-cluster-writer]: [12:35:50][STATE] INITIALIZED ---> BINDING
+[3160536:mft-cluster-writer]: [12:35:50][STATE] BINDING ---> BOUND
+[3160536:mft-cluster-writer]: [12:35:50][STATE] BOUND ---> CONNECTING
+[3160536:mft-cluster-writer]: [12:35:50][STATE] CONNECTING ---> DEVICE READY
+[3160536:mft-cluster-writer]: [12:35:50][STATE] DEVICE READY ---> INITIALIZING TASK
+[3160536:mft-cluster-writer]: [12:35:50][STATE] INITIALIZING TASK ---> READY
+[3160536:mft-cluster-writer]: [12:35:50][STATE] READY ---> RUNNING
+[3160536:mft-cluster-writer]: [12:35:50][INFO] DEVICE: Running...
+[3160537:mft-tracker]: 2021-03-26 12:35:50	[1;49mBuffering enabled (100)[0m
+[3160534:mft-digit-reader]: 2021-03-26 12:35:50	[1;49mBuffering enabled (100)[0m
+[3160535:mft-clusterer]: [12:35:50][INFO] MFTClusterer running with a provided dictionary: MFTdictionary.bin
+[3160535:mft-clusterer]: [12:35:50][INFO] Clusterizer masks overflow pixels separated by < 406 BC and <= 0 in row/col
+[3160535:mft-clusterer]: [12:35:50][INFO] Inclusive clusterization timing (w/o disk IO): Cpu: 0 Real: 0 s in 1 slots
+[3160535:mft-clusterer]: [12:35:50][INFO] Threads output merging timing                : Cpu: 0 Real: 0 s in 1 slots
+[3160535:mft-clusterer]: [12:35:50][STATE] INITIALIZING DEVICE ---> INITIALIZED
+[3160535:mft-clusterer]: [12:35:50][STATE] INITIALIZED ---> BINDING
+[3160535:mft-clusterer]: [12:35:50][STATE] BINDING ---> BOUND
+[3160535:mft-clusterer]: [12:35:50][STATE] BOUND ---> CONNECTING
+[3160535:mft-clusterer]: [12:35:50][STATE] CONNECTING ---> DEVICE READY
+[3160535:mft-clusterer]: [12:35:50][STATE] DEVICE READY ---> INITIALIZING TASK
+[3160535:mft-clusterer]: [12:35:50][STATE] INITIALIZING TASK ---> READY
+[3160535:mft-clusterer]: [12:35:50][STATE] READY ---> RUNNING
+[3160535:mft-clusterer]: [12:35:50][INFO] DEVICE: Running...
+[3160534:mft-digit-reader]: [12:35:50][STATE] INITIALIZING DEVICE ---> INITIALIZED
+[3160534:mft-digit-reader]: [12:35:50][STATE] INITIALIZED ---> BINDING
+[3160534:mft-digit-reader]: [12:35:50][STATE] BINDING ---> BOUND
+[3160534:mft-digit-reader]: [12:35:50][STATE] BOUND ---> CONNECTING
+[3160534:mft-digit-reader]: [12:35:50][STATE] CONNECTING ---> DEVICE READY
+[3160534:mft-digit-reader]: [12:35:50][STATE] DEVICE READY ---> INITIALIZING TASK
+[3160534:mft-digit-reader]: [12:35:50][STATE] INITIALIZING TASK ---> READY
+[3160534:mft-digit-reader]: [12:35:50][STATE] READY ---> RUNNING
+[3160534:mft-digit-reader]: [12:35:50][INFO] DEVICE: Running...
+[3160537:mft-tracker]: [12:35:51][INFO] MagneticField::Print: MagneticFieldMap:
+[3160537:mft-tracker]: [12:35:51][INFO] MagneticField::Print: Solenoid (-1*)5 kG, Dipole ON (-1) 
+[3160537:mft-tracker]: [12:35:51][INFO] MagneticField::Print: Machine B fields for p-p  beam (7000 GeV): QGrad: 22.0002 Dipole: 37.8781
+[3160537:mft-tracker]: [12:35:51][INFO] MagneticField::Print: Uses Sol30_Dip6_Hole  of /opt/alice/sw/slc7_x86-64/O2/v1.3.0-3/share/Common/maps/mfchebKGI_sym.root
+[3160537:mft-tracker]: Info in <TGeoGlobalMagField::SetField>: Global magnetic field set to <MagneticFieldMap>
+[3160537:mft-tracker]: Info in <TGeoGlobalMagField::Lock>: Global magnetic field <MagneticFieldMap> is now locked
+[3160537:mft-tracker]: [12:35:51][INFO] Loading geometry FAIRGeom from o2sim_geometry.root
+[3160538:mft-track-writer]: 2021-03-26 12:35:50	[1;49mBuffering enabled (100)[0m
+[3160538:mft-track-writer]: [12:35:51][INFO] 0: branch  MFTTrack set up
+[3160538:mft-track-writer]: [12:35:51][INFO] 1: branch  MFTTrackClusIdx set up
+[3160538:mft-track-writer]: [12:35:51][INFO] 2: branch  MFTTrackMCTruth set up
+[3160538:mft-track-writer]: [12:35:51][INFO] 3: branch  MFTTracksROF set up
+[3160538:mft-track-writer]: [12:35:51][INFO] 4: branch  MFTTracksMC2ROF set up
+[3160538:mft-track-writer]: [12:35:51][STATE] INITIALIZING DEVICE ---> INITIALIZED
+[3160538:mft-track-writer]: [12:35:51][STATE] INITIALIZED ---> BINDING
+[3160538:mft-track-writer]: [12:35:51][STATE] BINDING ---> BOUND
+[3160538:mft-track-writer]: [12:35:51][STATE] BOUND ---> CONNECTING
+[3160538:mft-track-writer]: [12:35:51][STATE] CONNECTING ---> DEVICE READY
+[3160538:mft-track-writer]: [12:35:51][STATE] DEVICE READY ---> INITIALIZING TASK
+[3160538:mft-track-writer]: [12:35:51][STATE] INITIALIZING TASK ---> READY
+[3160538:mft-track-writer]: [12:35:51][STATE] READY ---> RUNNING
+[3160538:mft-track-writer]: [12:35:51][INFO] DEVICE: Running...
+[3160534:mft-digit-reader]: [12:35:52][INFO] MFTDigitReader pushed 4852 digits, in 23 RO frames
+[3160535:mft-clusterer]: [12:35:52][INFO] MFTClusterer pulled 4852 digits, in 23 RO frames
+[3160535:mft-clusterer]: [12:35:52][INFO] MFTClusterer pushed 2092 compressed clusters, in 23 RO frames
+[3160536:mft-cluster-writer]: [12:35:52][INFO] MFTClusterWriter pulled 2092 clusters, in 23 RO frames
+[3160537:mft-tracker]: Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
+[3160537:mft-tracker]: Info in <TGeoManager::SetTopVolume>: Top volume is cave. Master volume is cave
+[3160537:mft-tracker]: Info in <TGeoNavigator::BuildCache>: --- Maximum geometry depth set to 100
+[3160537:mft-tracker]: Info in <TGeoManager::CloseGeometry>: Voxelization retrieved from file
+[3160537:mft-tracker]: Info in <TGeoManager::CountLevels>: max level = 9, max placements = 138
+[3160537:mft-tracker]: Info in <TGeoManager::CloseGeometry>: 229647 nodes/ 24603 volume UID's in FAIR geometry
+[3160537:mft-tracker]: Info in <TGeoManager::CloseGeometry>: ----------------modeler ready----------------
+[3160537:mft-tracker]: [12:35:52][INFO] MFT GeometryTGeo::Build total number of sensors 936
+[3160537:mft-tracker]: [12:35:52][INFO] Loading MFT T2L matrices from TGeo
+[3160537:mft-tracker]: [12:35:52][INFO] Loading MFT T2G matrices from TGeo
+[3160537:mft-tracker]: [12:35:52][INFO] Tracker running with a provided dictionary: MFTdictionary.bin
+[3160537:mft-tracker]: [12:35:52][STATE] INITIALIZING DEVICE ---> INITIALIZED
+[3160537:mft-tracker]: [12:35:52][STATE] INITIALIZED ---> BINDING
+[3160537:mft-tracker]: [12:35:52][STATE] BINDING ---> BOUND
+[3160537:mft-tracker]: [12:35:52][STATE] BOUND ---> CONNECTING
+[3160537:mft-tracker]: [12:35:52][STATE] CONNECTING ---> DEVICE READY
+[3160537:mft-tracker]: [12:35:52][STATE] DEVICE READY ---> INITIALIZING TASK
+[3160537:mft-tracker]: [12:35:52][STATE] INITIALIZING TASK ---> READY
+[3160537:mft-tracker]: [12:35:52][STATE] READY ---> RUNNING
+[3160537:mft-tracker]: [12:35:52][INFO] DEVICE: Running...
+[3160537:mft-tracker]: [12:35:52][INFO] MFTTracker pulled 2092 compressed clusters in 23 RO frames
+[3160537:mft-tracker]: [12:35:52][INFO] 2092 MC label objects , in 5 MC events
+[3160537:mft-tracker]: [12:35:52][INFO] MFTTracker RO: continuous=1
+[3160537:mft-tracker]: [12:35:52][INFO] Loading MFT L2G matrices from TGeo
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 0, clusters loaded : 58
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 1, clusters loaded : 50
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 2, clusters loaded : 42
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 3, clusters loaded : 50
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 4, clusters loaded : 58
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 5, clusters loaded : 51
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 6, clusters loaded : 50
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 7, clusters loaded : 44
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 8, clusters loaded : 44
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 9, clusters loaded : 64
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 10, clusters loaded : 215
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 23
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 11, clusters loaded : 51
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 12, clusters loaded : 45
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 13, clusters loaded : 250
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 20
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 1
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 14, clusters loaded : 452
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 45
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 1
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 15, clusters loaded : 47
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 16, clusters loaded : 40
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 17, clusters loaded : 61
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 18, clusters loaded : 42
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 19, clusters loaded : 54
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 20, clusters loaded : 55
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 21, clusters loaded : 220
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 22
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 1
+[3160537:mft-tracker]: [12:35:52][INFO] ROframe: 22, clusters loaded : 49
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks LTF: 0
+[3160537:mft-tracker]: [12:35:52][INFO] Found tracks CA: 0
+[3160537:mft-tracker]: [12:35:52][INFO] MFTTracker found 110 tracks LTF
+[3160537:mft-tracker]: [12:35:52][INFO] MFTTracker found 3 tracks CA
+[3160537:mft-tracker]: [12:35:52][INFO] MFTTracker pushed 113 tracks
+[3160537:mft-tracker]: [12:35:53][INFO] MFT Tracker total timing: Cpu: 1.000e-02 Real: 2.385e-02 s in 1 slots
+[3160538:mft-track-writer]: [12:35:53][INFO] MFTTrackWriter pulled 113 tracks, in 23 RO frames
+[INFO] Quitting
+[INFO] QUIT_REQUESTED
+[3160535:mft-clusterer]: [12:35:53][INFO] Received device shutdown request (signal 15).
+[3160535:mft-clusterer]: [12:35:53][INFO] Waiting for graceful device shutdown. Hit Ctrl-C again to abort immediately.
+[3160537:mft-tracker]: [12:35:53][INFO] Received device shutdown request (signal 15).
+[3160537:mft-tracker]: [12:35:53][INFO] Waiting for graceful device shutdown. Hit Ctrl-C again to abort immediately.
+[3160533:internal-dpl-clock]: [12:35:53][INFO] Received device shutdown request (signal 15).
+[3160533:internal-dpl-clock]: [12:35:53][INFO] Waiting for graceful device shutdown. Hit Ctrl-C again to abort immediately.
+[3160536:mft-cluster-writer]: [12:35:53][INFO] Received device shutdown request (signal 15).
+[3160536:mft-cluster-writer]: [12:35:53][INFO] Waiting for graceful device shutdown. Hit Ctrl-C again to abort immediately.
+[3160534:mft-digit-reader]: [12:35:53][INFO] Received device shutdown request (signal 15).
+[3160534:mft-digit-reader]: [12:35:53][INFO] Waiting for graceful device shutdown. Hit Ctrl-C again to abort immediately.
+[3160534:mft-digit-reader]: [12:35:53][STATE] RUNNING ---> READY
+[3160534:mft-digit-reader]: [12:35:53][STATE] READY ---> RESETTING TASK
+[3160534:mft-digit-reader]: [12:35:53][STATE] RESETTING TASK ---> DEVICE READY
+[3160534:mft-digit-reader]: [12:35:53][STATE] DEVICE READY ---> RESETTING DEVICE
+[3160538:mft-track-writer]: [12:35:53][INFO] Received device shutdown request (signal 15).
+[3160538:mft-track-writer]: [12:35:53][INFO] Waiting for graceful device shutdown. Hit Ctrl-C again to abort immediately.
+[3160534:mft-digit-reader]: [12:35:53][STATE] RESETTING DEVICE ---> IDLE
+[3160534:mft-digit-reader]: [12:35:53][STATE] IDLE ---> EXITING
+[3160534:mft-digit-reader]: [12:35:53][STATE] Exiting FairMQ state machine
+[3160534:mft-digit-reader]: [12:35:53][INFO] Process 3160534 is exiting.
+[3160537:mft-tracker]: [12:35:53][STATE] RUNNING ---> READY
+[3160537:mft-tracker]: [12:35:53][STATE] READY ---> RESETTING TASK
+[3160537:mft-tracker]: [12:35:53][STATE] RESETTING TASK ---> DEVICE READY
+[3160537:mft-tracker]: [12:35:53][STATE] DEVICE READY ---> RESETTING DEVICE
+[3160533:internal-dpl-clock]: [12:35:53][STATE] RUNNING ---> READY
+[3160533:internal-dpl-clock]: [12:35:53][STATE] READY ---> RESETTING TASK
+[3160533:internal-dpl-clock]: [12:35:53][STATE] RESETTING TASK ---> DEVICE READY
+[3160533:internal-dpl-clock]: [12:35:53][STATE] DEVICE READY ---> RESETTING DEVICE
+[3160535:mft-clusterer]: [12:35:53][STATE] RUNNING ---> READY
+[3160535:mft-clusterer]: [12:35:53][STATE] READY ---> RESETTING TASK
+[3160535:mft-clusterer]: [12:35:53][STATE] RESETTING TASK ---> DEVICE READY
+[3160535:mft-clusterer]: [12:35:53][STATE] DEVICE READY ---> RESETTING DEVICE
+[3160537:mft-tracker]: [12:35:53][STATE] RESETTING DEVICE ---> IDLE
+[3160537:mft-tracker]: [12:35:53][STATE] IDLE ---> EXITING
+[3160533:internal-dpl-clock]: [12:35:53][STATE] RESETTING DEVICE ---> IDLE
+[3160533:internal-dpl-clock]: [12:35:53][STATE] IDLE ---> EXITING
+[3160537:mft-tracker]: [12:35:53][STATE] Exiting FairMQ state machine
+[3160535:mft-clusterer]: [12:35:53][STATE] RESETTING DEVICE ---> IDLE
+[3160535:mft-clusterer]: [12:35:53][STATE] IDLE ---> EXITING
+[3160535:mft-clusterer]: [12:35:53][STATE] Exiting FairMQ state machine
+[3160537:mft-tracker]: [12:35:53][INFO] Process 3160537 is exiting.
+[3160535:mft-clusterer]: [12:35:53][INFO] Process 3160535 is exiting.
+[3160533:internal-dpl-clock]: [12:35:53][STATE] Exiting FairMQ state machine
+[3160533:internal-dpl-clock]: [12:35:53][INFO] Process 3160533 is exiting.
+[3160538:mft-track-writer]: [12:35:53][STATE] RUNNING ---> READY
+[3160538:mft-track-writer]: [12:35:53][STATE] READY ---> RESETTING TASK
+[3160538:mft-track-writer]: [12:35:53][STATE] RESETTING TASK ---> DEVICE READY
+[3160538:mft-track-writer]: [12:35:53][STATE] DEVICE READY ---> RESETTING DEVICE
+[3160538:mft-track-writer]: [12:35:53][STATE] RESETTING DEVICE ---> IDLE
+[3160538:mft-track-writer]: [12:35:53][STATE] IDLE ---> EXITING
+[3160538:mft-track-writer]: [12:35:53][STATE] Exiting FairMQ state machine
+[3160538:mft-track-writer]: [12:35:53][INFO] Process 3160538 is exiting.
+[3160536:mft-cluster-writer]: [12:35:54][STATE] RUNNING ---> READY
+[3160536:mft-cluster-writer]: [12:35:54][STATE] READY ---> RESETTING TASK
+[3160536:mft-cluster-writer]: [12:35:54][STATE] RESETTING TASK ---> DEVICE READY
+[3160536:mft-cluster-writer]: [12:35:54][STATE] DEVICE READY ---> RESETTING DEVICE
+[3160536:mft-cluster-writer]: Cleaning up for shared memory id '9232ea84'...
+[3160536:mft-cluster-writer]: No region counter found. No regions to cleanup.
+[3160536:mft-cluster-writer]: Successfully removed 'fmq_9232ea84_m_0'.
+[3160536:mft-cluster-writer]: Successfully removed 'fmq_9232ea84_mng'.
+[3160536:mft-cluster-writer]: Successfully removed 'fmq_9232ea84_mtx'.
+[3160536:mft-cluster-writer]: Successfully removed 'fmq_9232ea84_cv'.
+[3160536:mft-cluster-writer]: [12:35:54][STATE] RESETTING DEVICE ---> IDLE
+[3160536:mft-cluster-writer]: [12:35:54][STATE] IDLE ---> EXITING
+[3160536:mft-cluster-writer]: [12:35:54][STATE] Exiting FairMQ state machine
+[3160536:mft-cluster-writer]: [12:35:54][INFO] Process 3160536 is exiting.
+[INFO] Dumping used configuration in dpl-config.json
+[INFO] Process 3160442 is exiting.

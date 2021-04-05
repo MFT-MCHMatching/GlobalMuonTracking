@@ -1823,13 +1823,65 @@ void MUONMatcher::exportTrainingDataRoot(int nMCHTracks)
 
   auto fT = TFile::Open(outputfile.c_str(), "RECREATE");
   std::cout << " Exporting training data to TTree. Pairing MFT tracks with " << nMCHTracks << " MCH Tracks" << std::endl;
+  
+  mMLInputFeaturesName[0] = "MFT_X";
+  mMLInputFeaturesName[1] = "MFT_Y";
+  mMLInputFeaturesName[2] = "MFT_Phi";
+  mMLInputFeaturesName[3] = "MFT_Tanl";
+  mMLInputFeaturesName[4] = "MFT_InvQPt";
+  mMLInputFeaturesName[5] = "MFT_Cov00";
+  mMLInputFeaturesName[6] = "MFT_Cov01";
+  mMLInputFeaturesName[7] = "MFT_Cov11";
+  mMLInputFeaturesName[8] = "MFT_Cov02";
+  mMLInputFeaturesName[9] = "MFT_Cov12";
+  mMLInputFeaturesName[10] = "MFT_Cov22";
+  mMLInputFeaturesName[11] = "MFT_Cov03";
+  mMLInputFeaturesName[12] = "MFT_Cov13";
+  mMLInputFeaturesName[13] = "MFT_Cov23";
+  mMLInputFeaturesName[14] = "MFT_Cov33";
+  mMLInputFeaturesName[15] = "MFT_Cov04";
+  mMLInputFeaturesName[16] = "MFT_Cov14";
+  mMLInputFeaturesName[17] = "MFT_Cov24";
+  mMLInputFeaturesName[18] = "MFT_Cov34";
+  mMLInputFeaturesName[19] = "MFT_Cov44";
+
+  mMLInputFeaturesName[20] = "MCH_X";
+  mMLInputFeaturesName[21] = "MCH_Y";
+  mMLInputFeaturesName[22] = "MCH_Phi";
+  mMLInputFeaturesName[23] = "MCH_Tanl";
+  mMLInputFeaturesName[24] = "MCH_InvQPt";
+  mMLInputFeaturesName[25] = "MCH_Cov00";
+  mMLInputFeaturesName[26] = "MCH_Cov01";
+  mMLInputFeaturesName[27] = "MCH_Cov11";
+  mMLInputFeaturesName[28] = "MCH_Cov02";
+  mMLInputFeaturesName[29] = "MCH_Cov12";
+  mMLInputFeaturesName[30] = "MCH_Cov22";
+  mMLInputFeaturesName[31] = "MCH_Cov03";
+  mMLInputFeaturesName[32] = "MCH_Cov13";
+  mMLInputFeaturesName[33] = "MCH_Cov23";
+  mMLInputFeaturesName[34] = "MCH_Cov33";
+  mMLInputFeaturesName[35] = "MCH_Cov04";
+  mMLInputFeaturesName[36] = "MCH_Cov14";
+  mMLInputFeaturesName[37] = "MCH_Cov24";
+  mMLInputFeaturesName[38] = "MCH_Cov34";
+  mMLInputFeaturesName[39] = "MCH_Cov44";
+
+  mMLInputFeaturesName[40] = "MFT_TrackChi2";
+  mMLInputFeaturesName[41] = "MFT_NClust";
 
   Int_t Truth, track_IDs, nCorrectPairs = 0, nFakesPairs = 0;
   Int_t pairID = 0;
   TTree* matchTree = new TTree("matchTree", "MatchTree");
   for (std::size_t nFeature = 0; nFeature < mNInputFeatures; nFeature++) {
-    std::cout << " Adding branch " << Form("Feature_%d/F", (int)nFeature) << std::endl;
-    matchTree->Branch(Form("Feature_%d", (int)nFeature), &mMLInputFeatures[nFeature], Form("Feature_%d/F", (int)nFeature));
+    //std::cout << " Adding branch " << Form("Feature_%d/F", (int)nFeature) << std::endl;
+    //matchTree->Branch(Form("Feature_%d", (int)nFeature), &mMLInputFeatures[nFeature], Form("Feature_%d/F", (int)nFeature));
+    //mMLInputFeaturesName
+    if( mMLInputFeaturesName[nFeature] != "" ) std::cout << " Adding branch " << mMLInputFeaturesName[nFeature].c_str() << std::endl;
+    else{
+      std::cout << Form("The corresponding variable name  has not been set. So adding branch Feature_%d",(Int_t)nFeature) << std::endl;
+      mMLInputFeaturesName[nFeature] = Form("Feature_%d",(Int_t)nFeature);
+    }
+    matchTree->Branch(mMLInputFeaturesName[nFeature].c_str(), &mMLInputFeatures[nFeature], Form("%s/F", mMLInputFeaturesName[nFeature].c_str()));
   }
 
   matchTree->Branch("Truth", &Truth, "Truth/I");
@@ -1872,76 +1924,6 @@ void MUONMatcher::exportTrainingDataRoot(int nMCHTracks)
   }
 
   fT->Write();
-  auto nPairs = nCorrectPairs + nFakesPairs;
-  std::cout << "Exported training data: " << nPairs << " pairs (" << nCorrectPairs << " correct pairs ; " << nFakesPairs << " fake pairs)" << std::endl;
-  std::cout << "   Exported file name: " << outputfile << std::endl;
-
-  std::ofstream matcherConfig("MatchingConfig.txt");
-  matcherConfig << mMatchingHelper.MatchingConfig() << std::endl;
-  matcherConfig.close();
-}
-
-//_________________________________________________________________________________________________
-void MUONMatcher::exportTrainingDataCsv(int nMCHTracks)
-{
-
-  if (nMCHTracks < 0 or nMCHTracks > mMatchingHelper.nMCHTracks)
-    nMCHTracks = mMatchingHelper.nMCHTracks;
-
-  std::string outputfile("MLTraining_" + std::to_string(nMCHTracks) + "_MCHTracks.csv");
-
-  std::ofstream of(outputfile.c_str());
-  std::cout << " Exporting training data to TTree. Pairing MFT tracks with " << nMCHTracks << " MCH Tracks" << std::endl;
-
-  Int_t Truth, track_IDs, nCorrectPairs = 0, nFakesPairs = 0;
-  Int_t pairID = 0;
-
-  for (std::size_t nFeature = 0; nFeature < mNInputFeatures; nFeature++) {
-    of << Form("Feature_%d", (int)nFeature) << " , ";
-  }
-  of << "Truth" << std::endl;
-
-  auto event = 0;
-  while (nMCHTracks > 0 or event < mNEvents) {
-    for (auto& mchTracks : mSortedGlobalMuonTracks) {
-      if (mVerbose) {
-        std::cout << " Event #" << event << std::endl;
-        std::cout << "  MCHTracks in this event = " << mSortedGlobalMuonTracks[event].size() << std::endl;
-        std::cout << "  nMFTTracks = " << mSortedMFTTracks[event].size() << std::endl;
-      }
-      auto MCHTrackID = 0;
-      for (auto& mchTrack : mchTracks) {
-        if (!nMCHTracks)
-          continue;
-        auto MCHlabel = mSortedMCHTrackLabels[event].getLabels(MCHTrackID);
-        if (mVerbose) {
-          std::cout << "  MCHTrack #" << MCHTrackID << " (" << nMCHTracks << " left)" << std::endl;
-        }
-        auto mftTrackID = 0;
-        for (auto mftTrack : mSortedMFTTracks[event]) {
-          auto MFTlabel = mftTrackLabels.getLabels(mftTrackLabelsIDx[event][mftTrackID]);
-          Truth = (int)(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID());
-          if (Truth || matchingCut(mchTrack, mftTrack)) {
-
-            setMLFeatures(mchTrack, mftTrack);
-
-            Truth ? nCorrectPairs++ : nFakesPairs++;
-            pairID++;
-
-            for (std::size_t nFeature = 0; nFeature < mNInputFeatures; nFeature++) {
-              of << mMLInputFeatures[nFeature] << " , ";
-            }
-            of << Truth << std::endl;
-          }
-          mftTrackID++;
-        } // loop mfttracks
-        nMCHTracks--;
-        MCHTrackID++;
-      }
-      event++;
-    }
-  }
-
   auto nPairs = nCorrectPairs + nFakesPairs;
   std::cout << "Exported training data: " << nPairs << " pairs (" << nCorrectPairs << " correct pairs ; " << nFakesPairs << " fake pairs)" << std::endl;
   std::cout << "   Exported file name: " << outputfile << std::endl;

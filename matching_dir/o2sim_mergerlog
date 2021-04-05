@@ -1,0 +1,91 @@
+[[01;36m12:32:07[0m][[01;32mINFO[0m] 
+      ______      _    _______  _________ 
+     / ____/___ _(_)_______   |/  /_  __ \    version 1.4.28
+    / /_  / __ `/ / ___/__  /|_/ /_  / / /    build RELWITHDEBINFO
+   / __/ / /_/ / / /    _  /  / / / /_/ /     https://github.com/FairRootGroup/FairMQ
+  /_/    \__,_/_/_/     /_/  /_/  \___\_\     LGPL-3.0  © 2012-2020 GSI
+
+[[01;36m12:32:07[0m][[01;35mSTATE[0m] Starting FairMQ state machine --> IDLE
+[[01;36m12:32:07[0m][[01;33mWARN[0m] Signal handling (e.g. Ctrl-C) has been deactivated.
+[[01;36m12:32:07[0m][[01;35mSTATE[0m] IDLE ---> INITIALIZING DEVICE
+[[01;36m12:32:07[0m][[01;35mSTATE[0m] INITIALIZING DEVICE ---> INITIALIZED
+[[01;36m12:32:07[0m][[01;35mSTATE[0m] INITIALIZED ---> BINDING
+[[01;36m12:32:07[0m][[01;35mSTATE[0m] BINDING ---> BOUND
+[[01;36m12:32:07[0m][[01;35mSTATE[0m] BOUND ---> CONNECTING
+[[01;36m12:32:07[0m][[01;35mSTATE[0m] CONNECTING ---> DEVICE READY
+[[01;36m12:32:07[0m][[01;35mSTATE[0m] DEVICE READY ---> INITIALIZING TASK
+[[01;36m12:32:20[0m][[01;32mINFO[0m] Waiting for configuration answer 
+[[01;36m12:32:21[0m][[01;32mINFO[0m] Configuration answer received, containing 1032 bytes 
+[[01;36m12:32:21[0m][[01;32mINFO[0m] COMMUNICATED ENGINE TGeant3
+[[01;36m12:32:22[0m][[01;32mINFO[0m] L# 0 Phi:16.42 R:2.34 Nst:12 Nunit:9 W:1.5 Tilt:17.503 Lthick:0.005 Dthick:0.003 DetID:0 B:0
+[[01;36m12:32:22[0m][[01;32mINFO[0m] L# 1 Phi:12.18 R:3.15 Nst:16 Nunit:9 W:1.5 Tilt:17.9445 Lthick:0.005 Dthick:0.003 DetID:0 B:0
+[[01;36m12:32:22[0m][[01;32mINFO[0m] L# 2 Phi:9.55 R:3.93 Nst:20 Nunit:9 W:1.5 Tilt:16.9423 Lthick:0.005 Dthick:0.003 DetID:0 B:0
+[[01;36m12:32:22[0m][[01;32mINFO[0m] L# 3 Phi:0 R:19.6 Nst:24 Nunit:4 Lthick:0.01 Dthick:0.003 DetID:0 B:0
+[[01;36m12:32:22[0m][[01;32mINFO[0m] L# 4 Phi:0 R:24.55 Nst:30 Nunit:4 Lthick:0.01 Dthick:0.003 DetID:0 B:0
+[[01;36m12:32:22[0m][[01;32mINFO[0m] L# 5 Phi:0 R:34.39 Nst:42 Nunit:7 Lthick:0.01 Dthick:0.003 DetID:0 B:0
+[[01;36m12:32:22[0m][[01;32mINFO[0m] L# 6 Phi:0 R:39.34 Nst:48 Nunit:7 Lthick:0.01 Dthick:0.003 DetID:0 B:0
+[[01;36m12:32:22[0m][[01;33mWARN[0m]  O2HitMerger: Some Detectors are potentially missing in this initialization 
+[[01;36m12:32:22[0m][[01;32mINFO[0m] OCCUPYING A SEGMENT IN A SHARED REGION
+[[01;36m12:32:22[0m][[01;32mINFO[0m] FOUND ID TO ATTACH 30
+[[01;36m12:32:22[0m][[01;32mINFO[0m] TRYING ADDRESS 0x7f09b81f9000
+[[01;36m12:32:22[0m][[01;32mINFO[0m] ASSIGNED PIPE HANDLE 6
+[[01;36m12:32:22[0m][[01;35mSTATE[0m] INITIALIZING TASK ---> READY
+[[01;36m12:32:22[0m][[01;35mSTATE[0m] READY ---> RUNNING
+[[01;36m12:32:22[0m][[01;32mINFO[0m] DEVICE: Running...
+[[01;36m12:32:59[0m][[01;32mINFO[0m] SIMDATA channel got 7 parts for event 1 part 1 out of 1
+[[01;36m12:32:59[0m][[01;32mINFO[0m] tree has file memfile1
+[[01;36m12:32:59[0m][[01;32mINFO[0m] EVERYTHING IS HERE FOR EVENT 1
+
+[[01;36m12:32:59[0m][[01;32mINFO[0m] ENTERING MERGING/FLUSHING HITS STAGE FOR EVENT 1
+HitMerger entry: 0 nprimry:    24 trackoffset:  1006 
+merge 0     0     0     0 
+[[01;36m12:32:59[0m][[01;32mINFO[0m] flushing tree to file o2sim_HitsITS.root
+[[01;36m12:32:59[0m][[01;32mINFO[0m] flushing tree to file o2sim_HitsMFT.root
+[[01;36m12:32:59[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m12:32:59[0m][[01;32mINFO[0m] MERGING HITS TOOK 0.292609
+[[01;36m12:33:01[0m][[01;32mINFO[0m] SIMDATA channel got 7 parts for event 2 part 1 out of 1
+[[01;36m12:33:01[0m][[01;32mINFO[0m] tree has file memfile2
+[[01;36m12:33:01[0m][[01;32mINFO[0m] EVERYTHING IS HERE FOR EVENT 2
+
+[[01;36m12:33:01[0m][[01;32mINFO[0m] ENTERING MERGING/FLUSHING HITS STAGE FOR EVENT 2
+HitMerger entry: 0 nprimry:    24 trackoffset:  1089 
+merge 0     0     0     0 
+[[01;36m12:33:01[0m][[01;32mINFO[0m] flushing tree to file o2sim_HitsITS.root
+[[01;36m12:33:01[0m][[01;32mINFO[0m] flushing tree to file o2sim_HitsMFT.root
+[[01;36m12:33:01[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m12:33:01[0m][[01;32mINFO[0m] MERGING HITS TOOK 0.100695
+[[01;36m12:33:04[0m][[01;32mINFO[0m] SIMDATA channel got 7 parts for event 3 part 1 out of 1
+[[01;36m12:33:04[0m][[01;32mINFO[0m] tree has file memfile3
+[[01;36m12:33:04[0m][[01;32mINFO[0m] EVERYTHING IS HERE FOR EVENT 3
+
+[[01;36m12:33:04[0m][[01;32mINFO[0m] ENTERING MERGING/FLUSHING HITS STAGE FOR EVENT 3
+HitMerger entry: 0 nprimry:    24 trackoffset:  1222 
+merge 0     0     0     0 
+[[01;36m12:33:04[0m][[01;32mINFO[0m] flushing tree to file o2sim_HitsITS.root
+[[01;36m12:33:04[0m][[01;32mINFO[0m] flushing tree to file o2sim_HitsMFT.root
+[[01;36m12:33:04[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m12:33:04[0m][[01;32mINFO[0m] MERGING HITS TOOK 0.194745
+[[01;36m12:33:06[0m][[01;32mINFO[0m] SIMDATA channel got 7 parts for event 4 part 1 out of 1
+[[01;36m12:33:06[0m][[01;32mINFO[0m] tree has file memfile4
+[[01;36m12:33:06[0m][[01;32mINFO[0m] EVERYTHING IS HERE FOR EVENT 4
+
+[[01;36m12:33:06[0m][[01;32mINFO[0m] ENTERING MERGING/FLUSHING HITS STAGE FOR EVENT 4
+HitMerger entry: 0 nprimry:    24 trackoffset:  1186 
+merge 0     0     0     0 
+[[01;36m12:33:06[0m][[01;32mINFO[0m] flushing tree to file o2sim_HitsITS.root
+[[01;36m12:33:06[0m][[01;32mINFO[0m] flushing tree to file o2sim_HitsMFT.root
+[[01;36m12:33:06[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m12:33:06[0m][[01;32mINFO[0m] MERGING HITS TOOK 0.131229
+[[01;36m12:33:08[0m][[01;32mINFO[0m] SIMDATA channel got 7 parts for event 5 part 1 out of 1
+[[01;36m12:33:08[0m][[01;32mINFO[0m] tree has file memfile5
+[[01;36m12:33:08[0m][[01;32mINFO[0m] EVERYTHING IS HERE FOR EVENT 5
+
+[[01;36m12:33:08[0m][[01;32mINFO[0m] ALL EVENTS HERE; CHECKSUM 15
+[[01;36m12:33:08[0m][[01;32mINFO[0m] ENTERING MERGING/FLUSHING HITS STAGE FOR EVENT 5
+HitMerger entry: 0 nprimry:    24 trackoffset:   913 
+merge 0     0     0     0 
+[[01;36m12:33:08[0m][[01;32mINFO[0m] flushing tree to file o2sim_HitsITS.root
+[[01;36m12:33:08[0m][[01;32mINFO[0m] flushing tree to file o2sim_HitsMFT.root
+[[01;36m12:33:08[0m][[01;32mINFO[0m] outtree has file o2sim_Kine.root
+[[01;36m12:33:08[0m][[01;32mINFO[0m] MERGING HITS TOOK 0.108166
+11
