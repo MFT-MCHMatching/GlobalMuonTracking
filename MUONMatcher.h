@@ -140,7 +140,9 @@ class MUONMatcher
   //// Position, Angles & Charged Momentum
   double matchMFT_MCH_TracksAllParam(const MCHTrackConv& mchTrack,
                                      const MFTTrack& mftTrack);
-
+  //// Hiroshima's Matching
+  double Hiroshima(const GlobalMuonTrack &mchTrack,
+		   const MFTTrack &mftTrack);
   //// Matching using trained ML
   double matchTrainedML(const MCHTrackConv& mchTrack,
                         const MFTTrack& mftTrack);
