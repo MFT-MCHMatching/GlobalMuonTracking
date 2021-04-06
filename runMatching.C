@@ -64,9 +64,9 @@ void loadAndSetMatchingConfig()
       std::cout << " Setting " << matching_fcn << std::endl;
       matcher.setMatchingFunction(&MUONMatcher::matchMFT_MCH_TracksAllParam);
     }
-    if (matching_fcn.find("Hiroshima_") < matching_fcn.length()) {
+    if (matching_fcn.find("matchHiroshima_") < matching_fcn.length()) {
       std::cout << " Setting " << matching_fcn << std::endl;
-      matcher.setMatchingFunction(&MUONMatcher::Hiroshima);
+      matcher.setMatchingFunction(&MUONMatcher::matchHiroshima);
     }
     if (matching_fcn.find("trainedML_") < matching_fcn.length()) {
       std::cout << " Setting " << matching_fcn << std::endl;
