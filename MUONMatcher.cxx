@@ -1669,8 +1669,8 @@ double MUONMatcher::matchMFT_MCH_TracksAllParam(const MCHTrackConv& mchTrack,
 }
 
 //_________________________________________________________________________________________________
-double MUONMatcher::Hiroshima(const GlobalMuonTrack& mchTrack,
-                              const MFTTrack& mftTrack)
+double MUONMatcher::matchHiroshima(const GlobalMuonTrack& mchTrack,
+                                   const MFTTrack& mftTrack)
 {
 
   //Hiroshima's Matching function

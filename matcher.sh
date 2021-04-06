@@ -74,6 +74,8 @@ Usage()
 
          matchXY - matching chi2 calculated track positions: X, Y
 
+         matchHiroshima - Hiroshima matching function
+
          trainedML - matching using a trained neural network (see TMVA interface bellow)
 
      --cutFcn

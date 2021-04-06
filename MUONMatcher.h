@@ -141,8 +141,8 @@ class MUONMatcher
   double matchMFT_MCH_TracksAllParam(const MCHTrackConv& mchTrack,
                                      const MFTTrack& mftTrack);
   //// Hiroshima's Matching
-  double Hiroshima(const GlobalMuonTrack& mchTrack,
-                   const MFTTrack& mftTrack);
+  double matchHiroshima(const GlobalMuonTrack& mchTrack,
+                        const MFTTrack& mftTrack);
   //// Matching using trained ML
   double matchTrainedML(const MCHTrackConv& mchTrack,
                         const MFTTrack& mftTrack);
@@ -159,6 +159,9 @@ class MUONMatcher
     }
     if (func == &MUONMatcher::matchMFT_MCH_TracksAllParam) {
       mMatchingHelper.MatchingFunction = "_matchAllParams";
+    }
+    if (func == &MUONMatcher::matchHiroshima) {
+      mMatchingHelper.MatchingFunction = "_matchHiroshima";
     }
     if (func == &MUONMatcher::matchTrainedML) {
       mMatchingHelper.MatchingFunction = "_matchML";
