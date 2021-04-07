@@ -260,7 +260,8 @@ class MUONMatcher
 
     mTMVAReader->BookMVA("MUONMatcherML", mTMVAWeightFileName);
   }
-  void DLRegression(std::string input_name, std::string trainingfile, std::string trainingstr);
+  void MLRegression(std::string input_name, std::string trainingfile,
+                    std::string trainingstr);
 
   void MLTraining()
   {
@@ -288,7 +289,7 @@ class MUONMatcher
     std::cout << " Network name: " << network_ID << "\n"
               << std::endl;
     //	std::cout<<" Training file "<< training_file<< "\n"<<std::endl;
-    DLRegression(network_ID, training_file, training_string);
+    MLRegression(network_ID, training_file, training_string);
   }
 
   //  Built-in cut functions
