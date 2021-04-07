@@ -323,6 +323,9 @@ trainML()
   fi
 
   export ML_TYPE="Regression" #${ML_TYPE:-"Regression"}
+  if [ $ML_TEST ]; then
+      export ML_NTEST=${ML_NTEST:-"0.1"}
+  fi
 
   if [ -d "${OUTDIR}" ]; then
       if ! [ -z ${UPDATECODE+x} ]; then updatecode ; fi
@@ -481,6 +484,14 @@ while [ $# -gt 0 ] ; do
     export TRAIN_ML_METHOD="$2";
     shift 2
     ;;
+    --mltest)
+    export ML_TEST="1";
+    shift 1
+    ;;
+    --ntest)
+    export ML_NTEST="$2";
+    shift 2
+    ;;
     --type)
     export ML_TYPE="$2";
     shift 2
@@ -499,6 +510,10 @@ while [ $# -gt 0 ] ; do
     ;;
     --trainingdata)
     export ML_TRAINING_FILE="`realpath $2`";
+    shift 2
+    ;;
+    --testdata)
+    export ML_TESTING_FILE="`realpath $2`";
     shift 2
     ;;
     --convert)

@@ -454,8 +454,8 @@ void MUONMatcher::runEventMatching()
 }
 
 //_________________________________________________________________________________________________
-void MUONMatcher::DLRegression(std::string input_name, std::string trainingfile, std::string trainingstr)
-{
+void MUONMatcher::MLRegression(std::string input_name, std::string trainingfile,
+                               std::string trainingstr) {
 
   TMVA::Tools::Instance();
 
@@ -519,19 +519,56 @@ void MUONMatcher::DLRegression(std::string input_name, std::string trainingfile,
   // global event weights per tree (see below for setting event-wise weights)
   Double_t regWeight = 1.0;
 
-  // You can now add the tree to the dataloader:
-  dataloader->AddRegressionTree(regTree, regWeight, Types::kTraining);
-  // ** In case we need some data for test, we shoudl use:
-  //  dataloader->AddRegressionTree( testTree, regWeight, Types::kTesting);
-
-  // Last, but not least, lets set the options for training (and testing):
-
-  // Apply additional cuts on the signal and background samples (can be different)
+  // Options for training (and testing):
+  // Apply additional cuts on the signal and background samples (can be
+  // different)
   TCut mycut = ""; // for example: TCut mycut = "abs(var1)<0.5 && abs(var2-0.5)<1";
 
-  dataloader->PrepareTrainingAndTestTree(mycut,
-                                         "SplitMode=Random:NormMode=NumEvents:!V");
+  if (gSystem->Getenv("ML_TEST")) {
 
+    if (gSystem->Getenv("ML_TESTING_FILE")) {
+      std::string testingfile = gSystem->Getenv("ML_TESTING_FILE");
+      TFile *test_input(0);
+      if (!gSystem->AccessPathName(testingfile.c_str())) {
+        test_input = TFile::Open(testingfile.c_str());
+      }
+      if (!test_input) {
+        std::cout << "ERROR: could not open testing data file" << std::endl;
+        exit(1);
+      }
+      std::cout << "--- TMVARegression           : Using testing input file: "
+                << test_input->GetName() << std::endl;
+      // Register the regression test tree (for now, must use same format as
+      // training tree)
+      TTree *testTree = (TTree *)test_input->Get("matchTree");
+      dataloader->AddRegressionTree(regTree, regWeight, Types::kTraining);
+      dataloader->AddRegressionTree(testTree, regWeight, Types::kTesting);
+
+      dataloader->PrepareTrainingAndTestTree(
+          mycut, "SplitMode=Random:NormMode=NumEvents:!V");
+    } else {
+      float ntest = atof((gSystem->Getenv("ML_NTEST")));
+      int nentries = regTree->GetEntries();
+      if (ntest < 1) {
+        int train_samples = (1 - ntest) * nentries;
+      } else {
+        int train_samples = nentries - ntest;
+      }
+      dataloader->AddRegressionTree(regTree, regWeight);
+      dataloader->PrepareTrainingAndTestTree(
+          mycut,
+          "nTrain_Regression=" + std::to_string(train_samples) +
+              ":nTest_Regression=0:"
+              "SplitMode=Random:NormMode="
+              "NumEvents:!V"); // nTest_Regression=0
+                               // uses all events left for testing
+    }
+  } else { // i.e. just training the ML, wo testing and evaluation
+    // You can now add the tree to the dataloader:
+    dataloader->AddRegressionTree(regTree, regWeight, Types::kTraining);
+    dataloader->PrepareTrainingAndTestTree(
+        mycut, "SplitMode=Random:NormMode=NumEvents:!V");
+  }
   // Book (SAVE) the method
   factory->BookMethod(dataloader,
                       TMVA::Types::Instance().GetMethodType(MLMethodType),
@@ -542,12 +579,13 @@ void MUONMatcher::DLRegression(std::string input_name, std::string trainingfile,
   // Train MVAs using the set of training events
   factory->TrainAllMethods();
 
-  // Evaluate all MVAs using the set of test events
-  //   factory->TestAllMethods();
+  if (gSystem->Getenv("ML_TEST")) {
+    // Evaluate all MVAs using the set of test events
+    factory->TestAllMethods();
 
-  // Evaluate and compare performance of all configured MVAs
-  //   factory->EvaluateAllMethods();
-
+    // Evaluate and compare performance of all configured MVAs
+    factory->EvaluateAllMethods();
+  }
   info << "\n END OF THE TRAINING \n";
   info << " ~CPU time (s): " << timewatch->CpuTime() << "\n\n"
        << " ~Real time(s): " << timewatch->RealTime() << "\n\n";
