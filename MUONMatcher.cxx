@@ -497,7 +497,7 @@ void MUONMatcher::DLRegression(std::string input_name, std::string trainingfile,
   TMVA::DataLoader* dataloader = new TMVA::DataLoader("trainedML");
 
   for (std::size_t i = 0; i < mNInputFeatures; i++) {
-    dataloader->AddVariable(Form("Feature_%d", (int)i), Form("Feature_%d", (int)i), "units", 'F');
+    dataloader->AddVariable(mMLInputFeaturesName[i], mMLInputFeaturesName[i], "units", 'F');
   }
 
   // Add the variable carrying the regression target
