@@ -203,6 +203,7 @@ generateMCHTracks()
   #echo ${MCHGENERATOR}_${NPIONS}pi_${NMUONS}mu_${NEV_}evts  > GENCFG
 
   ## 1) aliroot generation of MCH Tracks
+  export SEED=${SEED:-"123456"}
   echo ${NEV_} > nMCHEvents
   export NEV=${NEV_}
   rm -rf MatcherGenConfig.txt
