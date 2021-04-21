@@ -454,6 +454,240 @@ void MUONMatcher::runEventMatching()
 }
 
 //_________________________________________________________________________________________________
+void MUONMatcher::MLClassification(std::string input_name, std::string trainingfile,
+                               std::string trainingstr) {
+
+  TMVA::Tools::Instance();
+
+  std::cout << "==> Start TMVAClassification" << std::endl;
+  TTree *signalTree;
+  TTree *background;
+//  TTree *classTree;
+//  TCut signalCut;
+//  TCut backgrCut;
+//  bool singleTree = false;
+
+  TFile* input(0);
+  if (!gSystem->AccessPathName(trainingfile.c_str())) {
+    input = TFile::Open(trainingfile.c_str());
+  }
+  if (!input) {
+    std::cout << "ERROR: could not open data file" << std::endl;
+    exit(1);
+  }
+  std::cout << "--- TMVAClassification           : Using training input file: " << input->GetName() << std::endl;
+
+  if (gSystem->Getenv("ML_BKG_FILE")) {
+    std::string bkgfile = gSystem->Getenv("ML_BKG_FILE");
+	TFile* input_bkg(0);
+	if (!gSystem->AccessPathName(trainingfile.c_str())) {
+	  input_bkg = TFile::Open(bkgfile.c_str());
+	}
+	if (!input_bkg) {
+	  std::cout << "ERROR: could not open background data file" << std::endl;
+	  exit(1);
+	}
+	std::cout << "--- TMVAClassification           : Using background file: " << input_bkg->GetName() << std::endl;
+ 
+    // Register the training and test trees
+    signalTree     = (TTree*)input->Get("matchTree");
+    background     = (TTree*)input_bkg->Get("matchTree");
+
+  //} else if ( (TTree*)input->Get("matchTree") ){
+    //  classTree = (TTree*)input->Get("matchTree");
+    //  signalCut = "Truth == 1";
+    // backgrCut = "Truth == 0";
+    //  singleTree = 1;      
+
+  } else {
+      signalTree     = (TTree*)input->Get("Signal_tree");
+      background     = (TTree*)input->Get("Bkg_tree");
+  }
+
+  // Let's initialize the factory object (analysis class)...:
+  // The first argument is the base of the name of all the
+  // weightfiles in the directory weight/
+  //
+  // The second argument is the output file for the training results.
+  // The weightfile name will be the the combined strings of the two arguments
+  //
+  // In the third argument we can set the analysis type: classification or regression
+
+  TString methodname = input_name.c_str();
+
+  std::size_t rpos = trainingfile.rfind('/');
+  std::size_t pos = trainingfile.find(".root");
+  methodname += "_" + trainingfile.substr(rpos + 1, (pos - (rpos + 1)));
+  TString outfileName(methodname + ".root");
+  TFile* outputFile = TFile::Open(outfileName, "RECREATE");
+
+  std::string MLMethodType = gSystem->Getenv("TRAIN_ML_METHOD");
+
+  TMVA::Factory *factory = new TMVA::Factory(
+      "Classification_" + MLMethodType, outputFile,
+      "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification"); //TODO check these transformations options
+
+  if (MLMethodType == "BDTG" or MLMethodType == "BDT" or MLMethodType == "BDTB" or MLMethodType == "BDTD" or MLMethodType == "BDTF") {
+    MLMethodType = "BDT";
+  } 
+  else if (MLMethodType == "MLP" or MLMethodType == "MLPBFGS" or MLMethodType == "MLPBNN") {
+    MLMethodType = "MLP";
+  }
+   else if (MLMethodType == "Cuts" or MLMethodType == "CutsD" or MLMethodType == "CutsSA" or
+             MLMethodType == "CutsGA" or MLMethodType == "CutsPCA") {
+    MLMethodType = "Cuts";
+  }
+   else if (MLMethodType == "FDA_GA" or MLMethodType == "FDA_GAMT" or MLMethodType == "FDA_SA" or 
+             MLMethodType == "FDA_MC" or MLMethodType == "FDA_MT" or MLMethodType == "FDA_MCMT") {
+    MLMethodType = "FDA";
+  }
+   else if (MLMethodType == "Likelihood" or MLMethodType == "LikelihoodD" or MLMethodType == "LikelihoodPCA" or 
+             MLMethodType == "LikelihoodKDE" or MLMethodType == "LikelihoodMIX") {
+    MLMethodType = "Likelihood";
+  }
+  else if (MLMethodType == "PDERS" or MLMethodType == "PDERSD" or MLMethodType == "PDERSPCA") {
+    MLMethodType = "PDERS";
+  }
+  else if (MLMethodType == "PDEFoam" or MLMethodType == "PDEFoamBoost") {
+    MLMethodType = "PDEFoam";
+  }
+  else if (MLMethodType == "Fisher" or MLMethodType == "FisherG" or MLMethodType == "BoostedFisher") {
+    MLMethodType = "Fisher";
+  }
+
+  // Dataloader object - this will handle the data (The argument also defines the name of the directory containing the weights' file)
+  TMVA::DataLoader* dataloader = new TMVA::DataLoader("trainedML");
+
+  for (std::size_t i = 0; i < mNInputFeatures; i++) {
+    dataloader->AddVariable(mMLInputFeaturesName[i], mMLInputFeaturesName[i], "units", 'F');
+  }
+
+   // global event weights per tree (see below for setting event-wise weights)
+   Double_t signalWeight     = 1.0;
+   Double_t backgroundWeight = 1.0;
+
+
+   // Apply additional cuts on the signal and background samples (can be different)
+   TCut mycutSig = ""; // for example: TCut mycutSig = "abs(var1)<0.5 && abs(var2-0.5)<1";
+   TCut mycutBkg = ""; // for example: TCut mycutBkg = "abs(var1)<0.5";
+
+
+  if (gSystem->Getenv("ML_TEST")) {
+
+    if (gSystem->Getenv("ML_TESTING_FILE")) {
+      std::string testingfile = gSystem->Getenv("ML_TESTING_FILE");
+      std::string test_bkg = gSystem->Getenv("ML_TESTING_BKG");
+      TFile *test_input(0);
+      TFile *test_input2(0);
+      if (!gSystem->AccessPathName(testingfile.c_str())) {
+        test_input = TFile::Open(testingfile.c_str());
+      }
+      if (!test_input) {
+        std::cout << "ERROR: could not open testing data file" << std::endl;
+        exit(1);
+      }
+      std::cout << "--- TMVARegression           : Using testing input file: "
+                << test_input->GetName() << std::endl;
+
+      if (!gSystem->AccessPathName(test_bkg.c_str())) {
+        test_input2 = TFile::Open(test_bkg.c_str());
+      }
+      if (!test_input2) {
+        std::cout << "ERROR: could not open background testing data file" << std::endl;
+        exit(1);
+      }
+      std::cout << "--- TMVARegression           : Using background testing file: "
+                << test_input2->GetName() << std::endl;
+      // Register the regression test tree (for now, must use same format as
+      // training tree)
+      TTree *SigTreeTest = (TTree *)test_input->Get("matchTree");
+      TTree *BkgTreeTest = (TTree *)test_input2->Get("matchTree");
+
+      dataloader->AddSignalTree    ( signalTree,     signalWeight, Types::kTraining);
+      dataloader->AddBackgroundTree( background, backgroundWeight, Types::kTraining);
+      dataloader->AddSignalTree    ( SigTreeTest,     signalWeight, Types::kTesting);
+      dataloader->AddBackgroundTree( BkgTreeTest, backgroundWeight, Types::kTesting);
+
+      dataloader->PrepareTrainingAndTestTree(
+          mycutSig, mycutBkg, "SplitMode=Random:NormMode=NumEvents:!V");
+
+    } else {
+      float ntest = atof((gSystem->Getenv("ML_NTEST")));
+      int nentries_sig = signalTree->GetEntries();
+      int nentries_bkg = background->GetEntries();
+      int train_signal;
+      int train_bkg;
+
+      if (ntest < 1) {
+        train_signal = (1 - ntest) * nentries_sig;
+        train_bkg = (1 - ntest) * nentries_bkg;
+      } else {
+        train_signal = nentries_sig - ntest;
+		train_bkg = nentries_bkg - ntest;
+      }
+      
+      dataloader->AddSignalTree    ( signalTree,     signalWeight);
+      dataloader->AddBackgroundTree( background, backgroundWeight);
+      
+      // Set individual event weights (the variables must exist in the original TTree)
+      // -  for signal    : `dataloader->SetSignalWeightExpression    ("weight1*weight2");`
+      // -  for background: `dataloader->SetBackgroundWeightExpression("weight1*weight2");`
+      // dataloader->SetBackgroundWeightExpression( "weight" );
+
+      dataloader->PrepareTrainingAndTestTree(
+          mycutSig, mycutBkg,
+          "nTrain_Signal=" + std::to_string(train_signal) +
+              ":nTrain_Background=" + std::to_string(train_bkg) +
+              ":SplitMode=Random:NormMode="
+              "NumEvents:!V"); // nTest_Regression=0
+                               // uses all events left for testing
+    }
+  } else { // i.e. just training the ML, wo testing and evaluation
+    // You can now add the tree to the dataloader:
+   
+      dataloader->AddSignalTree    ( signalTree,     signalWeight, Types::kTraining);
+      dataloader->AddBackgroundTree( background, backgroundWeight, Types::kTraining);
+      dataloader->PrepareTrainingAndTestTree(
+        mycutSig, mycutBkg, "SplitMode=Random:NormMode=NumEvents:!V");
+    }
+  
+  // Book (SAVE) the method
+  factory->BookMethod(dataloader,
+                      TMVA::Types::Instance().GetMethodType(MLMethodType),
+                      methodname, trainingstr);
+  // --------------------------------------------------------------------------------------------------
+  std::ofstream info("time_" + methodname + ".txt");
+  TStopwatch* timewatch = new TStopwatch();
+  // Train MVAs using the set of training events
+  factory->TrainAllMethods();
+
+  if (gSystem->Getenv("ML_TEST")) {
+    // Evaluate all MVAs using the set of test events
+    factory->TestAllMethods();
+
+    // Evaluate and compare performance of all configured MVAs
+    factory->EvaluateAllMethods();
+  }
+  info << "\n END OF THE TRAINING \n";
+  info << " ~CPU time (s): " << timewatch->CpuTime() << "\n\n"
+       << " ~Real time(s): " << timewatch->RealTime() << "\n\n";
+  // --------------------------------------------------------------
+
+  // Save the output
+  outputFile->Close();
+
+  std::cout << "==> Wrote root file: " << outputFile->GetName() << std::endl;
+  std::cout << "==> TMVAClassification is done!" << std::endl;
+
+  delete factory;
+  delete dataloader;
+
+  // Launch the GUI for the root macros
+  if (!gROOT->IsBatch())
+    TMVA::TMVARegGui(outfileName);
+}
+
+//_________________________________________________________________________________________________
 void MUONMatcher::MLRegression(std::string input_name, std::string trainingfile,
                                std::string trainingstr) {
 
@@ -491,11 +725,10 @@ void MUONMatcher::MLRegression(std::string input_name, std::string trainingfile,
   TString outfileName(methodname + ".root");
   TFile* outputFile = TFile::Open(outfileName, "RECREATE");
 
-  std::string MLAnalysisType = gSystem->Getenv("ML_TYPE");
   std::string MLMethodType = gSystem->Getenv("TRAIN_ML_METHOD");
   TMVA::Factory *factory = new TMVA::Factory(
-      MLAnalysisType + "_" + MLMethodType, outputFile,
-      "!V:!Silent:Color:DrawProgressBar:AnalysisType=" + MLAnalysisType);
+      "Regression_" + MLMethodType, outputFile,
+      "!V:!Silent:Color:DrawProgressBar:AnalysisType=Regression");
 
   if (MLMethodType == "DNN") {
     MLMethodType = "DL";
@@ -549,10 +782,11 @@ void MUONMatcher::MLRegression(std::string input_name, std::string trainingfile,
     } else {
       float ntest = atof((gSystem->Getenv("ML_NTEST")));
       int nentries = regTree->GetEntries();
+      int train_samples;
       if (ntest < 1) {
-        int train_samples = (1 - ntest) * nentries;
+        train_samples = (1 - ntest) * nentries;
       } else {
-        int train_samples = nentries - ntest;
+        train_samples = nentries - ntest;
       }
       dataloader->AddRegressionTree(regTree, regWeight);
       dataloader->PrepareTrainingAndTestTree(
@@ -1791,9 +2025,15 @@ double MUONMatcher::matchTrainedML(const MCHTrackConv& mchTrack,
 {
 
   setMLFeatures(mchTrack, mftTrack);
+  double matchingscore;
+//  std::string MLAnalysisType = gSystem->Getenv("ML_TYPE");
 
-  double matchingscore =
-    mTMVAReader->EvaluateRegression(0, "MUONMatcherML");
+//  if (MLAnalysisType == "regression" || MLAnalysisType == "Regression") {
+    matchingscore = mTMVAReader->EvaluateRegression(0, "MUONMatcherML");
+//  }
+//  if (MLAnalysisType == "Classification" || MLAnalysisType == "classification") {
+//    matchingscore = mTMVAReader->EvaluateMVA( "Classification ML method"    );
+//  }
   //  Note: returning negative ML scores to get lowest value = best match
   return -matchingscore;
 }

@@ -322,7 +322,7 @@ trainML()
     exit
   fi
 
-  export ML_TYPE="Regression" #${ML_TYPE:-"Regression"}
+  export ML_TYPE=${ML_TYPE:-"Regression"}
   if [ $ML_TEST ]; then
       export ML_NTEST=${ML_NTEST:-"0.1"}
   fi
@@ -512,8 +512,16 @@ while [ $# -gt 0 ] ; do
     export ML_TRAINING_FILE="`realpath $2`";
     shift 2
     ;;
+    --bkg)
+    export ML_BKG_FILE="`realpath $2`";
+    shift 2
+    ;;
     --testdata)
     export ML_TESTING_FILE="`realpath $2`";
+    shift 2
+    ;;
+    --testbkg)
+    export ML_TESTING_BKG="`realpath $2`";
     shift 2
     ;;
     --convert)
