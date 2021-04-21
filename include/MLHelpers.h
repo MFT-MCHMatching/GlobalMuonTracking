@@ -45,6 +45,7 @@ string opt_reader(const char *filename = "MLConfigs.xml") {
 
   while (xml.GetNodeName(mainnode) != MLMethodType) {
     mainnode = xml.GetNext(mainnode);
+  if( !mainnode ) { std::cout << " [ERROR] There are no configurations for method " << MLMethodType << " in file Configs.xml." << endl; exit(0);}
   }
   for (auto config_str : configvect) {
 
@@ -73,7 +74,7 @@ string opt_reader(const char *filename = "MLConfigs.xml") {
     }
     if (!param_found) {
       std::cout << config_str << configuration_map[config_str]
-                << " NOT found! Using TMVA's default where needed. \n"
+                << " NOT found! Using TMVA's default. \n"
                 << std::endl;
     }
   }

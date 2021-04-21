@@ -262,6 +262,8 @@ class MUONMatcher
   }
   void MLRegression(std::string input_name, std::string trainingfile,
                     std::string trainingstr);
+  void MLClassification(std::string input_name, std::string trainingfile,
+                    std::string trainingstr);
 
   void MLTraining()
   {
@@ -285,11 +287,26 @@ class MUONMatcher
       network_ID += MLOpt + "_";
     }
 
+    std::string training_string("");
+    if (network_ID != "") {
     std::string training_string(opt_reader());
+    } else {
+     std::cout << " [WARNING] Configurations for ML method were not setted. I'll use TMVAs default; hope that works!" << endl;
+    }
+
     std::cout << " Network name: " << network_ID << "\n"
               << std::endl;
     //	std::cout<<" Training file "<< training_file<< "\n"<<std::endl;
-    MLRegression(network_ID, training_file, training_string);
+    std::string MLAnalysisType = gSystem->Getenv("ML_TYPE");
+    if (MLAnalysisType == "regression" || MLAnalysisType == "Regression") {
+      MLRegression(network_ID, training_file, training_string);
+
+    } else if (MLAnalysisType == "Classification" || MLAnalysisType == "classification") {
+      MLClassification(network_ID, training_file, training_string);
+
+    } else {
+      std::cout << " Type of ML analysis does not exist or it is not supported right now. Please choose Classification or Regression. " << std::endl;
+    }
   }
 
   //  Built-in cut functions
