@@ -289,14 +289,14 @@ class MUONMatcher
 
     std::string training_string("");
     if (network_ID != "") {
-    std::string training_string(opt_reader());
+      std::string training_string(opt_reader());
     } else {
      std::cout << " [WARNING] Configurations for ML method were not setted. I'll use TMVAs default; hope that works!" << endl;
     }
 
     std::cout << " Network name: " << network_ID << "\n"
               << std::endl;
-    //	std::cout<<" Training file "<< training_file<< "\n"<<std::endl;
+
     std::string MLAnalysisType = gSystem->Getenv("ML_TYPE");
     if (MLAnalysisType == "regression" || MLAnalysisType == "Regression") {
       MLRegression(network_ID, training_file, training_string);

@@ -45,7 +45,10 @@ string opt_reader(const char *filename = "MLConfigs.xml") {
 
   while (xml.GetNodeName(mainnode) != MLMethodType) {
     mainnode = xml.GetNext(mainnode);
-  if( !mainnode ) { std::cout << " [ERROR] There are no configurations for method " << MLMethodType << " in file Configs.xml." << endl; exit(0);}
+    if( !mainnode ) {
+      std::cout << " [ERROR] There are no configurations for method " << MLMethodType << " in file Configs.xml." << endl;
+      exit(0);
+    }
   }
   for (auto config_str : configvect) {
 
