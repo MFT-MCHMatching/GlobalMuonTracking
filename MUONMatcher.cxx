@@ -462,10 +462,6 @@ void MUONMatcher::MLClassification(std::string input_name, std::string trainingf
   std::cout << "==> Start TMVAClassification" << std::endl;
   TTree *signalTree;
   TTree *background;
-//  TTree *classTree;
-//  TCut signalCut;
-//  TCut backgrCut;
-//  bool singleTree = false;
 
   TFile* input(0);
   if (!gSystem->AccessPathName(trainingfile.c_str())) {
@@ -492,12 +488,6 @@ void MUONMatcher::MLClassification(std::string input_name, std::string trainingf
     // Register the training and test trees
     signalTree     = (TTree*)input->Get("matchTree");
     background     = (TTree*)input_bkg->Get("matchTree");
-
-  //} else if ( (TTree*)input->Get("matchTree") ){
-    //  classTree = (TTree*)input->Get("matchTree");
-    //  signalCut = "Truth == 1";
-    // backgrCut = "Truth == 0";
-    //  singleTree = 1;      
 
   } else {
       signalTree     = (TTree*)input->Get("Signal_tree");
@@ -2026,14 +2016,8 @@ double MUONMatcher::matchTrainedML(const MCHTrackConv& mchTrack,
 
   setMLFeatures(mchTrack, mftTrack);
   double matchingscore;
-//  std::string MLAnalysisType = gSystem->Getenv("ML_TYPE");
-
-//  if (MLAnalysisType == "regression" || MLAnalysisType == "Regression") {
     matchingscore = mTMVAReader->EvaluateRegression(0, "MUONMatcherML");
-//  }
-//  if (MLAnalysisType == "Classification" || MLAnalysisType == "classification") {
-//    matchingscore = mTMVAReader->EvaluateMVA( "Classification ML method"    );
-//  }
+
   //  Note: returning negative ML scores to get lowest value = best match
   return -matchingscore;
 }
