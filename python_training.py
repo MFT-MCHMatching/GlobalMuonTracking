@@ -9,14 +9,41 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
 import uproot
-import xgboost as xgb
+import lightgbm as lgb
 
-#import ROOT
-#from ROOT import TH1, TFile
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.datasets import make_moons, make_circles, make_classification
+from sklearn.neural_network import MLPClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn.gaussian_process.kernels import RBF
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 
-#MFT_X,MFT_Y,MFT_Phi,MFT_Tanl,MFT_InvQPt,MFT_Cov00,MFT_Cov01,MFT_Cov11,MFT_Cov02,MFT_Cov12,MFT_Cov22,MFT_Cov03,MFT_Cov13,MFT_Cov23,MFT_Cov33,MFT_Cov04,MFT_Cov14,MFT_Cov24,MFT_Cov34,MFT_Cov44,MFT_Chi2,MFT_nClu,MCH_X,MCH_Y,MCH_Phi,MCH_Tanl,MCH_InvQPt,MCH_Cov00,MCH_Cov01,MCH_Cov11,MCH_Cov02,MCH_Cov12,MCH_Cov22,MCH_Cov03,MCH_Cov13,MCH_Cov23,MCH_Cov33,MCH_Cov04,MCH_Cov14,MCH_Cov24,MCH_Cov34,MCH_Cov44,Truth
+names = ["Nearest Neighbors", "Linear SVM", "RBF SVM", "Gaussian Process",
+         "Decision Tree", "Random Forest", "Neural Net", "AdaBoost",
+         "Naive Bayes", "QDA","LightGBM"]
 
-#print(os.environ['ML_TRAINING_FILE'])
+classifiers = [
+    KNeighborsClassifier(3),
+    SVC(kernel="linear", C=0.025),
+    SVC(gamma=2, C=1),
+    GaussianProcessClassifier(1.0 * RBF(1.0)),
+    DecisionTreeClassifier(max_depth=5),
+    RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
+    MLPClassifier(alpha=1, max_iter=1000),
+    AdaBoostClassifier(),
+    GradientBoostingClassifier(n_estimators=1000, learning_rate=0.01,max_depth=10, random_state=0),
+    GaussianNB(),
+    QuadraticDiscriminantAnalysis(),
+    lgb
+]
+
+classifiers =[lgb]
 
 file = uproot.open(os.environ['ML_TRAINING_FILE'])
 matchTree = file["matchTree"]
@@ -110,7 +137,6 @@ Ratio_Cov24  = MCH_Cov24 - MFT_Cov24;
 Ratio_Cov34  = MCH_Cov34 - MFT_Cov34;
 Ratio_Cov44  = MCH_Cov44 - MFT_Cov44;
 
-
 MFT_TrackReducedChi2 = MFT_TrackChi2/MFT_NClust;
 
 training_list = np.stack([MFT_X,MFT_Y,MFT_Phi,MFT_Tanl,MFT_InvQPt,MFT_Cov00,MFT_Cov01,MFT_Cov11,MFT_Cov02,MFT_Cov12,MFT_Cov22,MFT_Cov03,MFT_Cov13,MFT_Cov23,MFT_Cov33,MFT_Cov04,MFT_Cov14,MFT_Cov24,MFT_Cov34,MFT_Cov44,
@@ -119,42 +145,47 @@ training_list = np.stack([MFT_X,MFT_Y,MFT_Phi,MFT_Tanl,MFT_InvQPt,MFT_Cov00,MFT_
                           Delta_X,Delta_Y,Delta_XY,Delta_Phi,Delta_Tanl,Delta_InvQPt,Delta_Cov00,Delta_Cov01,Delta_Cov11,Delta_Cov02,Delta_Cov12,Delta_Cov22,Delta_Cov03,Delta_Cov13,Delta_Cov23,Delta_Cov33,Delta_Cov04,Delta_Cov14,Delta_Cov24,Delta_Cov34,Delta_Cov44,
                           Ratio_X,Ratio_Y,Ratio_XY,Ratio_Phi,Ratio_Tanl,Ratio_InvQPt,Ratio_Cov00,Ratio_Cov01,Ratio_Cov11,Ratio_Cov02,Ratio_Cov12,Ratio_Cov22,Ratio_Cov03,Ratio_Cov13,Ratio_Cov23,Ratio_Cov33,Ratio_Cov04,Ratio_Cov14,Ratio_Cov24,Ratio_Cov34,Ratio_Cov44], 1);
 
-xgb_params = {
-    'objective': 'binary:logistic',
-    'learning_rate': 0.01,
-    'verbosity' : 2,
-    'max_depth' : 10,
-    'eval_metric': 'auc'
-}
-                
 X = training_list
 y = CorrectMatching
 
-X_train, X_test, y_train, y_test = train_test_split(X, y,test_size=0.2,random_state=0,stratify=y)
-X_train, X_eval, y_train, y_eval = train_test_split(X_train, y_train,test_size=0.2,random_state=1,stratify=y_train)
+X = StandardScaler().fit_transform(X)
 
-xgb_train = xgb.DMatrix(X_train, label=y_train)
-xgb_eval  = xgb.DMatrix(X_eval, label=y_eval)
-xgb_test  = xgb.DMatrix(X_test, label=y_test)
+X_train, X_eval, y_train, y_eval = train_test_split(X, y,test_size=0.2,random_state=0,stratify=y)
 
-evals = [(xgb_train, 'train'), (xgb_eval, 'eval')] 
+evals_result = {}
+ 
+train_data = lgb.Dataset(X_train, label=y_train)
+valid_data = lgb.Dataset(X_eval, label=y_eval, reference = train_data)
 
-eval_results = {}
-model = xgb.train(xgb_params,xgb_train,num_boost_round=1000,early_stopping_rounds=100,evals=evals,evals_result=eval_results,verbose_eval=10)
-pickle.dump(model, open("xgb_model.pickle", "wb"))
+params = {
+    'task':'train',
+    'boosting_type':'gbdt',
+    'objective': 'binary',
+    'learning_rate':0.01,
+    'max_depth':10,
+    'n_estimators':1000,
+    'metric':'auc',
+    'verbose': 2,
+}
 
-train_metric = eval_results['train']['auc']
+model = lgb.train(
+    params,
+    train_data,
+    valid_sets=[train_data,valid_data],
+    valid_names = ['train','eval'],
+    num_boost_round=1000,
+    early_stopping_rounds=100,
+    evals_result=evals_result,
+)
+
+train_metric = evals_result['train']['auc']
+eval_metric = evals_result['eval']['auc']
 plt.plot(train_metric, label='train auc')
-eval_metric = eval_results['eval']['auc']
 plt.plot(eval_metric, label='eval auc')
 plt.grid()
 plt.legend()
+plt.ylim(0, 1.1)
+
 plt.xlabel('rounds')
 plt.ylabel('auc')
-
-xgb.plot_importance(model,
-                    #ax=ax,
-                    importance_type='gain',
-                    show_values=False)
-
 plt.show()
