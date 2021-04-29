@@ -43,10 +43,20 @@ ClassImp(AliGenDimuon)
   //====================================================================================================================================================
 
   AliGenDimuon::AliGenDimuon() : AliGenerator(),
-                                 fPt(0x0),
-                                 fRap(0x0),
-                                 fPdgCode(0),
-                                 fBW(0x0)
+  fPt(0x0),
+  fRap(0x0),
+  fPdgCode(0),
+  fBW(0x0),
+  fMinMuonMomentum(4.0),
+  fMaxMuonMomentum(9999.),
+  fMinMuonRap(-3.8),
+  fMaxMuonRap(-2.3),
+  fMinMuonEta(-3.8),
+  fMaxMuonEta(-2.3),
+  kMuonMomentumRange(kTRUE),
+  kMuonRapRange(kFALSE),
+  kMuonEtaRange(kTRUE),
+  fHistParentKine(0x0)
 {
 
   // Default constructor
@@ -58,7 +68,18 @@ AliGenDimuon::AliGenDimuon(Int_t nPart/*, Char_t *inputFile*/):
   AliGenerator(nPart),
   fPt(0x0),
   fRap(0x0),
-  fPdgCode(0){
+  fPdgCode(0),
+  fMinMuonMomentum(4.0),
+  fMaxMuonMomentum(9999.),
+  fMinMuonRap(-3.8),
+  fMaxMuonRap(-2.3),
+  fMinMuonEta(-3.8),
+  fMaxMuonEta(-2.3),
+  kMuonMomentumRange(kTRUE),
+  kMuonRapRange(kFALSE),
+  kMuonEtaRange(kTRUE),
+  fHistParentKine(0x0)
+{
 
   // Standard constructor
 
@@ -67,28 +88,32 @@ AliGenDimuon::AliGenDimuon(Int_t nPart/*, Char_t *inputFile*/):
 
   SetPtShape();
   SetRapidityShape();
-
+  
   fBW = new TF1("fBW","gaus",0.2,15);
 }
 
 //====================================================================================================================================================
 
 void AliGenDimuon::Generate() {
-
+  
   // Generate one trigger
-
   Double_t polar[3]= {0,0,0};
   Int_t nt;
   Double_t origin[3];
 
   Double_t mass=0.;
   Double_t pt=0.;
+  Double_t px=0.;
+  Double_t py=0.;
+  Double_t pz=0.;
+  Double_t p=0.;
   Double_t rap=0.;
   Double_t mom=0.;
   Double_t energy=0;
   Double_t phi=0.;
   Double_t time=0.;
   Double_t theta = 0.;
+  Double_t eta=0.;
 
   Int_t pdgCode1;
   Int_t pdgCode2;
@@ -101,6 +126,7 @@ void AliGenDimuon::Generate() {
   Double_t mom1    = 0;
   Double_t rap1    = 0;
   Double_t theta1  = 0;
+  Double_t eta1    = 0;
 
   Double_t energy2 = 0;
   Double_t px2     = 0;
@@ -110,6 +136,7 @@ void AliGenDimuon::Generate() {
   Double_t mom2    = 0;
   Double_t rap2    = 0;
   Double_t theta2  = 0;
+  Double_t eta2    = 0;
 
   for (Int_t j=0; j<3; j++) origin[j] = fOrigin[j];
   time = fTimeOrigin;
@@ -121,134 +148,185 @@ void AliGenDimuon::Generate() {
 
   Int_t nPartGenerated = 2;
 
-  Double_t m_muon       = TDatabasePDG::Instance()->GetParticle(13)->Mass();
+  Double_t mass_muon    = TDatabasePDG::Instance()->GetParticle(13)->Mass();
   Double_t mass_parent  = TDatabasePDG::Instance()->GetParticle(fPdgCode)->Mass();
   Double_t width_parent = TDatabasePDG::Instance()->GetParticle(fPdgCode)->Width();
-  fBW->SetParameters(1,mass_parent,width_parent);
 
   mass = mass_parent;
 
-  /*
-  while(1){
-
-    //mass = fBW->GetRandom();
-    mass = mass_parent;
-
-    if(mass<2*m_muon){
-      continue;
-    }
-    else{
-      break;
-    }
-  }
-  */
-
-  Double_t daughter_m[2]={m_muon,m_muon};
+  Double_t daughter_m[2]={mass_muon,mass_muon};
 
   TLorentzVector rest_p(0,0,0,mass);
 
   TGenPhaseSpace ps_decay;
   ps_decay.SetDecay(rest_p,2,daughter_m);
+  
+  Int_t nParentTrial = 0;
+  Int_t nDaughterTrial = 0;
+  
+  if (kMuonMomentumRange){
+    printf("Set kMuonMomentumRange:  Range(%.2f,%.2f) \n",fMinMuonMomentum,fMaxMuonMomentum);
+  }
+  if (kMuonRapRange){
+    printf("Set kMuonRapRange:  Range(%.2f,%.2f) \n",fMinMuonRap,fMaxMuonRap);
+  }
+  if (kMuonEtaRange){
+    printf("Set kMuonEtaRange:  Range(%.2f,%.2f) \n",fMinMuonEta,fMaxMuonEta);
+  }
+  
 
-  while (1){;
+  while (1){
 
-    ps_decay.Generate();
+    ++nParentTrial;
+    
+    /////////////////////////////////////////////////////////////////////////////////
+    //Parent particle kinematics
+    /////////////////////////////////////////////////////////////////////////////////
+    
+    //Get parent kinemtacs from histogram
+    fHistParentKine->GetRandom2(rap,pt);
+    rap = -1*fabs(rap);
 
-    pt  = fPt  -> GetRandom(0.,10);
-    rap = fRap -> GetRandom(-3.6,-2.5);
+    //pt  = fPt  -> GetRandom(0.,1.);
+    //rap = fRap -> GetRandom(-3.6,-2.5);
     phi = gRandom->Uniform(0.,TMath::TwoPi());
 
-    if (TestBit(kPtRange)       && (pt<fPtMin || pt>fPtMax))             continue;
-    if (TestBit(kYRange)        && (rap<fYMin || rap>fYMax))             continue;
+    px = pt*TMath::Cos(phi);
+    py = pt*TMath::Sin(phi);
+    energy   = sqrt((px*px + py*py + mass*mass)/(1-pow((exp(2*rap)-1)/(1+exp(2*rap)),2)));
+    pz    = (exp(2*rap)-1)/(1+exp(2*rap)) * energy;
+    p     = sqrt(px*px + py*py + pz*pz);
+    theta = TMath::ACos(pz/p);
+    eta = -1*TMath::Log(TMath::Tan(theta/2.));
 
     TLorentzVector parent;
-    parent.SetPtEtaPhiM(pt,rap,phi,mass);
+    parent.SetPtEtaPhiM(pt,eta,phi,mass);
 
     mom   = parent.P();
     theta = parent.Theta();
+    
+    //printf("Set kMuonMomentumRange:  Range(%.2f,%.2f) \n",fMinMuonMomentum,fMaxMuonMomentum);
+    //printf("Set kMuonRapRange:  Range(%.2f,%.2f) \n",fMinMuonRap,fMaxMuonRap);
+    //printf("Set kMuonEtaRange:  Range(%.2f,%.2f) \n",fMinMuonEta,fMaxMuonEta);
+    //printf("Generated parent particle kinematics: Pt = %.3f [GeV/c]  y = %.3f\n",pt,rap);
 
+    //Select parent particle kinematics 
+    if (TestBit(kPtRange)    && (pt<fPtMin || pt>fPtMax))             continue;
+    if (TestBit(kYRange)     && (rap<fYMin || rap>fYMax))             continue;
+    
     TVector3 vec_boost =parent.BoostVector();
+    
+    while (1){
 
-    TLorentzVector* muon1 = ps_decay.GetDecay(0);
-    TLorentzVector* muon2 = ps_decay.GetDecay(1);
+      ++nDaughterTrial;
+      
+      /////////////////////////////////////////////////////////////////////////////////
+      //Daughter muon kinematics
+      /////////////////////////////////////////////////////////////////////////////////
+      
+      ps_decay.Generate();
 
-    muon1->Boost(vec_boost);
-    muon2->Boost(vec_boost);
+      TLorentzVector* muon1 = ps_decay.GetDecay(0);
+      TLorentzVector* muon2 = ps_decay.GetDecay(1);
 
-    energy1 = muon1->E();
-    px1     = muon1->Px();
-    py1     = muon1->Py();
-    pz1     = muon1->Pz();
-    pt1     = muon1->Pt();
-    mom1    = muon1->P();
-    rap1    = muon1->Rapidity();
-    theta1  = muon1->Theta();
+      TLorentzVector* boostedMuon1 = (TLorentzVector*)muon1->Clone();
+      TLorentzVector* boostedMuon2 = (TLorentzVector*)muon2->Clone();
 
-    //if (TestBit(kPtRange)       && (pt1<fPtMin || pt1>fPtMax))             continue;
-    if (TestBit(kYRange)        && (rap1<fYMin || rap1>fYMax))             continue;
-    //if (TestBit(kMomentumRange) && (mom1<fPMin || mom1>fPMax))             continue;
-    //if (TestBit(kThetaRange)    && (theta1<fThetaMin || theta1>fThetaMax)) continue;
+      //Boost the daughter muons with the parent particle kinematics
+      boostedMuon1->Boost(vec_boost);
+      boostedMuon2->Boost(vec_boost);
 
-    if(mom1<4.0) continue;
+      //Daughter muon1 kinematics in lab frame
+      energy1 = boostedMuon1->E();
+      px1     = boostedMuon1->Px();
+      py1     = boostedMuon1->Py();
+      pz1     = boostedMuon1->Pz();
+      pt1     = boostedMuon1->Pt();
+      mom1    = boostedMuon1->P();
+      rap1    = boostedMuon1->Rapidity();
+      theta1  = boostedMuon1->Theta();
+      eta1    = boostedMuon1->Eta();
+      
 
-    energy2 = muon2->E();
-    px2     = muon2->Px();
-    py2     = muon2->Py();
-    pz2     = muon2->Pz();
-    pt2     = muon2->Pt();
-    mom2    = muon2->P();
-    rap2    = muon2->Rapidity();
-    theta2  = muon2->Theta();
+      //Select daughter muons kinematics
+      if (kMuonMomentumRange && (fMinMuonMomentum>mom1 || mom1>fMaxMuonMomentum)){
+	delete boostedMuon1;
+	delete boostedMuon2;
+	continue; 
+      }
+      if (kMuonRapRange      && (fMaxMuonRap<rap1      || rap1<fMinMuonRap)){
+	delete boostedMuon1;
+	delete boostedMuon2;
+	continue;
+      }
+      if (kMuonEtaRange      && (fMaxMuonEta<eta1      || eta1<fMinMuonEta)){
+	delete boostedMuon1;
+	delete boostedMuon2;
+	continue;
+      }
+      
+      //Daughter boostedMuon2 kinematics in lab frame
+      energy2 = boostedMuon2->E();
+      px2     = boostedMuon2->Px();
+      py2     = boostedMuon2->Py();
+      pz2     = boostedMuon2->Pz();
+      pt2     = boostedMuon2->Pt();
+      mom2    = boostedMuon2->P();
+      rap2    = boostedMuon2->Rapidity();
+      theta2  = boostedMuon2->Theta();
+      eta2    = boostedMuon1->Eta();
 
-    //if (TestBit(kPtRange)       && (pt2<fPtMin || pt2>fPtMax))             continue;
-    if (TestBit(kYRange)        && (rap2<fYMin || rap2>fYMax))             continue;
-    //if (TestBit(kMomentumRange) && (mom2<fPMin || mom2>fPMax))             continue;
-    //if (TestBit(kThetaRange)    && (theta2<fThetaMin || theta2>fThetaMax)) continue;
+      //Select daughter muons kinematics
+      if (kMuonMomentumRange && (fMinMuonMomentum>mom2 || mom2>fMaxMuonMomentum)){
+	delete boostedMuon1;
+	delete boostedMuon2;
+	continue; 
+      }
+      if (kMuonRapRange      && (fMaxMuonRap<rap2      || rap2<fMinMuonRap)){
+	delete boostedMuon1;
+	delete boostedMuon2;
+	continue;
+      }
+      if (kMuonEtaRange      && (fMaxMuonEta<eta2      || eta2<fMinMuonEta)){
+	delete boostedMuon1;
+	delete boostedMuon2;
+	continue;
+      }
 
-    if(mom2<4.0) continue;
+      //printf("muon1 Kinematics: momentum = %.3f [GeV/c]   eta = %.3f\n",boostedMuon1->P(),boostedMuon1->PseudoRapidity());
+      //printf("muon2 Kinematics: momentum = %.3f [GeV/c]   eta = %.3f\n",boostedMuon2->P(),boostedMuon2->PseudoRapidity());
 
-    if (gRandom->Rndm() < 0.5){
-      pdgCode1 =  13;
-      pdgCode2 = -13;
+      //Select charge
+      if (gRandom->Rndm() < 0.5){
+	pdgCode1 =  13;
+	pdgCode2 = -13;
+      }
+      else{
+	pdgCode1 = -13;
+	pdgCode2 =  13;
+      }
+
+      //Store the muon pairs
+      PushTrack(1, -1, Int_t(pdgCode1),
+		px1,py1,pz1,energy1,
+		origin[0],origin[1],origin[2],Double_t(time),
+		polar[0],polar[1],polar[2],
+		kPPrimary, nt, 1., 1);
+
+      PushTrack(1, -1, Int_t(pdgCode2),
+		px2, py2, pz2, energy2,
+		origin[0], origin[1], origin[2], Double_t(time),
+		polar[0], polar[1], polar[2],
+		kPPrimary, nt, 1., 1);
+
+      delete boostedMuon1;
+      delete boostedMuon2;
+      
+      break;
+
     }
-    else{
-      pdgCode1 = -13;
-      pdgCode2 =  13;
-    }
-
-    PushTrack(1, -1, Int_t(pdgCode1),
-              px1,py1,pz1,energy1,
-              origin[0],origin[1],origin[2],Double_t(time),
-              polar[0],polar[1],polar[2],
-              kPPrimary, nt, 1., 1);
-
-    PushTrack(1, -1, Int_t(pdgCode2),
-              px2, py2, pz2, energy2,
-              origin[0], origin[1], origin[2], Double_t(time),
-              polar[0], polar[1], polar[2],
-              kPPrimary, nt, 1., 1);
-
-    //cout<<pt<<"    "<<mom1<<"    "<<mom2<<endl;
-
-    TLorentzVector muon12 = *muon1 + *muon2;
-    //cout<<muon12.Pt()<<"   "<<muon12.Eta()<<"   "<<muon12.M()<<endl;
-
-    /*
-    Double_t m1  = muon1->M();
-    Double_t px1 = muon1->Px();
-    Double_t py1 = muon1->Py();
-    Double_t pz1 = muon1->Pz();
-    Double_t p1  = sqrt(px1*px1 + py1*py1 + pz1*pz1);
-    Double_t e1  = sqrt(m1*m1 + p1*p1);
-
-    Double_t m2  = muon2->M();
-    Double_t px2 = muon2->Px();
-    Double_t py2 = muon2->Py();
-    Double_t pz2 = muon2->Pz();
-    Double_t p2  = sqrt(px2*px2 + py2*py2 + pz2*pz2);
-    Double_t e2  = sqrt(m2*m2 + p2*p2);
-    */
-
+    
+    
     break;
   }
 
@@ -279,6 +357,46 @@ void AliGenDimuon::Init() {
     printf("You should only set the range of one of these variables: y, eta or theta\n");
   if ((!TestBit(kYRange)) && (!TestBit(kEtaRange)) && (!TestBit(kThetaRange)))
     printf("You should set the range of one of these variables: y, eta or theta\n");
+  
+  printf("Parent PdgCode (%d)\n",fPdgCode);
+  if(TestBit(kYRange)) 
+    printf("Parent particle rapigity range %.3f<y<%.3f \n",fYMin,fYMax);
+  if(TestBit(kPtRange)) 
+    printf("Parent particle pT range %.3f<pT<%.3f \n",fPtMin,fPtMax);
+  if(TestBit(kThetaRange)) 
+    printf("Parent particle theta range %.3f<theta<%.3f \n",fThetaMin,fThetaMax);
+
+
+  TFile* inFile = TFile::Open("./include/inputDimuonParam.root");
+  
+  if( fPdgCode == 113 ){
+    fHistParentKine = (TH2F*)inFile->Get("fHistRhoRapPt");
+  }
+  else if( fPdgCode == 223 ){
+    fHistParentKine = (TH2F*)inFile->Get("fHistOmegaRapPt");
+  }
+  else if( fPdgCode == 333 ){
+    fHistParentKine = (TH2F*)inFile->Get("fHistPhiRapPt");
+  }
+  else if( fPdgCode == 443 ){
+    fHistParentKine = (TH2F*)inFile->Get("fHistJpsiRapPt");
+  }
+  else if( fPdgCode ==  100443){
+    fHistParentKine = (TH2F*)inFile->Get("fHistPsi2SRapPt");
+  }
+  else if( fPdgCode == 533 ){
+    fHistParentKine = (TH2F*)inFile->Get("fHistUpsilon1SRapPt");
+  }
+  else if( fPdgCode == 100553 ){
+    fHistParentKine = (TH2F*)inFile->Get("fHistUpsilon2SRapPt");
+  }
+  else if( fPdgCode == 200553 ){
+    fHistParentKine = (TH2F*)inFile->Get("fHistUpsilon3SRapPt");
+  }
+  else{
+    fHistParentKine = (TH2F*)inFile->Get("fHistPhiRapPt");
+    printf("You should set the particle (113,223,333,433,100433,533,100533,200533). Now phi-meson (333) kinematic distribution is set, instead\n");
+  }
 
   AliPDG::AddParticlesToPdgDataBase();
 }
@@ -310,3 +428,18 @@ void AliGenDimuon::SetRapidityShape(){
   fRap = new TF1("fRap","[0]*(1 + [1]*x + [2]*x*x + [3]*x*x*x + [4]*x*x*x*x)",-10,10);
   fRap->SetParameters(p0,p1,p2,p3,p4);
 }
+
+Double_t AliGenDimuon::EtaToTheta(Double_t arg) {
+  return (180. / TMath::Pi()) * 2. * atan(exp(-arg));
+}
+
+/*
+//====================================================================================================================================================
+void AliGenDimuon::SetDimuonKinematics(){
+  
+  //TFile* input = 
+
+  fRap = new TF1("fRap","[0]*(1 + [1]*x + [2]*x*x + [3]*x*x*x + [4]*x*x*x*x)",-10,10);
+  fRap->SetParameters(p0,p1,p2,p3,p4);
+}
+*/
