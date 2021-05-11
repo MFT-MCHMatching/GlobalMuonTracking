@@ -229,6 +229,7 @@ class MUONMatcher
   };
 
   void exportTrainingDataRoot(int nMCHTracks = -1);
+  void setCorrectMatchIgnoreCut(bool v = true) { mCorrectMatchIgnoreCut = v; };
 
   // Matching cuts
   void enableChargeMatchCut() { mChargeCutEnabled = true; }
@@ -263,7 +264,7 @@ class MUONMatcher
   void MLRegression(std::string input_name, std::string trainingfile,
                     std::string trainingstr);
   void MLClassification(std::string input_name, std::string trainingfile,
-                    std::string trainingstr);
+                        std::string trainingstr);
 
   void MLTraining()
   {
@@ -279,7 +280,7 @@ class MUONMatcher
     }
     if (gSystem->Getenv("ML_TRAINING_STRAT")) {
       MLStrat = gSystem->Getenv(
-          "ML_TRAINING_STRAT"); //#TODO reorganize these strings in MLHelpers
+        "ML_TRAINING_STRAT"); //#TODO reorganize these strings in MLHelpers
       network_ID += MLStrat + "_";
     }
     if (gSystem->Getenv("ML_GENERAL_OPT")) {
@@ -291,7 +292,7 @@ class MUONMatcher
     if (network_ID != "") {
       std::string training_string(opt_reader());
     } else {
-     std::cout << " [WARNING] Configurations for ML method were not setted. I'll use TMVAs default; hope that works!" << endl;
+      std::cout << " [WARNING] Configurations for ML method were not setted. I'll use TMVAs default; hope that works!" << endl;
     }
 
     std::cout << " Network name: " << network_ID << "\n"
@@ -387,6 +388,7 @@ class MUONMatcher
   float_t mMLScoreCut;
   float_t mMLInputFeatures[sMaxMLFeatures];
   std::size_t mNInputFeatures = -1;
+  bool mCorrectMatchIgnoreCut = false; // Cut function not applied to correct match on training data
 
   string mMLInputFeaturesName[sMaxMLFeatures];
 };

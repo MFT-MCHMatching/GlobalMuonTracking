@@ -455,13 +455,14 @@ void MUONMatcher::runEventMatching()
 
 //_________________________________________________________________________________________________
 void MUONMatcher::MLClassification(std::string input_name, std::string trainingfile,
-                               std::string trainingstr) {
+                                   std::string trainingstr)
+{
 
   TMVA::Tools::Instance();
 
   std::cout << "==> Start TMVAClassification" << std::endl;
-  TTree *signalTree;
-  TTree *background;
+  TTree* signalTree;
+  TTree* background;
 
   TFile* input(0);
   if (!gSystem->AccessPathName(trainingfile.c_str())) {
@@ -475,23 +476,23 @@ void MUONMatcher::MLClassification(std::string input_name, std::string trainingf
 
   if (gSystem->Getenv("ML_BKG_FILE")) {
     std::string bkgfile = gSystem->Getenv("ML_BKG_FILE");
-	TFile* input_bkg(0);
-	if (!gSystem->AccessPathName(trainingfile.c_str())) {
-	  input_bkg = TFile::Open(bkgfile.c_str());
-	}
-	if (!input_bkg) {
-	  std::cout << "ERROR: could not open background data file" << std::endl;
-	  exit(1);
-	}
-	std::cout << "--- TMVAClassification           : Using background file: " << input_bkg->GetName() << std::endl;
- 
+    TFile* input_bkg(0);
+    if (!gSystem->AccessPathName(trainingfile.c_str())) {
+      input_bkg = TFile::Open(bkgfile.c_str());
+    }
+    if (!input_bkg) {
+      std::cout << "ERROR: could not open background data file" << std::endl;
+      exit(1);
+    }
+    std::cout << "--- TMVAClassification           : Using background file: " << input_bkg->GetName() << std::endl;
+
     // Register the training and test trees
-    signalTree     = (TTree*)input->Get("matchTree");
-    background     = (TTree*)input_bkg->Get("matchTree");
+    signalTree = (TTree*)input->Get("matchTree");
+    background = (TTree*)input_bkg->Get("matchTree");
 
   } else {
-      signalTree     = (TTree*)input->Get("Signal_tree");
-      background     = (TTree*)input->Get("Bkg_tree");
+    signalTree = (TTree*)input->Get("Signal_tree");
+    background = (TTree*)input->Get("Bkg_tree");
   }
 
   // Let's initialize the factory object (analysis class)...:
@@ -513,35 +514,28 @@ void MUONMatcher::MLClassification(std::string input_name, std::string trainingf
 
   std::string MLMethodType = gSystem->Getenv("TRAIN_ML_METHOD");
 
-  TMVA::Factory *factory = new TMVA::Factory(
-      "Classification_" + MLMethodType, outputFile,
-      "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification"); //TODO check these transformations options
+  TMVA::Factory* factory = new TMVA::Factory(
+    "Classification_" + MLMethodType, outputFile,
+    "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification"); //TODO check these transformations options
 
   if (MLMethodType == "BDTG" or MLMethodType == "BDT" or MLMethodType == "BDTB" or MLMethodType == "BDTD" or MLMethodType == "BDTF") {
     MLMethodType = "BDT";
-  } 
-  else if (MLMethodType == "MLP" or MLMethodType == "MLPBFGS" or MLMethodType == "MLPBNN") {
+  } else if (MLMethodType == "MLP" or MLMethodType == "MLPBFGS" or MLMethodType == "MLPBNN") {
     MLMethodType = "MLP";
-  }
-   else if (MLMethodType == "Cuts" or MLMethodType == "CutsD" or MLMethodType == "CutsSA" or
+  } else if (MLMethodType == "Cuts" or MLMethodType == "CutsD" or MLMethodType == "CutsSA" or
              MLMethodType == "CutsGA" or MLMethodType == "CutsPCA") {
     MLMethodType = "Cuts";
-  }
-   else if (MLMethodType == "FDA_GA" or MLMethodType == "FDA_GAMT" or MLMethodType == "FDA_SA" or 
+  } else if (MLMethodType == "FDA_GA" or MLMethodType == "FDA_GAMT" or MLMethodType == "FDA_SA" or
              MLMethodType == "FDA_MC" or MLMethodType == "FDA_MT" or MLMethodType == "FDA_MCMT") {
     MLMethodType = "FDA";
-  }
-   else if (MLMethodType == "Likelihood" or MLMethodType == "LikelihoodD" or MLMethodType == "LikelihoodPCA" or 
+  } else if (MLMethodType == "Likelihood" or MLMethodType == "LikelihoodD" or MLMethodType == "LikelihoodPCA" or
              MLMethodType == "LikelihoodKDE" or MLMethodType == "LikelihoodMIX") {
     MLMethodType = "Likelihood";
-  }
-  else if (MLMethodType == "PDERS" or MLMethodType == "PDERSD" or MLMethodType == "PDERSPCA") {
+  } else if (MLMethodType == "PDERS" or MLMethodType == "PDERSD" or MLMethodType == "PDERSPCA") {
     MLMethodType = "PDERS";
-  }
-  else if (MLMethodType == "PDEFoam" or MLMethodType == "PDEFoamBoost") {
+  } else if (MLMethodType == "PDEFoam" or MLMethodType == "PDEFoamBoost") {
     MLMethodType = "PDEFoam";
-  }
-  else if (MLMethodType == "Fisher" or MLMethodType == "FisherG" or MLMethodType == "BoostedFisher") {
+  } else if (MLMethodType == "Fisher" or MLMethodType == "FisherG" or MLMethodType == "BoostedFisher") {
     MLMethodType = "Fisher";
   }
 
@@ -552,23 +546,21 @@ void MUONMatcher::MLClassification(std::string input_name, std::string trainingf
     dataloader->AddVariable(mMLInputFeaturesName[i], mMLInputFeaturesName[i], "units", 'F');
   }
 
-   // global event weights per tree (see below for setting event-wise weights)
-   Double_t signalWeight     = 1.0;
-   Double_t backgroundWeight = 1.0;
+  // global event weights per tree (see below for setting event-wise weights)
+  Double_t signalWeight = 1.0;
+  Double_t backgroundWeight = 1.0;
 
-
-   // Apply additional cuts on the signal and background samples (can be different)
-   TCut mycutSig = ""; // for example: TCut mycutSig = "abs(var1)<0.5 && abs(var2-0.5)<1";
-   TCut mycutBkg = ""; // for example: TCut mycutBkg = "abs(var1)<0.5";
-
+  // Apply additional cuts on the signal and background samples (can be different)
+  TCut mycutSig = ""; // for example: TCut mycutSig = "abs(var1)<0.5 && abs(var2-0.5)<1";
+  TCut mycutBkg = ""; // for example: TCut mycutBkg = "abs(var1)<0.5";
 
   if (gSystem->Getenv("ML_TEST")) {
 
     if (gSystem->Getenv("ML_TESTING_FILE")) {
       std::string testingfile = gSystem->Getenv("ML_TESTING_FILE");
       std::string test_bkg = gSystem->Getenv("ML_TESTING_BKG");
-      TFile *test_input(0);
-      TFile *test_input2(0);
+      TFile* test_input(0);
+      TFile* test_input2(0);
       if (!gSystem->AccessPathName(testingfile.c_str())) {
         test_input = TFile::Open(testingfile.c_str());
       }
@@ -590,16 +582,16 @@ void MUONMatcher::MLClassification(std::string input_name, std::string trainingf
                 << test_input2->GetName() << std::endl;
       // Register the regression test tree (for now, must use same format as
       // training tree)
-      TTree *SigTreeTest = (TTree *)test_input->Get("matchTree");
-      TTree *BkgTreeTest = (TTree *)test_input2->Get("matchTree");
+      TTree* SigTreeTest = (TTree*)test_input->Get("matchTree");
+      TTree* BkgTreeTest = (TTree*)test_input2->Get("matchTree");
 
-      dataloader->AddSignalTree    ( signalTree,     signalWeight, Types::kTraining);
-      dataloader->AddBackgroundTree( background, backgroundWeight, Types::kTraining);
-      dataloader->AddSignalTree    ( SigTreeTest,     signalWeight, Types::kTesting);
-      dataloader->AddBackgroundTree( BkgTreeTest, backgroundWeight, Types::kTesting);
+      dataloader->AddSignalTree(signalTree, signalWeight, Types::kTraining);
+      dataloader->AddBackgroundTree(background, backgroundWeight, Types::kTraining);
+      dataloader->AddSignalTree(SigTreeTest, signalWeight, Types::kTesting);
+      dataloader->AddBackgroundTree(BkgTreeTest, backgroundWeight, Types::kTesting);
 
       dataloader->PrepareTrainingAndTestTree(
-          mycutSig, mycutBkg, "SplitMode=Random:NormMode=NumEvents:!V");
+        mycutSig, mycutBkg, "SplitMode=Random:NormMode=NumEvents:!V");
 
     } else {
       float ntest = atof((gSystem->Getenv("ML_NTEST")));
@@ -613,34 +605,34 @@ void MUONMatcher::MLClassification(std::string input_name, std::string trainingf
         train_bkg = (1 - ntest) * nentries_bkg;
       } else {
         train_signal = nentries_sig - ntest;
-		train_bkg = nentries_bkg - ntest;
+        train_bkg = nentries_bkg - ntest;
       }
-      
-      dataloader->AddSignalTree    ( signalTree,     signalWeight);
-      dataloader->AddBackgroundTree( background, backgroundWeight);
-      
+
+      dataloader->AddSignalTree(signalTree, signalWeight);
+      dataloader->AddBackgroundTree(background, backgroundWeight);
+
       // Set individual event weights (the variables must exist in the original TTree)
       // -  for signal    : `dataloader->SetSignalWeightExpression    ("weight1*weight2");`
       // -  for background: `dataloader->SetBackgroundWeightExpression("weight1*weight2");`
       // dataloader->SetBackgroundWeightExpression( "weight" );
 
       dataloader->PrepareTrainingAndTestTree(
-          mycutSig, mycutBkg,
-          "nTrain_Signal=" + std::to_string(train_signal) +
-              ":nTrain_Background=" + std::to_string(train_bkg) +
-              ":SplitMode=Random:NormMode="
-              "NumEvents:!V"); // nTest_Regression=0
-                               // uses all events left for testing
+        mycutSig, mycutBkg,
+        "nTrain_Signal=" + std::to_string(train_signal) +
+          ":nTrain_Background=" + std::to_string(train_bkg) +
+          ":SplitMode=Random:NormMode="
+          "NumEvents:!V"); // nTest_Regression=0
+                           // uses all events left for testing
     }
   } else { // i.e. just training the ML, wo testing and evaluation
-    // You can now add the tree to the dataloader:
-   
-      dataloader->AddSignalTree    ( signalTree,     signalWeight, Types::kTraining);
-      dataloader->AddBackgroundTree( background, backgroundWeight, Types::kTraining);
-      dataloader->PrepareTrainingAndTestTree(
-        mycutSig, mycutBkg, "SplitMode=Random:NormMode=NumEvents:!V");
-    }
-  
+           // You can now add the tree to the dataloader:
+
+    dataloader->AddSignalTree(signalTree, signalWeight, Types::kTraining);
+    dataloader->AddBackgroundTree(background, backgroundWeight, Types::kTraining);
+    dataloader->PrepareTrainingAndTestTree(
+      mycutSig, mycutBkg, "SplitMode=Random:NormMode=NumEvents:!V");
+  }
+
   // Book (SAVE) the method
   factory->BookMethod(dataloader,
                       TMVA::Types::Instance().GetMethodType(MLMethodType),
@@ -679,7 +671,8 @@ void MUONMatcher::MLClassification(std::string input_name, std::string trainingf
 
 //_________________________________________________________________________________________________
 void MUONMatcher::MLRegression(std::string input_name, std::string trainingfile,
-                               std::string trainingstr) {
+                               std::string trainingstr)
+{
 
   TMVA::Tools::Instance();
 
@@ -716,9 +709,9 @@ void MUONMatcher::MLRegression(std::string input_name, std::string trainingfile,
   TFile* outputFile = TFile::Open(outfileName, "RECREATE");
 
   std::string MLMethodType = gSystem->Getenv("TRAIN_ML_METHOD");
-  TMVA::Factory *factory = new TMVA::Factory(
-      "Regression_" + MLMethodType, outputFile,
-      "!V:!Silent:Color:DrawProgressBar:AnalysisType=Regression");
+  TMVA::Factory* factory = new TMVA::Factory(
+    "Regression_" + MLMethodType, outputFile,
+    "!V:!Silent:Color:DrawProgressBar:AnalysisType=Regression");
 
   if (MLMethodType == "DNN") {
     MLMethodType = "DL";
@@ -751,7 +744,7 @@ void MUONMatcher::MLRegression(std::string input_name, std::string trainingfile,
 
     if (gSystem->Getenv("ML_TESTING_FILE")) {
       std::string testingfile = gSystem->Getenv("ML_TESTING_FILE");
-      TFile *test_input(0);
+      TFile* test_input(0);
       if (!gSystem->AccessPathName(testingfile.c_str())) {
         test_input = TFile::Open(testingfile.c_str());
       }
@@ -763,12 +756,12 @@ void MUONMatcher::MLRegression(std::string input_name, std::string trainingfile,
                 << test_input->GetName() << std::endl;
       // Register the regression test tree (for now, must use same format as
       // training tree)
-      TTree *testTree = (TTree *)test_input->Get("matchTree");
+      TTree* testTree = (TTree*)test_input->Get("matchTree");
       dataloader->AddRegressionTree(regTree, regWeight, Types::kTraining);
       dataloader->AddRegressionTree(testTree, regWeight, Types::kTesting);
 
       dataloader->PrepareTrainingAndTestTree(
-          mycut, "SplitMode=Random:NormMode=NumEvents:!V");
+        mycut, "SplitMode=Random:NormMode=NumEvents:!V");
     } else {
       float ntest = atof((gSystem->Getenv("ML_NTEST")));
       int nentries = regTree->GetEntries();
@@ -780,18 +773,18 @@ void MUONMatcher::MLRegression(std::string input_name, std::string trainingfile,
       }
       dataloader->AddRegressionTree(regTree, regWeight);
       dataloader->PrepareTrainingAndTestTree(
-          mycut,
-          "nTrain_Regression=" + std::to_string(train_samples) +
-              ":nTest_Regression=0:"
-              "SplitMode=Random:NormMode="
-              "NumEvents:!V"); // nTest_Regression=0
-                               // uses all events left for testing
+        mycut,
+        "nTrain_Regression=" + std::to_string(train_samples) +
+          ":nTest_Regression=0:"
+          "SplitMode=Random:NormMode="
+          "NumEvents:!V"); // nTest_Regression=0
+                           // uses all events left for testing
     }
   } else { // i.e. just training the ML, wo testing and evaluation
     // You can now add the tree to the dataloader:
     dataloader->AddRegressionTree(regTree, regWeight, Types::kTraining);
     dataloader->PrepareTrainingAndTestTree(
-        mycut, "SplitMode=Random:NormMode=NumEvents:!V");
+      mycut, "SplitMode=Random:NormMode=NumEvents:!V");
   }
   // Book (SAVE) the method
   factory->BookMethod(dataloader,
@@ -2016,7 +2009,7 @@ double MUONMatcher::matchTrainedML(const MCHTrackConv& mchTrack,
 
   setMLFeatures(mchTrack, mftTrack);
   double matchingscore;
-    matchingscore = mTMVAReader->EvaluateRegression(0, "MUONMatcherML");
+  matchingscore = mTMVAReader->EvaluateRegression(0, "MUONMatcherML");
 
   //  Note: returning negative ML scores to get lowest value = best match
   return -matchingscore;
@@ -2194,7 +2187,7 @@ void MUONMatcher::exportTrainingDataRoot(int nMCHTracks)
         for (auto mftTrack : mSortedMFTTracks[event]) {
           auto MFTlabel = mftTrackLabels.getLabels(mftTrackLabelsIDx[event][mftTrackID]);
           Truth = (int)(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID());
-          if (Truth || matchingCut(mchTrack, mftTrack)) {
+          if ((mCorrectMatchIgnoreCut && Truth) || matchingCut(mchTrack, mftTrack)) {
 
             setMLFeatures(mchTrack, mftTrack);
 

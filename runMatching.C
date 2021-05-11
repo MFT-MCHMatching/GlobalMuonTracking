@@ -133,7 +133,9 @@ void loadAndSetMatchingConfig()
   if (gSystem->Getenv("ENABLECHARGEMATCHCUT")) {
     matcher.enableChargeMatchCut();
   }
-
+  if (gSystem->Getenv("ML_CORRECTMATCHIGNORECUT")) {
+    matcher.setCorrectMatchIgnoreCut();
+  }
   if (gSystem->Getenv("MATCHING_CUTPARAM0")) {
     double matching_cutparam0 = atof(gSystem->Getenv("MATCHING_CUTPARAM0"));
     std::cout << " MATCHING_CUTPARAM0: " << matching_cutparam0 << std::endl;

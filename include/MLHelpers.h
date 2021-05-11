@@ -1,6 +1,7 @@
 
 //_________________________________________________________________________________________________
-string opt_reader(const char *filename = "MLConfigs.xml") {
+string opt_reader(const char* filename = "MLConfigs.xml")
+{
   // First create engine
   TXMLEngine xml;
   // Now try to parse xml file
@@ -19,7 +20,7 @@ string opt_reader(const char *filename = "MLConfigs.xml") {
   std::string MLOpt;
   std::string MLMethodType = gSystem->Getenv("TRAIN_ML_METHOD");
 
-  const char *content2;
+  const char* content2;
   bool param_found;
   std::map<string, string> configuration_map;
   std::vector<string> configvect;
@@ -45,7 +46,7 @@ string opt_reader(const char *filename = "MLConfigs.xml") {
 
   while (xml.GetNodeName(mainnode) != MLMethodType) {
     mainnode = xml.GetNext(mainnode);
-    if( !mainnode ) {
+    if (!mainnode) {
       std::cout << " [ERROR] There are no configurations for method " << MLMethodType << " in file Configs.xml." << endl;
       exit(0);
     }
@@ -54,11 +55,11 @@ string opt_reader(const char *filename = "MLConfigs.xml") {
 
     param_found = false;
     XMLNodePointer_t config =
-        xml.GetChild(mainnode); // Note that the program will search the entire
-                                // .xml file for the entered option
+      xml.GetChild(mainnode); // Note that the program will search the entire
+                              // .xml file for the entered option
     while (config) {
       XMLNodePointer_t param =
-          xml.GetChild(config); // second child layers should be the parameters
+        xml.GetChild(config); // second child layers should be the parameters
       while (param) {
         if (configuration_map[config_str] == xml.GetNodeName(param)) {
           content2 = xml.GetNodeContent(param);
