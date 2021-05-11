@@ -132,27 +132,28 @@ Usage()
   Machine learning interface - ROOT TMVA
 
   1) Generate training data file:
-     {0##*/} --exportTrainingData NMCH_Tracks -o <outputdir>
+    ${0##*/} --exportTrainingData NMCH_Tracks -o <outputdir>
      Creates a traning data root file. Each entry o on the tree contains
        40 parameters and 1 truth.
      Track-pairs can be selected by the matching cut functions. See option --cutFcn.
-     TODO: Configurable training data format
+     Correct matches can be forced into training data file with --CorrectMatchIgnoreCut
+
 
      Example:
      ${0##*/} --exportTrainingData 42 --cutFcn cutDistance --cutParam0 2.0 -o outputdir
 
   2) Train neural network:
-     {0##*/} --train <Training_Method> <config_alias/es> --trainingdata <training_data_file.root>
+    ${0##*/} --train <Training_Method> <config_alias/es> --trainingdata <training_data_file.root>
 
      Example:
      ${0##*/} --train DNN --layout DL4.2 --strategy ts1 --MLoptions oo1 --trainingdata MLTraining_1000_MCHTracks.root -o outputdir
 
       This creates the Trained Network file "Trained_ML_<config_alias>_<training_data_file>.weights.xml" in the folder "outputdir/trainedMLs/weights/"
-      Existing aliases are in ML configuration file "MLConfigs.xml". One can use any number of the three available. If none are set, then default values from TMVA will be used. The only restrition is that within the options of a method, options cannot have the same name, e.g., a layout and a strategy called "example1".  
+      Existing aliases are in ML configuration file "MLConfigs.xml". One can use any number of the three available. If none are set, then default values from TMVA will be used. The only restrition is that within the options of a method, options cannot have the same name, e.g., a layout and a strategy called "example1".
       Training method is mandatory.
 
   3) Run track-matching using trained network:
-     {0##*/} --match --matchFcn trainedML --weightfile weightfilename.xml -o outputdir
+    ${0##*/} --match --matchFcn trainedML --weightfile weightfilename.xml -o outputdir
      Runs track-matching as any matching function with a default machine learning
      score cut of 0.5 (see --MLScoreCut). Also generates ML_Evaluation.root with
      basic performance assessment of the method.
@@ -161,14 +162,14 @@ Usage()
      Configures matching score cut to select the final GlobalMuonTracks.root. (default: 0.5)
 
      Example:
-     ${0##*/} --match --matchFcn trainedML --weightfile trainedMLs/weights/Trained_ML_DNN13.0_ts2_oo1_MLTraining_1000_MCHTracks.weights.xml -o outputdir
+     ${0##*/} --match --matchFcn trainedML --weightfile trainedML/weights/Regression_DNN_DL4.2_ts1_oo1__MLTraining_1000_MCHTracks.weights.xml -o outputdir
 
 
  ======================================================================================
   Machine learning interface - Python
 
   1) Generate training data file:
-     {0##*/} --exportTrainingData NMCH_Tracks -o <outputdir>
+    ${0##*/} --exportTrainingData NMCH_Tracks -o <outputdir>
      Creates a traning data root file. Each entry o on the tree contains
        40 parameters and 1 truth.
      Track-pairs can be selected by the matching cut functions. See option --cutFcn.
@@ -178,7 +179,7 @@ Usage()
      ${0##*/} --exportTrainingData 42 --cutFcn cutDistance --cutParam0 2.0 -o outputdir
 
   2) Train XGBoost:
-     {0##*/} --train --onPythonML --trainingdata <training_data_file.root>
+    ${0##*/} --train --onPythonML --trainingdata <training_data_file.root>
 
      Example:
      matcher.sh --train --onPythonML --trainingdata MLTraining_1000_MCHTracks.root -o outputdir
@@ -463,6 +464,10 @@ while [ $# -gt 0 ] ; do
     --enableChargeMatchCut)
     export ENABLECHARGEMATCHCUT="1";
     shift 1
+    ;;
+    --CorrectMatchIgnoreCut)
+    export ML_CORRECTMATCHIGNORECUT="1";
+    shift 2
     ;;
     --exportTrainingData)
     export ML_EXPORTTRAINDATA="$2";
