@@ -117,12 +117,12 @@ class MUONMatcher
 
   void printMFTLabels()
   {
-    for (auto i = 0; i < (int)mftTrackLabels.getNElements(); i++) {
-      for (auto label : mftTrackLabels.getLabels(i)) {
-        std::cout << " Track " << i << " label: ";
-        label.print();
-        std::cout << std::endl;
-      }
+    auto i = 0;
+    for (auto label : mftTrackLabels) {
+      std::cout << " Track " << i << " label: ";
+      label.print();
+      std::cout << std::endl;
+      i++;
     }
   }
 
@@ -362,7 +362,7 @@ class MUONMatcher
   int mNEvents = 0;
   MatchingHelper mMatchingHelper;
 
-  o2::dataformats::MCTruthContainer<o2::MCCompLabel> mftTrackLabels;
+  std::vector<o2::MCCompLabel> mftTrackLabels;
   std::vector<std::vector<int>> mftTrackLabelsIDx;
 
   std::vector<o2::dataformats::MCTruthContainer<o2::MCCompLabel>> mSortedMCHTrackLabels;
