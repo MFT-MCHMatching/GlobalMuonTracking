@@ -229,6 +229,7 @@ class MUONMatcher
   };
 
   void exportTrainingDataRoot(int nMCHTracks = -1);
+  void setCorrectMatchIgnoreCut(bool v = true) { mCorrectMatchIgnoreCut = v; };
 
   // Matching cuts
   void enableChargeMatchCut() { mChargeCutEnabled = true; }
@@ -260,21 +261,53 @@ class MUONMatcher
 
     mTMVAReader->BookMVA("MUONMatcherML", mTMVAWeightFileName);
   }
-  void DLRegression(std::string input_name, std::string trainingfile, std::string trainingstr);
+  void MLRegression(std::string input_name, std::string trainingfile,
+                    std::string trainingstr);
+  void MLClassification(std::string input_name, std::string trainingfile,
+                        std::string trainingstr);
 
   void MLTraining()
   {
-    std::string MLLayout = gSystem->Getenv("ML_LAYOUT");
-    std::string MLStrat = gSystem->Getenv("ML_TRAINING_STRAT");
-    std::string MLOpt = gSystem->Getenv("ML_GENERAL_OPT");
+    std::string network_ID;
+    std::string MLLayout("");
+    std::string MLStrat("");
+    std::string MLOpt("");
     std::string training_file = gSystem->Getenv("ML_TRAINING_FILE");
 
-    std::string training_string(DNN_read(MLLayout, MLStrat, MLOpt));
-    std::string network_ID(MLLayout + "_" + MLStrat + "_" + MLOpt);
+    if (gSystem->Getenv("ML_LAYOUT")) {
+      MLLayout = gSystem->Getenv("ML_LAYOUT");
+      network_ID += MLLayout + "_";
+    }
+    if (gSystem->Getenv("ML_TRAINING_STRAT")) {
+      MLStrat = gSystem->Getenv(
+        "ML_TRAINING_STRAT"); //#TODO reorganize these strings in MLHelpers
+      network_ID += MLStrat + "_";
+    }
+    if (gSystem->Getenv("ML_GENERAL_OPT")) {
+      MLOpt = gSystem->Getenv("ML_GENERAL_OPT");
+      network_ID += MLOpt + "_";
+    }
+
+    std::string training_string("");
+    if (network_ID != "") {
+      std::string training_string(opt_reader());
+    } else {
+      std::cout << " [WARNING] Configurations for ML method were not setted. I'll use TMVAs default; hope that works!" << endl;
+    }
+
     std::cout << " Network name: " << network_ID << "\n"
               << std::endl;
-    //	std::cout<<" Training file "<< training_file<< "\n"<<std::endl;
-    DLRegression(network_ID, training_file, training_string);
+
+    std::string MLAnalysisType = gSystem->Getenv("ML_TYPE");
+    if (MLAnalysisType == "regression" || MLAnalysisType == "Regression") {
+      MLRegression(network_ID, training_file, training_string);
+
+    } else if (MLAnalysisType == "Classification" || MLAnalysisType == "classification") {
+      MLClassification(network_ID, training_file, training_string);
+
+    } else {
+      std::cout << " Type of ML analysis does not exist or it is not supported right now. Please choose Classification or Regression. " << std::endl;
+    }
   }
 
   //  Built-in cut functions
@@ -355,6 +388,7 @@ class MUONMatcher
   float_t mMLScoreCut;
   float_t mMLInputFeatures[sMaxMLFeatures];
   std::size_t mNInputFeatures = -1;
+  bool mCorrectMatchIgnoreCut = false; // Cut function not applied to correct match on training data
 
   string mMLInputFeaturesName[sMaxMLFeatures];
 };

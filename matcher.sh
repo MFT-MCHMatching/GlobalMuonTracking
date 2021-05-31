@@ -132,26 +132,28 @@ Usage()
   Machine learning interface - ROOT TMVA
 
   1) Generate training data file:
-     {0##*/} --exportTrainingData NMCH_Tracks -o <outputdir>
+    ${0##*/} --exportTrainingData NMCH_Tracks -o <outputdir>
      Creates a traning data root file. Each entry o on the tree contains
        40 parameters and 1 truth.
      Track-pairs can be selected by the matching cut functions. See option --cutFcn.
-     TODO: Configurable training data format
+     Correct matches can be forced into training data file with --CorrectMatchIgnoreCut
+
 
      Example:
      ${0##*/} --exportTrainingData 42 --cutFcn cutDistance --cutParam0 2.0 -o outputdir
 
   2) Train neural network:
-     {0##*/} --train <config_alias/es> --trainingdata <training_data_file.root>
+    ${0##*/} --train <Training_Method> <config_alias/es> --trainingdata <training_data_file.root>
 
      Example:
-     ${0##*/} --train --layout DNN4.2 --strategy ts1 --MLoptions oo1 --trainingdata MLTraining_1000_MCHTracks.root -o outputdir
+     ${0##*/} --train DNN --layout DL4.2 --strategy ts1 --MLoptions oo1 --trainingdata MLTraining_1000_MCHTracks.root -o outputdir
 
       This creates the Trained Network file "Trained_ML_<config_alias>_<training_data_file>.weights.xml" in the folder "outputdir/trainedMLs/weights/"
-      Existing aliases are in ML configuration file "MLConfigs.xml"
+      Existing aliases are in ML configuration file "MLConfigs.xml". One can use any number of the three available. If none are set, then default values from TMVA will be used. The only restrition is that within the options of a method, options cannot have the same name, e.g., a layout and a strategy called "example1".
+      Training method is mandatory.
 
   3) Run track-matching using trained network:
-     {0##*/} --match --matchFcn trainedML --weightfile weightfilename.xml -o outputdir
+    ${0##*/} --match --matchFcn trainedML --weightfile weightfilename.xml -o outputdir
      Runs track-matching as any matching function with a default machine learning
      score cut of 0.5 (see --MLScoreCut). Also generates ML_Evaluation.root with
      basic performance assessment of the method.
@@ -160,14 +162,14 @@ Usage()
      Configures matching score cut to select the final GlobalMuonTracks.root. (default: 0.5)
 
      Example:
-     ${0##*/} --match --matchFcn trainedML --weightfile trainedMLs/weights/Trained_ML_DNN13.0_ts2_oo1_MLTraining_1000_MCHTracks.weights.xml -o outputdir
+     ${0##*/} --match --matchFcn trainedML --weightfile trainedML/weights/Regression_DNN_DL4.2_ts1_oo1__MLTraining_1000_MCHTracks.weights.xml -o outputdir
 
 
  ======================================================================================
   Machine learning interface - Python
 
   1) Generate training data file:
-     {0##*/} --exportTrainingData NMCH_Tracks -o <outputdir>
+    ${0##*/} --exportTrainingData NMCH_Tracks -o <outputdir>
      Creates a traning data root file. Each entry o on the tree contains
        40 parameters and 1 truth.
      Track-pairs can be selected by the matching cut functions. See option --cutFcn.
@@ -177,7 +179,7 @@ Usage()
      ${0##*/} --exportTrainingData 42 --cutFcn cutDistance --cutParam0 2.0 -o outputdir
 
   2) Train XGBoost:
-     {0##*/} --train --onPythonML --trainingdata <training_data_file.root>
+    ${0##*/} --train --onPythonML --trainingdata <training_data_file.root>
 
      Example:
      matcher.sh --train --onPythonML --trainingdata MLTraining_1000_MCHTracks.root -o outputdir
@@ -321,6 +323,11 @@ trainML()
     exit
   fi
 
+  export ML_TYPE=${ML_TYPE:-"Regression"}
+  if [ $ML_TEST ]; then
+      export ML_NTEST=${ML_NTEST:-"0.1"}
+  fi
+
   if [ -d "${OUTDIR}" ]; then
       if ! [ -z ${UPDATECODE+x} ]; then updatecode ; fi
       pushd ${OUTDIR}
@@ -458,6 +465,10 @@ while [ $# -gt 0 ] ; do
     export ENABLECHARGEMATCHCUT="1";
     shift 1
     ;;
+    --CorrectMatchIgnoreCut)
+    export ML_CORRECTMATCHIGNORECUT="1";
+    shift 2
+    ;;
     --exportTrainingData)
     export ML_EXPORTTRAINDATA="$2";
     shift 2
@@ -475,8 +486,20 @@ while [ $# -gt 0 ] ; do
     shift 2
     ;;
     --train)
-    export TRAIN_ML="1";
+    export TRAIN_ML_METHOD="$2";
+    shift 2
+    ;;
+    --mltest)
+    export ML_TEST="1";
     shift 1
+    ;;
+    --ntest)
+    export ML_NTEST="$2";
+    shift 2
+    ;;
+    --type)
+    export ML_TYPE="$2";
+    shift 2
     ;;
     --layout)
     export ML_LAYOUT="$2";
@@ -492,6 +515,18 @@ while [ $# -gt 0 ] ; do
     ;;
     --trainingdata)
     export ML_TRAINING_FILE="`realpath $2`";
+    shift 2
+    ;;
+    --bkg)
+    export ML_BKG_FILE="`realpath $2`";
+    shift 2
+    ;;
+    --testdata)
+    export ML_TESTING_FILE="`realpath $2`";
+    shift 2
+    ;;
+    --testbkg)
+    export ML_TESTING_BKG="`realpath $2`";
     shift 2
     ;;
     --convert)
@@ -527,7 +562,7 @@ if ! [[ -z "$LOADEDMODULES" ]]
  fi
 
 
-if [ -z ${GENERATEMCH+x} ] && [ -z ${GENERATEMFT+x} ] && [ -z ${MATCHING+x} ] && [ -z ${CHECKS+x} ] && [ -z ${ML_EXPORTTRAINDATA+x} ] && [ -z ${TRAIN_ML+x} ]
+if [ -z ${GENERATEMCH+x} ] && [ -z ${GENERATEMFT+x} ] && [ -z ${MATCHING+x} ] && [ -z ${CHECKS+x} ] && [ -z ${ML_EXPORTTRAINDATA+x} ] && [ -z ${TRAIN_ML_METHOD+x} ]
 then
   echo "Missing use mode!"
   echo " "
@@ -568,5 +603,5 @@ fi
 
 if ! [ -z ${MATCHING+x} ]; then runMatching ; fi
 if ! [ -z ${ML_EXPORTTRAINDATA+x} ]; then exportMLTrainningData ; fi
-if ! [ -z ${TRAIN_ML+x} ]; then trainML ; fi
+if ! [ -z ${TRAIN_ML_METHOD+x} ]; then trainML ; fi
 if ! [ -z ${CHECKS+x} ]; then runChecks ; fi
