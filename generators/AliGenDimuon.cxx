@@ -43,10 +43,7 @@ ClassImp(AliGenDimuon)
   //====================================================================================================================================================
 
   AliGenDimuon::AliGenDimuon() : AliGenerator(),
-  fPt(0x0),
-  fRap(0x0),
   fPdgCode(0),
-  fBW(0x0),
   fMinMuonMomentum(4.0),
   fMaxMuonMomentum(9999.),
   fMinMuonRap(-3.8),
@@ -66,8 +63,6 @@ ClassImp(AliGenDimuon)
 
 AliGenDimuon::AliGenDimuon(Int_t nPart/*, Char_t *inputFile*/):
   AliGenerator(nPart),
-  fPt(0x0),
-  fRap(0x0),
   fPdgCode(0),
   fMinMuonMomentum(4.0),
   fMaxMuonMomentum(9999.),
@@ -85,11 +80,6 @@ AliGenDimuon::AliGenDimuon(Int_t nPart/*, Char_t *inputFile*/):
 
   fName  = "ParamDimuons";
   fTitle = "Parametric muon pair generator";
-
-  SetPtShape();
-  SetRapidityShape();
-  
-  fBW = new TF1("fBW","gaus",0.2,15);
 }
 
 //====================================================================================================================================================
@@ -204,11 +194,6 @@ void AliGenDimuon::Generate() {
 
     mom   = parent.P();
     theta = parent.Theta();
-    
-    //printf("Set kMuonMomentumRange:  Range(%.2f,%.2f) \n",fMinMuonMomentum,fMaxMuonMomentum);
-    //printf("Set kMuonRapRange:  Range(%.2f,%.2f) \n",fMinMuonRap,fMaxMuonRap);
-    //printf("Set kMuonEtaRange:  Range(%.2f,%.2f) \n",fMinMuonEta,fMaxMuonEta);
-    //printf("Generated parent particle kinematics: Pt = %.3f [GeV/c]  y = %.3f\n",pt,rap);
 
     //Select parent particle kinematics 
     if (TestBit(kPtRange)    && (pt<fPtMin || pt>fPtMax))             continue;
@@ -292,9 +277,6 @@ void AliGenDimuon::Generate() {
 	delete boostedMuon2;
 	continue;
       }
-
-      //printf("muon1 Kinematics: momentum = %.3f [GeV/c]   eta = %.3f\n",boostedMuon1->P(),boostedMuon1->PseudoRapidity());
-      //printf("muon2 Kinematics: momentum = %.3f [GeV/c]   eta = %.3f\n",boostedMuon2->P(),boostedMuon2->PseudoRapidity());
 
       //Select charge
       if (gRandom->Rndm() < 0.5){
@@ -402,44 +384,3 @@ void AliGenDimuon::Init() {
 }
 
 //====================================================================================================================================================
-
-void AliGenDimuon::SetPtShape(){
-
-  Double_t Ae = 187.;
-  Double_t Te = 0.39;
-  Double_t m0 = 0.135;
-  Double_t A  = 1526.;
-  Double_t T  = 0.29;
-  Double_t n  = 2.75;
-
-  fPt = new TF1("fPt","[0]*exp(-(sqrt(x*x + [1]*[1])-[1])/[2]) + [3]*pow(1+x*x/([4]*[4]*[5]),-[5])",0,10);
-  fPt->SetParameters(Ae,Te,m0,A,T,n);
-}
-
-//====================================================================================================================================================
-void AliGenDimuon::SetRapidityShape(){
-
-  Double_t p0 = 1.87732;
-  Double_t p1 = 0.00658212;
-  Double_t p2 = -0.0988071;
-  Double_t p3 = -0.000452746;
-  Double_t p4 = 0.00269782;
-
-  fRap = new TF1("fRap","[0]*(1 + [1]*x + [2]*x*x + [3]*x*x*x + [4]*x*x*x*x)",-10,10);
-  fRap->SetParameters(p0,p1,p2,p3,p4);
-}
-
-Double_t AliGenDimuon::EtaToTheta(Double_t arg) {
-  return (180. / TMath::Pi()) * 2. * atan(exp(-arg));
-}
-
-/*
-//====================================================================================================================================================
-void AliGenDimuon::SetDimuonKinematics(){
-  
-  //TFile* input = 
-
-  fRap = new TF1("fRap","[0]*(1 + [1]*x + [2]*x*x + [3]*x*x*x + [4]*x*x*x*x)",-10,10);
-  fRap->SetParameters(p0,p1,p2,p3,p4);
-}
-*/

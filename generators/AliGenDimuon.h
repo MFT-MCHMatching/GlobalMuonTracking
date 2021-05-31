@@ -53,9 +53,6 @@ private:
   AliGenDimuon(const AliGenDimuon&);
   AliGenDimuon &operator=(const AliGenDimuon&);
 
-  void SetPtShape();
-  void SetRapidityShape();
-
   Int_t fPdgCode;
   
   Double_t fMinMuonMomentum;
@@ -77,13 +74,9 @@ private:
 
 protected:
 
-  TF1* fPt;
-  TF1* fRap;
-
   //enum E_Parent{Rho2Body,Omega2Body,Phi2Body,Jpsi2Body,Psiprime,Upsilon1S,Upsilon2S,Upsilon3S,BtoJpasi,LMRinMedium};
 
   Double_t mass[10];
-  TF1* fBW;
   
   ClassDef(AliGenDimuon, 1)
 
