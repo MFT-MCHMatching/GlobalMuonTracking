@@ -166,7 +166,7 @@ void MUONMatcher::loadMFTTracksOut()
   std::vector<int> trackExtClsVec, *trackExtClsVecP = &trackExtClsVec;
   mftTrackTree->SetBranchAddress("MFTTrackClusIdx", &trackExtClsVecP);
 
-  o2::dataformats::MCTruthContainer<o2::MCCompLabel>* mcLabels = nullptr;
+  std::vector<o2::MCCompLabel>* mcLabels = nullptr;
   mftTrackTree->SetBranchAddress("MFTTrackMCTruth", &mcLabels);
   std::vector<o2::itsmft::ROFRecord>* mMFTTracksROFsP = nullptr;
   mftTrackTree->SetBranchAddress("MFTTracksROF", &mMFTTracksROFsP);
@@ -177,14 +177,13 @@ void MUONMatcher::loadMFTTracksOut()
   mMFTTracksROFs.swap(*mMFTTracksROFsP);
 
   std::cout << "Loaded " << mMFTTracks.size()
-            << " MFT Tracks. Label info:" << std::endl;
-  mcLabels->print(std::cout);
+            << " MFT Tracks." << std::endl;
   auto mftTrackID = 0;
   auto nInvalidMFTLabels = 0;
   for (auto& track : mMFTTracks) {
-    auto MFTlabel = mftTrackLabels.getLabels(mftTrackID);
-    if (MFTlabel[0].isValid()) {
-      auto event = MFTlabel[0].getEventID();
+    auto MFTlabel = mftTrackLabels.at(mftTrackID);
+    if (MFTlabel.isValid()) {
+      auto event = MFTlabel.getEventID();
       track.setParameters(track.getOutParam().getParameters());
       track.setCovariances(track.getOutParam().getCovariances());
       track.setZ(track.getOutParam().getZ());
@@ -387,10 +386,10 @@ void MUONMatcher::runEventMatching()
         auto MCHlabel = mSortedMCHTrackLabels[event].getLabels(GTrackID);
           auto mftTrackID = 0;
           for (auto mftTrack : mSortedMFTTracks[event]) {
-            auto MFTlabel = mftTrackLabels.getLabels(mftTrackLabelsIDx[event][mftTrackID]);
+            auto MFTlabel = mftTrackLabels.at(mftTrackLabelsIDx[event][mftTrackID]);
             if (matchingCut(gTrack, mftTrack)) {
               gTrack.countCandidate();
-              if (MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID())
+              if (MFTlabel.getTrackID() == MCHlabel[0].getTrackID())
                 gTrack.setCloseMatch();
               auto chi2 = matchingEval(gTrack, mftTrack);
               if (chi2 < gTrack.getMatchingChi2()) {
@@ -413,15 +412,15 @@ void MUONMatcher::runEventMatching()
         auto mftTrackID = 0;
         for (auto mftTrack : mSortedMFTTracks[event]) {
           //printf("BV: MFT track %d \n", mftTrackID);
-          auto MFTlabel = mftTrackLabels.getLabels(mftTrackLabelsIDx[event][mftTrackID]);
-          if (MFTlabel[0].getEventID() == event) {
+          auto MFTlabel = mftTrackLabels.at(mftTrackLabelsIDx[event][mftTrackID]);
+          if (MFTlabel.getEventID() == event) {
             if (matchingCut(gTrackTmp, mftTrack)) {
               GlobalMuonTrackExt gTrack{MCHtoGlobal(track)};
               gTrack.setParametersMCH(gTrack.getParameters());
               gTrack.setCovariancesMCH(gTrack.getCovariances());
               gTrack.countCandidate();
               //printf("BV: match MCH %d MFT %d \n", GTrackID, mftTrackID);
-              if (MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) {
+              if (MFTlabel.getTrackID() == MCHlabel[0].getTrackID()) {
                 gTrack.setCloseMatch();
               }
               auto chi2 = matchingEval(gTrack, mftTrack);
@@ -852,8 +851,8 @@ bool MUONMatcher::printMatchingPlaneView(int event, int MCHTrackID)
 
   auto mftTrackID = 0, nMFTTracks = 0;
   for (auto mftTrack : mSortedMFTTracks[event]) {
-    auto MFTlabel = mftTrackLabels.getLabels(mftTrackLabelsIDx[event][mftTrackID]);
-    if (MFTlabel[0].getEventID() == event) {
+    auto MFTlabel = mftTrackLabels.at(mftTrackLabelsIDx[event][mftTrackID]);
+    if (MFTlabel.getEventID() == event) {
       nMFTTracks++;
       xPositions.emplace_back(mftTrack.getX());
       yPositions.emplace_back(mftTrack.getY());
@@ -861,7 +860,7 @@ bool MUONMatcher::printMatchingPlaneView(int event, int MCHTrackID)
       if (matchingCut(MCHTrack, mftTrack)) {
         pointsColors.back() = "blue";
         MCHTrack.countCandidate();
-        if (MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) {
+        if (MFTlabel.getTrackID() == MCHlabel[0].getTrackID()) {
           MCHTrack.setCloseMatch();
           pointsColors.back() = "magenta"; // Close match
           localCorrectMFTMatch = pointsColors.size();
@@ -878,7 +877,7 @@ bool MUONMatcher::printMatchingPlaneView(int event, int MCHTrackID)
           matchCovStr = getCovString(mftTrack);
         }
       } else {
-        if (MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID()) {
+        if (MFTlabel.getTrackID() == MCHlabel[0].getTrackID()) {
           pointsColors.back() = "violet"; // far match
           correctParamStr = getParamString(mftTrack);
           correctCovStr = getCovString(mftTrack);
@@ -1310,16 +1309,16 @@ void MUONMatcher::finalize()
         o2::MCCompLabel thisLabel{MCHlabel[0].getTrackID(),
                                   MCHlabel[0].getEventID(), -1, true};
         if (bestMFTTrackMatchID >= 0) {
-          auto MFTlabel = mftTrackLabels.getLabels(bestMFTTrackMatchID);
+          auto MFTlabel = mftTrackLabels.at(bestMFTTrackMatchID);
           if (mVerbose) {
             std::cout << "    MFT Label:  ";
-            MFTlabel[0].print();
+            MFTlabel.print();
             std::cout << "    MCH Label:  ";
             MCHlabel[0].print();
           }
 
-          if ((MCHlabel[0].getTrackID() == MFTlabel[0].getTrackID()) and
-              (MCHlabel[0].getEventID() == MFTlabel[0].getEventID())) {
+          if ((MCHlabel[0].getTrackID() == MFTlabel.getTrackID()) and
+              (MCHlabel[0].getEventID() == MFTlabel.getEventID())) {
             thisLabel = MCHlabel[0];
             thisLabel.setFakeFlag(false);
             gTrack.computeResiduals2Cov(mMFTTracks[bestMFTTrackMatchID]);
@@ -1357,16 +1356,16 @@ void MUONMatcher::finalize()
         o2::MCCompLabel thisLabel{MCHlabel[0].getTrackID(),
                                   MCHlabel[0].getEventID(), -1, true};
         if (bestMFTTrackMatchID >= 0) {
-          auto MFTlabel = mftTrackLabels.getLabels(bestMFTTrackMatchID);
+          auto MFTlabel = mftTrackLabels.at(bestMFTTrackMatchID);
           if (mVerbose) {
             std::cout << "    MFT Label:  ";
-            MFTlabel[0].print();
+            MFTlabel.print();
             std::cout << "    MCH Label:  ";
             MCHlabel[0].print();
           }
 
-          if ((MCHlabel[0].getTrackID() == MFTlabel[0].getTrackID()) and
-              (MCHlabel[0].getEventID() == MFTlabel[0].getEventID())) {
+          if ((MCHlabel[0].getTrackID() == MFTlabel.getTrackID()) and
+              (MCHlabel[0].getEventID() == MFTlabel.getEventID())) {
             thisLabel = MCHlabel[0];
             thisLabel.setFakeFlag(false);
             gTrack.computeResiduals2Cov(mMFTTracks[bestMFTTrackMatchID]);
@@ -2185,8 +2184,8 @@ void MUONMatcher::exportTrainingDataRoot(int nMCHTracks)
         }
         auto mftTrackID = 0;
         for (auto mftTrack : mSortedMFTTracks[event]) {
-          auto MFTlabel = mftTrackLabels.getLabels(mftTrackLabelsIDx[event][mftTrackID]);
-          Truth = (int)(MFTlabel[0].getTrackID() == MCHlabel[0].getTrackID());
+          auto MFTlabel = mftTrackLabels.at(mftTrackLabelsIDx[event][mftTrackID]);
+          Truth = (int)(MFTlabel.getTrackID() == MCHlabel[0].getTrackID());
           if ((mCorrectMatchIgnoreCut && Truth) || matchingCut(mchTrack, mftTrack)) {
 
             setMLFeatures(mchTrack, mftTrack);
