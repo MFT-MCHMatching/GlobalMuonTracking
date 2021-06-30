@@ -58,6 +58,13 @@ Usage()
   3) Run track matching:
      ${0##*/} --match --matchFcn <matching_function> --cutFcn <cut_function> --cutParam0 <val0> -o <outputdir>
 
+     --matchPlaneZ
+       Sets the z position of the matching plane; MCH and MFT tracks are propagated to this plane for matching evaluation.
+
+     --InitMFTTracksFromVertexingParameters
+       Initializes MFT tracks from the vertexing parameters: tracks are propagated to the matching plane starting from the main vertexing parameters.
+       MCS effects due to MFT disks are added to the covariances matrix. 
+
      --matchSaveAll
        Save all MCH/MFT track combinations, not only the best match
 
@@ -91,6 +98,11 @@ Usage()
                                 ** Use --cutParamN (see bellow)
 
         cutDistanceAndAngles3Sigma - MFT TDR cut (Section 6.5)
+
+        cut3Sigma - 3 Sigma cut for all parameters.
+
+        cutNSigma - N Sigma cut for all parameters. N msut be set with `--cutParam0 <N>`.
+
 
         cutDistanceAndAnglesVar - Cut based on observed MCH residuals variances
 
@@ -436,6 +448,10 @@ while [ $# -gt 0 ] ; do
     --matchPlaneZ)
     export MATCHING_PLANEZ="$2";
     shift 2
+    ;;
+    --InitMFTTracksFromVertexingParameters)
+    export INIT_MFT_FROM_VERTEXING="1";
+    shift 1
     ;;
     --matchSaveAll)
     export MATCH_SAVE_ALL="1";

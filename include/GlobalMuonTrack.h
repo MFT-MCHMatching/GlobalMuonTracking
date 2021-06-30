@@ -14,8 +14,7 @@ namespace o2::track
 {
 
 using ClusRefs = o2::dataformats::RangeRefComp<4>;
-using SMatrix55 =
-  ROOT::Math::SMatrix<double, 5, 5, ROOT::Math::MatRepSym<double, 5>>;
+using SMatrix55Sym = ROOT::Math::SMatrix<double, 5, 5, ROOT::Math::MatRepSym<double, 5>>;
 using SMatrix5 = ROOT::Math::SVector<Double_t, 5>;
 
 class GlobalMuonTrack : public o2::track::TrackParCovFwd
@@ -95,13 +94,13 @@ class GlobalMuonTrackExt : public o2::track::GlobalMuonTrack
   {
     mParametersMFT = parameters;
   }
-  const SMatrix55& getCovariancesMCH() const { return mCovariancesMCH; }
-  const SMatrix55& getCovariancesMFT() const { return mCovariancesMFT; }
-  void setCovariancesMCH(const SMatrix55& covariances)
+  const SMatrix55Sym& getCovariancesMCH() const { return mCovariancesMCH; }
+  const SMatrix55Sym& getCovariancesMFT() const { return mCovariancesMFT; }
+  void setCovariancesMCH(const SMatrix55Sym& covariances)
   {
     mCovariancesMCH = covariances;
   }
-  void setCovariancesMFT(const SMatrix55& covariances)
+  void setCovariancesMFT(const SMatrix55Sym& covariances)
   {
     mCovariancesMFT = covariances;
   }
@@ -112,11 +111,11 @@ class GlobalMuonTrackExt : public o2::track::GlobalMuonTrack
   SMatrix5
     mParametersMCH{}; ///< \brief Track parameters, MCH part of the track
   SMatrix5
-    mParametersMFT{};          ///< \brief Track parameters, MFT part of the track
-  SMatrix55 mCovariancesMCH{}; ///< \brief Covariance matrix of track
-                               ///< parameters, MCH
-  SMatrix55 mCovariancesMFT{}; ///< \brief Covariance matrix of track
-                               ///< parameters, MFT
+    mParametersMFT{};             ///< \brief Track parameters, MFT part of the track
+  SMatrix55Sym mCovariancesMCH{}; ///< \brief Covariance matrix of track
+                                  ///< parameters, MCH
+  SMatrix55Sym mCovariancesMFT{}; ///< \brief Covariance matrix of track
+                                  ///< parameters, MFT
 };
 } // namespace o2::track
 

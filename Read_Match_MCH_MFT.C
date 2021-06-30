@@ -18,7 +18,7 @@
 using GlobalMuonTrack = o2::track::GlobalMuonTrack;
 using GlobalMuonTrackExt = o2::track::GlobalMuonTrackExt;
 using SMatrix5 = o2::track::SMatrix5;
-using SMatrix55 = o2::track::SMatrix55;
+using SMatrix55Sym = o2::track::SMatrix55Sym;
 
 void Read_Match_MCH_MFT(
   const std::string trkFile = "GlobalMuonTracksExt.root")
@@ -39,8 +39,8 @@ void Read_Match_MCH_MFT(
     for (auto& gmTrack : trackGMVec) {
       const SMatrix5& trackMCHpar = gmTrack.getParametersMCH();
       const SMatrix5& trackMFTpar = gmTrack.getParametersMFT();
-      const SMatrix55& trackMCHcov = gmTrack.getCovariancesMCH();
-      const SMatrix55& trackMFTcov = gmTrack.getCovariancesMFT();
+      const SMatrix55Sym& trackMCHcov = gmTrack.getCovariancesMCH();
+      const SMatrix55Sym& trackMFTcov = gmTrack.getCovariancesMFT();
       if (gmTrack.closeMatch()) {
         printf("Global track %d close match!\n", igm);
       } else {
