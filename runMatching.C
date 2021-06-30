@@ -90,6 +90,11 @@ void loadAndSetMatchingConfig()
     matcher.setMatchingFunction(&MUONMatcher::matchMFT_MCH_TracksAllParam);
   }
 
+  if (gSystem->Getenv("INIT_MFT_FROM_VERTEXING")) {
+    std::cout << " Configuring MFT tracks initializaton from vertexing parameters." << std::endl;
+    matcher.setLoadMFTTracksOut(false);
+  }
+
   if (gSystem->Getenv("MATCHING_PLANEZ")) {
     double matching_planeZ = atof(gSystem->Getenv("MATCHING_PLANEZ"));
     std::cout << " MATCHING_PLANEZ: " << matching_planeZ << std::endl;
@@ -118,10 +123,20 @@ void loadAndSetMatchingConfig()
       std::cout << " Setting " << matching_cutfcn << std::endl;
       matcher.setCutFunction(&MUONMatcher::matchCutDistanceAndAngles);
     }
-    if (matching_cutfcn.find("cutDistanceAndAngles3Sigma_") <
+    if (matching_cutfcn.find("cutDistanceAndAngles3Sigma_") < 
         matching_cutfcn.length()) {
       std::cout << " Setting " << matching_cutfcn << std::endl;
       matcher.setCutFunction(&MUONMatcher::matchCut3SigmaXYAngles);
+    }
+    if (matching_cutfcn.find("cut3Sigma_") < 
+        matching_cutfcn.length()) {
+      std::cout << " Setting " << matching_cutfcn << std::endl;
+      matcher.setCutFunction(&MUONMatcher::matchCut3Sigma);
+    }
+    if (matching_cutfcn.find("cutNSigma_") < 
+        matching_cutfcn.length()) {
+      std::cout << " Setting " << matching_cutfcn << std::endl;
+      matcher.setCutFunction(&MUONMatcher::matchCutNSigma);
     }
     if (matching_cutfcn.find("cutDistanceAndAnglesVar_") <
         matching_cutfcn.length()) {

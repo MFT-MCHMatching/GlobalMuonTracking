@@ -113,6 +113,7 @@ class MUONMatcher
   // Track IO
   void loadMCHTracks();
   void loadMFTTracksOut();
+  void setLoadMFTTracksOut(bool v = true) { mLoadMFTOutparameters = v; }
   void saveGlobalMuonTracks();
 
   void printMFTLabels()
@@ -318,6 +319,8 @@ class MUONMatcher
   bool matchCutDistanceAndAngles(const MCHTrackConv&, const MFTTrack&);
   bool matchCutDistanceSigma(const MCHTrackConv&, const MFTTrack&);
   bool matchCut3SigmaXYAngles(const MCHTrackConv&, const MFTTrack&);
+  bool matchCut3Sigma(const MCHTrackConv&, const MFTTrack&);
+  bool matchCutNSigma(const MCHTrackConv&, const MFTTrack&);
   bool matchCutVarXYAngles(const MCHTrackConv&, const MFTTrack&);
   void setCutParam(int index, double param)
   {
@@ -340,6 +343,8 @@ class MUONMatcher
   // Global Muon Track Methods
   void fitGlobalMuonTrack(GlobalMuonTrack&); // Kalman filter
   bool computeCluster(GlobalMuonTrack&, MFTCluster&);
+  template <typename T>
+  bool propagateToNextClusterWithMCS(T& track, double z);
   double (MUONMatcher::*mMatchFunc)(const MCHTrackConv&, const MFTTrack&);
   double (*mCustomMatchFunc)(const MCHTrackConv&,
                              const MFTTrack&) = nullptr;
@@ -377,11 +382,13 @@ class MUONMatcher
   double mField_z;
   const double sLastMFTPlaneZ = -77.5;
   double mMatchingPlaneZ = sLastMFTPlaneZ;
+  double mMFTDiskThicknessInX0 = 0.042 / 5.0;
   std::vector<double> mCutParams;
   bool mVerbose = false;
   TGeoManager* mGeoManager;
   bool mMatchSaveAll = false;
   bool mChargeCutEnabled = false;
+  bool mLoadMFTOutparameters = true; 
 
   // TMVA interface
   static const std::size_t sMaxMLFeatures = 50;
@@ -394,6 +401,84 @@ class MUONMatcher
 
   string mMLInputFeaturesName[sMaxMLFeatures];
 };
+
+
+
+//_________________________________________________________________________________________________
+template <typename T>
+bool MUONMatcher::propagateToNextClusterWithMCS(T& track, double z)
+{
+
+  // Propagate track to the next cluster z position, adding angular MCS effects at 
+  // each MFT disk crossed by the track
+
+  using o2::mft::constants::LayerZPosition;
+  int startingLayerID, newLayerID;
+  auto startingZ = track.getZ();
+
+  //LayerID of each cluster from ZPosition // TODO: Use ChipMapping
+  for (auto layer = 10; layer--;) {
+    if (startingZ<LayerZPosition[layer] + .3 & startingZ> LayerZPosition[layer] - .3) {
+      startingLayerID = layer;
+    }
+  }
+  for (auto layer = 10; layer--;) {
+    if (z<LayerZPosition[layer] + .3 & z> LayerZPosition[layer] - .3) {
+      newLayerID = layer;
+    }
+  }
+
+  int direction = (newLayerID - startingLayerID) / std::abs(newLayerID - startingLayerID);
+  auto currentLayer = startingLayerID;
+
+  if (mVerbose) {
+    std::cout << " => Propagate to next cluster with MCS : startingLayerID = " << startingLayerID << " = > "
+              << " newLayerID = " << newLayerID << " (NLayers = " << std::abs(newLayerID - startingLayerID);
+    std::cout << ") ; track.getZ() = " << track.getZ() << " => ";
+    std::cout << "destination cluster z = " << z << " ; " << std::endl;
+  }
+
+  // Number of disks crossed by this track segment
+  while (currentLayer != newLayerID) {
+    auto nextlayer = currentLayer + direction;
+    auto nextZ = LayerZPosition[nextlayer];
+
+    int NDisksMS;
+    if (nextZ - track.getZ() > 0) {
+      NDisksMS = (currentLayer % 2 == 0) ? (currentLayer - nextlayer) / 2 : (currentLayer - nextlayer + 1) / 2;
+    } else {
+      NDisksMS = (currentLayer % 2 == 0) ? (nextlayer - currentLayer + 1) / 2 : (nextlayer - currentLayer) / 2;
+    }
+
+    if (mVerbose) {
+      std::cout << "currentLayer = " << currentLayer << " ; "
+                << "nextlayer = " << nextlayer << " ; ";
+      std::cout << "track.getZ() = " << track.getZ() << " ; ";
+      std::cout << "nextZ = " << nextZ << " ; ";
+      std::cout << "NDisksMS = " << NDisksMS << std::endl;
+    }
+    if ((NDisksMS * mMFTDiskThicknessInX0) != 0) {
+      track.addMCSEffect(NDisksMS * mMFTDiskThicknessInX0);
+      if (mVerbose) {
+        std::cout << "Track covariances after MCS effects: \n"
+                  << track.getCovariances() << std::endl
+                  << std::endl;
+      }
+    }
+
+    if (mVerbose) {
+      std::cout << "  BeforeExtrap: X = " << track.getX() << " Y = " << track.getY() << " Z = " << track.getZ() << " Tgl = " << track.getTanl() << "  Phi = " << track.getPhi() << " pz = " << track.getPz() << " q/pt = " << track.getInvQPt() << std::endl;
+    }
+
+    track.propagateToZhelix(nextZ, mField_z);
+    currentLayer = nextlayer;
+  }
+  if (z != track.getZ()) {
+    track.propagateToZhelix(z, mField_z);
+  }
+  return true;
+}
+
 
 //_________________________________________________________________________________________________
 std::string getParamString(o2::track::TrackParCovFwd t)

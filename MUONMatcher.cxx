@@ -184,11 +184,14 @@ void MUONMatcher::loadMFTTracksOut()
     auto MFTlabel = mftTrackLabels.at(mftTrackID);
     if (MFTlabel.isValid()) {
       auto event = MFTlabel.getEventID();
-      track.setParameters(track.getOutParam().getParameters());
-      track.setCovariances(track.getOutParam().getCovariances());
-      track.setZ(track.getOutParam().getZ());
-      track.propagateToZhelix(mMatchingPlaneZ, mField_z);
-
+      if (mLoadMFTOutparameters) {
+        track.setParameters(track.getOutParam().getParameters());
+        track.setCovariances(track.getOutParam().getCovariances());
+        track.setZ(track.getOutParam().getZ());
+        track.propagateToZhelix(mMatchingPlaneZ, mField_z);
+      } else {
+        propagateToNextClusterWithMCS(track, mMatchingPlaneZ);
+      }
       mSortedMFTTracks[event].push_back(track);
       mftTrackLabelsIDx[event].push_back(mftTrackID);
     } else {
@@ -260,18 +263,8 @@ void MUONMatcher::loadMFTClusters()
     float sigmaX2 = DefClusError2Row, sigmaY2 = DefClusError2Col;
 
     if (pattID != o2::itsmft::CompCluster::InvalidPatternID) {
-      // sigmaX2 = dict.getErr2X(pattID); // ALPIDE local X coordinate => MFT
-      // global X coordinate (ALPIDE rows) sigmaY2 = dict.getErr2Z(pattID); //
-      // ALPIDE local Z coordinate => MFT global Y coordinate (ALPIDE columns)
-      // temporary, until ITS bug fix
-      sigmaX2 = dict.getErrX(pattID) * dict.getErrX(pattID);
-      sigmaY2 = dict.getErrZ(pattID) * dict.getErrZ(pattID);
-      if (!dict.isGroup(pattID)) {
-        locC = dict.getClusterCoordinates(c);
-      } else {
-        locC = dict.getClusterCoordinates(c);
-      }
-    } else {
+      sigmaX2 = dict.getErr2X(pattID); // ALPIDE local X coordinate => MFT global X coordinate (ALPIDE rows)
+      sigmaY2 = dict.getErr2Z(pattID); // ALPIDE local Z coordinate => MFT global Y coordinate (ALPIDE columns)
       locC = dict.getClusterCoordinates(c);
     }
 
@@ -357,11 +350,14 @@ void MUONMatcher::initGlobalTracks()
       helper.MatchingCutFunc = "_cutDistanceAndAngles";
     if (mCutFunc == &MUONMatcher::matchCut3SigmaXYAngles)
       helper.MatchingCutFunc = "_cutDistanceAndAngles3Sigma";
+    if (mCutFunc == &MUONMatcher::matchCut3Sigma)
+      helper.MatchingCutFunc = "_cut3Sigma";
+    if (mCutFunc == &MUONMatcher::matchCutNSigma)
+      helper.MatchingCutFunc = "_cutNSigma";
     if (mCutFunc == &MUONMatcher::matchCutVarXYAngles)
       helper.MatchingCutFunc = "_cutDistanceAndAnglesVar";
   }
 }
-
 
 //_________________________________________________________________________________________________
 void MUONMatcher::runEventMatching()
@@ -384,21 +380,21 @@ void MUONMatcher::runEventMatching()
     if (!mMatchSaveAll) {
       for (auto& gTrack : mSortedGlobalMuonTracks[event]) {
         auto MCHlabel = mSortedMCHTrackLabels[event].getLabels(GTrackID);
-          auto mftTrackID = 0;
-          for (auto mftTrack : mSortedMFTTracks[event]) {
-            auto MFTlabel = mftTrackLabels.at(mftTrackLabelsIDx[event][mftTrackID]);
-            if (matchingCut(gTrack, mftTrack)) {
-              gTrack.countCandidate();
-              if (MFTlabel.getTrackID() == MCHlabel[0].getTrackID())
-                gTrack.setCloseMatch();
-              auto chi2 = matchingEval(gTrack, mftTrack);
-              if (chi2 < gTrack.getMatchingChi2()) {
-                gTrack.setBestMFTTrackMatchID(mftTrackLabelsIDx[event][mftTrackID]);
-                gTrack.setMatchingChi2(chi2);
-              }
+        auto mftTrackID = 0;
+        for (auto mftTrack : mSortedMFTTracks[event]) {
+          auto MFTlabel = mftTrackLabels.at(mftTrackLabelsIDx[event][mftTrackID]);
+          if (matchingCut(gTrack, mftTrack)) {
+            gTrack.countCandidate();
+            if (MFTlabel.getTrackID() == MCHlabel[0].getTrackID())
+              gTrack.setCloseMatch();
+            auto chi2 = matchingEval(gTrack, mftTrack);
+            if (chi2 < gTrack.getMatchingChi2()) {
+              gTrack.setBestMFTTrackMatchID(mftTrackLabelsIDx[event][mftTrackID]);
+              gTrack.setMatchingChi2(chi2);
             }
-            mftTrackID++;
           }
+          mftTrackID++;
+        }
         GTrackID++;
       }      // /loop over global tracks
     } else { // if matchSaveAll is set
@@ -438,7 +434,7 @@ void MUONMatcher::runEventMatching()
       } // end loop MCH tracks
     }   // end match save all
     nGlobalMuonTracksExt += (int)mSortedGlobalMuonTracksExt[event].size();
-  }     // /loop over events
+  } // /loop over events
 
   if (!mMatchSaveAll) {
     std::cout << "Finished runEventMatching on " << nMCHTracks << " MCH Tracks on " << mNEvents << " events"
@@ -1224,14 +1220,54 @@ bool MUONMatcher::matchCut3SigmaXYAngles(const MCHTrackConv& mchTrack,
   auto dx = mchTrack.getX() - mftTrack.getX();
   auto dy = mchTrack.getY() - mftTrack.getY();
   auto dPhi = mchTrack.getPhi() - mftTrack.getPhi();
-  auto dTheta =
-    TMath::Abs(EtaToTheta(mchTrack.getEta()) - EtaToTheta(mftTrack.getEta()));
+  auto dTanl = TMath::Abs(mchTrack.getTanl() - mftTrack.getTanl());
   auto distance = TMath::Sqrt(dx * dx + dy * dy);
-  auto cutDistance =
-    3 * TMath::Sqrt(mchTrack.getSigma2X() + mchTrack.getSigma2Y());
-  auto cutPhi = 3 * TMath::Sqrt(mchTrack.getSigma2Phi());
-  auto cutTanl = 3 * TMath::Sqrt(mchTrack.getSigma2Tanl());
-  return (distance < cutDistance) and (dPhi < cutPhi) and (dTheta < cutTanl);
+  auto cutDistance = 3 * TMath::Sqrt(mchTrack.getSigma2X() + mchTrack.getSigma2Y());
+  auto cutPhi = 3 * TMath::Sqrt(mchTrack.getSigma2Phi() + mftTrack.getSigma2Phi());
+  auto cutTanl = 3 * TMath::Sqrt(mchTrack.getSigma2Tanl() + mftTrack.getSigma2Tanl());
+  return (distance < cutDistance) and (dPhi < cutPhi) and (dTanl < cutTanl);
+}
+
+//_________________________________________________________________________________________________
+bool MUONMatcher::matchCut3Sigma(const MCHTrackConv& mchTrack,
+                                 const MFTTrack& mftTrack)
+{
+
+  if (mChargeCutEnabled && (mchTrack.getCharge() != mftTrack.getCharge()))
+    return false;
+
+  auto dx = mchTrack.getX() - mftTrack.getX();
+  auto dy = mchTrack.getY() - mftTrack.getY();
+  auto dPhi = mchTrack.getPhi() - mftTrack.getPhi();
+  auto dTanl = TMath::Abs(mchTrack.getTanl() - mftTrack.getTanl());
+  auto dInvQPt = TMath::Abs(mchTrack.getInvQPt() - mftTrack.getInvQPt());
+  auto distance = TMath::Sqrt(dx * dx + dy * dy);
+  auto cutDistance = 3 * TMath::Sqrt(mchTrack.getSigma2X() + mchTrack.getSigma2Y());
+  auto cutPhi = 3 * TMath::Sqrt(mchTrack.getSigma2Phi() + mftTrack.getSigma2Phi());
+  auto cutTanl = 3 * TMath::Sqrt(mchTrack.getSigma2Tanl() + mftTrack.getSigma2Tanl());
+  auto cutInvQPt = 3 * TMath::Sqrt(mchTrack.getSigma2InvQPt() + mftTrack.getSigma2InvQPt());
+  return (distance < cutDistance) and (dPhi < cutPhi) and (dTanl < cutTanl) and (dInvQPt < cutInvQPt);
+}
+
+//_________________________________________________________________________________________________
+bool MUONMatcher::matchCutNSigma(const MCHTrackConv& mchTrack,
+                                 const MFTTrack& mftTrack)
+{
+
+  if (mChargeCutEnabled && (mchTrack.getCharge() != mftTrack.getCharge()))
+    return false;
+
+  auto dx = mchTrack.getX() - mftTrack.getX();
+  auto dy = mchTrack.getY() - mftTrack.getY();
+  auto dPhi = mchTrack.getPhi() - mftTrack.getPhi();
+  auto dTanl = TMath::Abs(mchTrack.getTanl() - mftTrack.getTanl());
+  auto dInvQPt = TMath::Abs(mchTrack.getInvQPt() - mftTrack.getInvQPt());
+  auto distance = TMath::Sqrt(dx * dx + dy * dy);
+  auto cutDistance = mCutParams[0] * TMath::Sqrt(mchTrack.getSigma2X() + mchTrack.getSigma2Y());
+  auto cutPhi = mCutParams[0] * TMath::Sqrt(mchTrack.getSigma2Phi()) + mftTrack.getSigma2Phi();
+  auto cutTanl = mCutParams[0] * TMath::Sqrt(mchTrack.getSigma2Tanl() + mftTrack.getSigma2Tanl());
+  auto cutInvQPt = mCutParams[0] * TMath::Sqrt(mchTrack.getSigma2InvQPt() + mftTrack.getSigma2InvQPt());
+  return (distance < cutDistance) and (dPhi < cutPhi) and (dTanl < cutTanl) and (dInvQPt < cutInvQPt);
 }
 
 //_________________________________________________________________________________________________
@@ -1432,25 +1468,28 @@ void MUONMatcher::finalize()
 //_________________________________________________________________________________________________
 void MUONMatcher::saveGlobalMuonTracks()
 {
+  std::vector<GlobalMuonTrack>* tracks;
+  std::vector<GlobalMuonTrackExt>* tracksExt;
+  MCLabels* trackLabels;
   std::string gmtracksfilename;
-  gmtracksfilename =
-    mMatchSaveAll ? "GlobalMuonTracksExt.root" : "GlobalMuonTracks.root";
+  gmtracksfilename = mMatchSaveAll ? "GlobalMuonTracksExt.root" : "GlobalMuonTracks.root";
   TFile outFile(gmtracksfilename.c_str(), "RECREATE");
   TTree outTree("o2sim", "Global Muon Tracks");
+  outTree.Branch("GlobalMuonTrackMCTruth", &trackLabels);
+
+  if (!mMatchSaveAll) {
+    outTree.Branch("GlobalMuonTrack", &tracks);
+  } else {
+    outTree.Branch("GlobalMuonTrackExt", &tracksExt);
+  }
 
   for (int event = 0; event < mNEvents; event++) {
-    std::vector<GlobalMuonTrack>* tracks = &mSortedGlobalMuonTracks[event];
-    std::vector<GlobalMuonTrackExt>* tracksExt = &mSortedGlobalMuonTracksExt[event];
-    MCLabels* trackLabels = &mSortedGlobalTrackLabels[event];
+    tracks = &mSortedGlobalMuonTracks[event];
+    tracksExt = &mSortedGlobalMuonTracksExt[event];
+    trackLabels = &mSortedGlobalTrackLabels[event];
 
-    if (!mMatchSaveAll) {
-      outTree.Branch("GlobalMuonTrack", &tracks);
+    std::cout << " Saving " << tracks->size() << "  GlobalMuonTracks for event  " << event << " of " << mNEvents << std::endl;
 
-    } else {
-      outTree.Branch("GlobalMuonTrackExt", &tracksExt);
-    }
-
-    outTree.Branch("GlobalMuonTrackMCTruth", &trackLabels);
     outTree.Fill();
   }
   outTree.Write();
@@ -1522,8 +1561,7 @@ void MUONMatcher::fitGlobalMuonTrack(GlobalMuonTrack& gTrack)
   auto Hz = std::copysign(1, mField_z);
   if (mVerbose) {
 
-    std::cout << "\n ***************************** Start Fitting new track "
-                 "***************************** \n";
+    std::cout << "\n ***************************** Start Fitting new track ***************************** \n";
     std::cout << "  N Clusters = " << ncls << std::endl;
     std::cout << "  Best MFT Track Match ID " << gTrack.getBestMFTTrackMatchID()
               << std::endl;
@@ -1533,49 +1571,12 @@ void MUONMatcher::fitGlobalMuonTrack(GlobalMuonTrack& gTrack)
               << " qpt = " << 1.0 / gTrack.getInvQPt() << std::endl;
   }
 
-  /// Compute the initial track parameters to seed the Kalman filter
-
-  int first_cls, last_cls;
-  // Vertexing
-  first_cls = nPoints - 1;
-  last_cls = 0;
-
-  auto firstMFTclsEntry = mtrackExtClsIDs[offset + ncls - 1];
-  auto& firstMFTcluster = mMFTClusters[firstMFTclsEntry];
-  auto lastMFTclsEntry = mtrackExtClsIDs[offset];
-  auto& lastMFTcluster = mMFTClusters[lastMFTclsEntry];
-
-  const auto& x0 = firstMFTcluster.getX();
-  const auto& y0 = firstMFTcluster.getY();
-  const auto& z0 = firstMFTcluster.getZ();
-
-  const auto& xf = lastMFTcluster.getX();
-  const auto& yf = lastMFTcluster.getY();
-  const auto& zf = lastMFTcluster.getZ();
-
-  auto deltaX = x0 - xf;
-  auto deltaY = y0 - yf;
-  auto deltaZ = z0 - zf;
-  auto deltaR = TMath::Sqrt(deltaX * deltaX + deltaY * deltaY);
-  auto tanl0 =
-    0.5 * TMath::Sqrt2() * (deltaZ / deltaR) *
-    TMath::Sqrt(
-      TMath::Sqrt((invQPt0 * deltaR * k) * (invQPt0 * deltaR * k) + 1) + 1);
-  auto phi0 =
-    TMath::ATan2(deltaY, deltaX) - 0.5 * Hz * invQPt0 * deltaZ * k / tanl0;
-  auto sigmax0sq = firstMFTcluster.sigmaX2;
-  auto sigmay0sq = firstMFTcluster.sigmaY2;
-  auto sigmax1sq = lastMFTcluster.sigmaX2;
-  auto sigmay1sq = lastMFTcluster.sigmaY2;
-  auto sigmaDeltaXsq = sigmax0sq + sigmax1sq;
-  auto sigmaDeltaYsq = sigmay0sq + sigmay1sq;
-
-  gTrack.setX(x0);
-  gTrack.setY(y0);
-  gTrack.setZ(z0);
-  gTrack.setPhi(phi0);
-  gTrack.setTanl(tanl0);
-  gTrack.setInvQPt(invQPt0);
+  gTrack.setX(mftTrack.getX());
+  gTrack.setY(mftTrack.getY());
+  gTrack.setZ(mftTrack.getZ());
+  gTrack.setPhi(mftTrack.getPhi());
+  gTrack.setTanl(mftTrack.getTanl());
+  gTrack.setInvQPt(gTrack.getInvQPt());
 
   if (mVerbose) {
 
@@ -1584,59 +1585,20 @@ void MUONMatcher::fitGlobalMuonTrack(GlobalMuonTrack& gTrack)
               << " Tgl = " << mftTrack.getTanl()
               << "  Phi = " << mftTrack.getPhi() << " pz = " << mftTrack.getPz()
               << " qpt = " << 1.0 / mftTrack.getInvQPt() << std::endl;
-    std::cout << "  initTrack GlobalTrack: X = " << x0 << " Y = " << y0
-              << " Z = " << z0 << " Tgl = " << tanl0 << "  Phi = " << phi0
-              << " pz = " << gTrack.getPz()
-              << " qpt = " << 1.0 / gTrack.getInvQPt() << std::endl;
+    std::cout << "  initTrack GlobalTrack: q/pt = " << gTrack.getInvQPt() << std::endl;
   }
 
-  auto deltaR2 = deltaR * deltaR;
-  auto deltaR3 = deltaR2 * deltaR;
-  auto deltaR4 = deltaR2 * deltaR2;
-  auto k2 = k * k;
-  auto A =
-    TMath::Sqrt(gTrack.getInvQPt() * gTrack.getInvQPt() * deltaR2 * k2 + 1);
-  auto A2 = A * A;
-  auto B = A + 1.0;
-  auto B3 = B * B * B;
-  auto B12 = TMath::Sqrt(B);
-  auto B32 = B * B12;
-  auto C = invQPt0 * k;
-  auto C2 = C * C;
-  auto D = 1.0 / (A2 * B3 * B * deltaR4);
-  auto E = D * deltaZ / (B * deltaR);
-  auto J = 2 * B * deltaR3 * deltaR3 * k2;
-  auto K = 0.5 * A * B - 0.25 * C2 * deltaR2;
-  auto N = -0.5 * B3 * C * Hz * deltaR3 * deltaR4 * k2;
-  auto O = 0.125 * C2 * deltaR4 * deltaR4 * k2;
-  auto P = -K * k * Hz * deltaR / A;
-  auto Q = deltaZ * deltaZ / (A2 * B * deltaR3 * deltaR3);
-  auto R = 0.25 * C * deltaZ * TMath::Sqrt2() * deltaR * k / (A * B12);
-
   SMatrix55Sym lastParamCov;
-  lastParamCov(0, 0) = sigmax0sq; // <X,X>
-  lastParamCov(0, 1) = 0;         // <Y,X>
-  lastParamCov(0, 2) = 0;         // <PHI,X>
-  lastParamCov(0, 3) = 0;         // <TANL,X>
-  // lastParamCov(0, 4) = 0;         // <INVQPT,X>
+  Double_t tanlsigma = TMath::Max(std::abs(mftTrack.getTanl()), .5);
+  Double_t qptsigma = TMath::Max(std::abs(mftTrack.getInvQPt()), .5);
 
-  lastParamCov(1, 1) = sigmay0sq; // <Y,Y>
-  lastParamCov(1, 2) = 0;         // <PHI,Y>
-  lastParamCov(1, 3) = 0;         // <TANL,Y>
-  // lastParamCov(1, 4) = 0;         // <INVQPT,Y>
-
-  lastParamCov(2, 2) = D * J * K * K * sigmainvQPtsq; // <PHI,PHI>
-  lastParamCov(2, 3) = E * K * N * sigmainvQPtsq;     //  <TANL,PHI>
-  // lastParamCov(2, 4) = P * sigmainvQPtsq * TMath::Sqrt2() / B32; //
-  // <INVQPT,PHI>
-
-  lastParamCov(3, 3) = Q * O * sigmainvQPtsq; // <TANL,TANL>
-  // lastParamCov(3, 4) = R * sigmainvQPtsq;     // <INVQPT,TANL>
-
-  // lastParamCov(4, 4) = sigmainvQPtsq; // <INVQPT,INVQPT>
+  lastParamCov(0, 0) = 10000. * mftTrack.getCovariances()(0, 0); // <X,X>
+  lastParamCov(1, 1) = 10000. * mftTrack.getCovariances()(1, 1); // <Y,X>
+  lastParamCov(2, 2) = 10000. * mftTrack.getCovariances()(2, 2); // TMath::Pi() * TMath::Pi() / 16 // <PHI,X>
+  lastParamCov(3, 3) = 10000. * mftTrack.getCovariances()(3, 3); // 100. * tanlsigma * tanlsigma;  // mftTrack.getCovariances()(3, 3);     // <TANL,X>
+  lastParamCov(4, 4) = gTrack.getCovariances()(4, 4);            //100. * qptsigma * qptsigma;  // <INVQPT,X>
 
   gTrack.setCovariances(lastParamCov);
-  gTrack.setTrackChi2(0.);
 
   for (int icls = ncls - 1; icls > -1; --icls) {
     auto clsEntry = mtrackExtClsIDs[offset + icls];
@@ -1648,60 +1610,46 @@ void MUONMatcher::fitGlobalMuonTrack(GlobalMuonTrack& gTrack)
 //_________________________________________________________________________________________________
 bool MUONMatcher::computeCluster(GlobalMuonTrack& track, MFTCluster& cluster)
 {
+  /// Propagate track to the z position of the new cluster
+  /// accounting for MCS dispersion in the current layer and the other(s) crossed
+  /// Recompute the parameters adding the cluster constraint with the Kalman filter
+  /// Returns false in case of failure
 
   const auto& clx = cluster.getX();
   const auto& cly = cluster.getY();
   const auto& clz = cluster.getZ();
 
-  // add MCS effects for the new cluster
-  using o2::mft::constants::LayerZPosition;
-  int startingLayerID, newLayerID;
+  if (mVerbose) {
+    std::cout << "computeCluster:     X = " << clx << " Y = " << cly << " Z = " << clz << " nCluster = " << cluster << std::endl;
+  }
 
-  double dZ = clz - track.getZ();
-  // LayerID of each cluster from ZPosition // TODO: Use ChipMapping
-  for (auto layer = 10; layer--;)
-    if (track.getZ() < LayerZPosition[layer] + .3 &
-        track.getZ() > LayerZPosition[layer] - .3)
-      startingLayerID = layer;
-  for (auto layer = 10; layer--;)
-    if (clz<LayerZPosition[layer] + .3 & clz> LayerZPosition[layer] - .3)
-      newLayerID = layer;
-  // Number of disks crossed by this tracklet
-  int NDisksMS;
-  if (clz - track.getZ() > 0)
-    NDisksMS = (startingLayerID % 2 == 0)
-                 ? (startingLayerID - newLayerID) / 2
-                 : (startingLayerID - newLayerID + 1) / 2;
-  else
-    NDisksMS = (startingLayerID % 2 == 0)
-                 ? (newLayerID - startingLayerID + 1) / 2
-                 : (newLayerID - startingLayerID) / 2;
+  if (!propagateToNextClusterWithMCS(track, clz)) {
+    return false;
+  }
 
-  double MFTDiskThicknessInX0 = 0.1 / 5.0; // FIXME!
+  if (mVerbose) {
+    std::cout << "   AfterExtrap: X = " << track.getX() << " Y = " << track.getY() << " Z = " << track.getZ() << " Tgl = " << track.getTanl() << "  Phi = " << track.getPhi() << " pz = " << track.getPz() << " q/pt = " << track.getInvQPt() << std::endl;
+    std::cout << "Track covariances after extrap: \n"
+              << track.getCovariances() << std::endl
+              << std::endl;
+  }
 
-  if ((NDisksMS * MFTDiskThicknessInX0) != 0)
-    track.addMCSEffect(-1, NDisksMS * MFTDiskThicknessInX0);
-
-  track.propagateToZhelix(clz, mField_z);
-
+  // recompute parameters
   const std::array<float, 2>& pos = {clx, cly};
   const std::array<float, 2>& cov = {cluster.sigmaX2, cluster.sigmaY2};
 
   if (track.update(pos, cov)) {
     if (mVerbose) {
-      std::cout << "   New Cluster: X = " << clx << " Y = " << cly
-                << " Z = " << clz << std::endl;
-      std::cout << "   AfterKalman: X = " << track.getX()
-                << " Y = " << track.getY() << " Z = " << track.getZ()
-                << " Tgl = " << track.getTanl() << "  Phi = " << track.getPhi()
-                << " pz = " << track.getPz()
-                << " qpt = " << 1.0 / track.getInvQPt() << std::endl;
+      std::cout << "   New Cluster: X = " << clx << " Y = " << cly << " Z = " << clz << std::endl;
+      std::cout << "   AfterKalman: X = " << track.getX() << " Y = " << track.getY() << " Z = " << track.getZ() << " Tgl = " << track.getTanl() << "  Phi = " << track.getPhi() << " pz = " << track.getPz() << " q/pt = " << track.getInvQPt() << std::endl;
       std::cout << std::endl;
-      // Outputs track covariance matrix:
-      // param.getCovariances().Print();
+      std::cout << "Track covariances after Kalman update: \n"
+                << track.getCovariances() << std::endl
+                << std::endl;
     }
+    return true;
   }
-  return true;
+  return false;
 }
 
 //_________________________________________________________________________________________________
