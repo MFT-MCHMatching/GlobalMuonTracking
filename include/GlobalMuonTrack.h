@@ -17,6 +17,7 @@ using ClusRefs = o2::dataformats::RangeRefComp<4>;
 using SMatrix55Sym = ROOT::Math::SMatrix<double, 5, 5, ROOT::Math::MatRepSym<double, 5>>;
 using SMatrix5 = ROOT::Math::SVector<Double_t, 5>;
 
+/*
 class GlobalMuonTrack : public o2::track::TrackParCovFwd
 {
 
@@ -118,7 +119,7 @@ class GlobalMuonTrackExt : public o2::track::GlobalMuonTrack
                                   ///< parameters, MFT
 };
 } // namespace o2::track
-
+*/
 //_________________________________________________________________________________________________
 struct MatchingHelper {
   std::string Generator;

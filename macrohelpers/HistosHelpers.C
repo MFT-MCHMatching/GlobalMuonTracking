@@ -5,32 +5,51 @@
 #endif
 
 //_________________________________________________________________________________________________
-template <typename H> void exportHisto(const H &histo) {
+template <typename H>
+void exportHisto(H& histo)
+{
   // gStyle->SetImageScaling(3.);
-  TCanvas *c = new TCanvas;
+  TCanvas* c = new TCanvas;
   c->SetBatch();
   std::string imgpath{"images/"};
   gSystem->MakeDirectory(imgpath.c_str());
-  H *h = new H(histo);
-  h->Draw();
+  histo.Draw();
   gSystem->ProcessEvents();
   c->Update();
   for (std::string type : {".png"})
-    c->Print((imgpath + std::string(h->GetName()) + type).c_str());
+    c->Print((imgpath + std::string(histo.GetName()) + type).c_str());
 }
 
 //_________________________________________________________________________________________________
-void FitSlicesy(TH2F &histo1, TH2F &histo2) {
+template <typename C>
+void exportCanvas(const C& c)
+{
+  // gStyle->SetImageScaling(3.);
+  //TCanvas *c = new TCanvas;
+  c->SetBatch();
+  std::string imgpath{"images/"};
+  gSystem->MakeDirectory(imgpath.c_str());
+  gSystem->ProcessEvents();
+  c->Update();
+  for (std::string type : {".png"})
+    c->Print((imgpath + std::string(c->GetName()) + type).c_str());
+
+  std::cout << "Exporting Canvas " << c->GetName() << std::endl;
+}
+
+//_________________________________________________________________________________________________
+void FitSlicesy(TH2F& histo1, TH2F& histo2)
+{
   // ## FitSlicesy
-  TH2F *h1 = &histo1;
-  TH2F *h2 = &histo2;
+  TH2F* h1 = &histo1;
+  TH2F* h2 = &histo2;
 
   h1->FitSlicesY(0, 0, -1, 1);
   // Create a canvas and divide it
   auto CanvasName = std::string(h1->GetName()) + std::string("FitSlicesY");
-  TCanvas *c1 = new TCanvas(CanvasName.c_str(), CanvasName.c_str(), 700, 500);
+  TCanvas* c1 = new TCanvas(CanvasName.c_str(), CanvasName.c_str(), 700, 500);
   c1->Divide(2, 1);
-  TPad *leftPad = (TPad *)c1->cd(1);
+  TPad* leftPad = (TPad*)c1->cd(1);
   ;
   leftPad->Divide(1, 2);
 
@@ -42,11 +61,11 @@ void FitSlicesy(TH2F &histo1, TH2F &histo2) {
   // Draw histo2
   leftPad->cd(2);
   h2->Draw();
-  TPad *rightPad = (TPad *)c1->cd(2);
+  TPad* rightPad = (TPad*)c1->cd(2);
   rightPad->Divide(1, 2);
   rightPad->cd(1);
-  TH2F *h1_Fit1 = (TH2F *)gDirectory->Get(
-      (std::string(h1->GetName()) + std::string("_1")).c_str());
+  TH2F* h1_Fit1 = (TH2F*)gDirectory->Get(
+    (std::string(h1->GetName()) + std::string("_1")).c_str());
   h1_Fit1->SetStats(0);
   h1_Fit1->SetTitle("Mean");
   h1_Fit1->Draw();
@@ -55,8 +74,8 @@ void FitSlicesy(TH2F &histo1, TH2F &histo2) {
   rightPad->cd(2);
   gPad->SetTopMargin(0.05);
   gPad->SetLeftMargin(0.05);
-  TH2F *h1_Fit2 = (TH2F *)gDirectory->Get(
-      (std::string(h1->GetName()) + std::string("_2")).c_str());
+  TH2F* h1_Fit2 = (TH2F*)gDirectory->Get(
+    (std::string(h1->GetName()) + std::string("_2")).c_str());
   h1_Fit2->SetStats(0);
   h1_Fit2->SetTitle("Sigma");
   h1_Fit2->Draw();
@@ -69,20 +88,21 @@ void FitSlicesy(TH2F &histo1, TH2F &histo2) {
 
 //_________________________________________________________________________________________________
 template <typename H1, typename H2, typename H3, typename H4>
-TCanvas summary_report(H1 &histo1, H2 &histo2, H3 &histo3, H4 &histo4,
+TCanvas summary_report(H1& histo1, H2& histo2, H3& histo3, H4& histo4,
                        std::string CanvasName, std::string tlt = "Summary",
                        int h1log = 0, // 0 = linear y scale; 1 = log y scale
                        int h2log = 0, int h3log = 0, int h4log = 0,
                        std::string h1_foot = "", std::string h2_foot = "",
-                       std::string h3_foot = "", std::string h4_foot = "") {
-  H1 *h1 = &histo1;
-  H2 *h2 = &histo2;
-  H3 *h3 = &histo3;
-  H4 *h4 = &histo4;
+                       std::string h3_foot = "", std::string h4_foot = "")
+{
+  H1* h1 = &histo1;
+  H2* h2 = &histo2;
+  H3* h3 = &histo3;
+  H4* h4 = &histo4;
 
   // h1->FitSlicesY(0,0,-1,1);
   // Create a canvas and divide it
-  TCanvas *c1 = new TCanvas(CanvasName.c_str(), CanvasName.c_str(), 1920, 1080);
+  TCanvas* c1 = new TCanvas(CanvasName.c_str(), CanvasName.c_str(), 1920, 1080);
   c1->UseCurrentStyle();
   // c1->SetCanvasSize(1920,1080);
   // gROOT->SetStyle("Bold");
@@ -94,7 +114,7 @@ TCanvas summary_report(H1 &histo1, H2 &histo2, H3 &histo3, H4 &histo4,
   Title.Draw();
 
   c1->Divide(2, 1);
-  TPad *leftPad = (TPad *)c1->cd(1);
+  TPad* leftPad = (TPad*)c1->cd(1);
   leftPad->SetPad(0.000, 0.000, 0.5, .96);
   leftPad->Divide(1, 2);
 
@@ -134,7 +154,7 @@ TCanvas summary_report(H1 &histo1, H2 &histo2, H3 &histo3, H4 &histo4,
   h2_entries.DrawLatex(.08, .08, h2_foot.c_str());
   h2_entries.Draw();
 
-  TPad *rightPad = (TPad *)c1->cd(2);
+  TPad* rightPad = (TPad*)c1->cd(2);
   rightPad->SetPad(0.5, 0, 1, 0.97);
   rightPad->Divide(1, 2);
 
@@ -176,6 +196,8 @@ TCanvas summary_report(H1 &histo1, H2 &histo2, H3 &histo3, H4 &histo4,
 
   c1->Update();
   c1->Write();
+  c1->Print();
+  exportCanvas(c1);
   return c1;
 }
 
@@ -183,29 +205,30 @@ TCanvas summary_report(H1 &histo1, H2 &histo2, H3 &histo3, H4 &histo4,
 template <typename H1, typename H2, typename H3, typename H4, typename H5,
           typename H6, typename H7, typename H8, typename H9>
 TCanvas
-summary_report_3x3(H1 &histo1, H2 &histo2, H3 &histo3, H4 &histo4, H5 &histo5,
-                   H6 &histo6, H7 &histo7, H8 &histo8, H9 &histo9,
-                   std::string CanvasName, std::string tlt = "Summary",
-                   int h1log = 0, // 0 = linear y scale; 1 = log y scale
-                   int h2log = 0, int h3log = 0, int h4log = 0, int h5log = 0,
-                   int h6log = 0, int h7log = 0, int h8log = 0, int h9log = 0,
-                   std::string h1_foot = "-", std::string h2_foot = "-",
-                   std::string h3_foot = "-", std::string h4_foot = "-",
-                   std::string h5_foot = "-", std::string h6_foot = "-",
-                   std::string h7_foot = "-", std::string h8_foot = "-",
-                   std::string h9_foot = "-") {
+  summary_report_3x3(H1& histo1, H2& histo2, H3& histo3, H4& histo4, H5& histo5,
+                     H6& histo6, H7& histo7, H8& histo8, H9& histo9,
+                     std::string CanvasName, std::string tlt = "Summary",
+                     int h1log = 0, // 0 = linear y scale; 1 = log y scale
+                     int h2log = 0, int h3log = 0, int h4log = 0, int h5log = 0,
+                     int h6log = 0, int h7log = 0, int h8log = 0, int h9log = 0,
+                     std::string h1_foot = "-", std::string h2_foot = "-",
+                     std::string h3_foot = "-", std::string h4_foot = "-",
+                     std::string h5_foot = "-", std::string h6_foot = "-",
+                     std::string h7_foot = "-", std::string h8_foot = "-",
+                     std::string h9_foot = "-")
+{
 
-  H1 *h1 = &histo1;
-  H2 *h2 = &histo2;
-  H3 *h3 = &histo3;
-  H4 *h4 = &histo4;
-  H5 *h5 = &histo5;
-  H6 *h6 = &histo6;
-  H7 *h7 = &histo7;
-  H8 *h8 = &histo8;
-  H9 *h9 = &histo9;
+  H1* h1 = &histo1;
+  H2* h2 = &histo2;
+  H3* h3 = &histo3;
+  H4* h4 = &histo4;
+  H5* h5 = &histo5;
+  H6* h6 = &histo6;
+  H7* h7 = &histo7;
+  H8* h8 = &histo8;
+  H9* h9 = &histo9;
 
-  TCanvas *c1 = new TCanvas(CanvasName.c_str(), CanvasName.c_str(), 1920, 1080);
+  TCanvas* c1 = new TCanvas(CanvasName.c_str(), CanvasName.c_str(), 1920, 1080);
   c1->UseCurrentStyle();
 
   TLatex Title = TLatex();
@@ -215,10 +238,10 @@ summary_report_3x3(H1 &histo1, H2 &histo2, H3 &histo3, H4 &histo4, H5 &histo5,
   Title.Draw();
 
   c1->Divide(1, 2);
-  TPad *topPad = (TPad *)c1->cd(1);
+  TPad* topPad = (TPad*)c1->cd(1);
   topPad->SetPad(0.000, 0.0, 1, .8);
 
-  TPad *bottomPad = (TPad *)c1->cd(2);
+  TPad* bottomPad = (TPad*)c1->cd(2);
   bottomPad->SetPad(0.000, 0.0, 1, .95);
   bottomPad->Divide(3, 3, 0.005, 0.005);
 
@@ -399,14 +422,15 @@ summary_report_3x3(H1 &histo1, H2 &histo2, H3 &histo3, H4 &histo4, H5 &histo5,
 
   c1->Update();
   c1->Write();
+  exportCanvas(c1);
   return c1;
 }
 
 //_________________________________________________________________________________________________
 template <typename H1, typename H2, typename H3, typename H4, typename H5,
           typename H6>
-TCanvas summary_report_3x2(H1 &histo1, H2 &histo2, H3 &histo3, H4 &histo4,
-                           H5 &histo5, H6 &histo6, std::string CanvasName,
+TCanvas summary_report_3x2(H1& histo1, H2& histo2, H3& histo3, H4& histo4,
+                           H5& histo5, H6& histo6, std::string CanvasName,
                            std::string tlt = "Summary",
                            int h1log = 0, // 0 = linear y scale; 1 = log y scale
                            int h2log = 0, int h3log = 0, int h4log = 0,
@@ -414,17 +438,18 @@ TCanvas summary_report_3x2(H1 &histo1, H2 &histo2, H3 &histo3, H4 &histo4,
                            std::string h1_foot = "-", std::string h2_foot = "-",
                            std::string h3_foot = "-", std::string h4_foot = "-",
                            std::string h5_foot = "-",
-                           std::string h6_foot = "-") {
-  H1 *h1 = &histo1;
-  H2 *h2 = &histo2;
-  H3 *h3 = &histo3;
-  H4 *h4 = &histo4;
-  H5 *h5 = &histo5;
-  H6 *h6 = &histo6;
+                           std::string h6_foot = "-")
+{
+  H1* h1 = &histo1;
+  H2* h2 = &histo2;
+  H3* h3 = &histo3;
+  H4* h4 = &histo4;
+  H5* h5 = &histo5;
+  H6* h6 = &histo6;
 
   // h1->FitSlicesY(0,0,-1,1);
   // Create a canvas and divide it
-  TCanvas *c1 = new TCanvas(CanvasName.c_str(), CanvasName.c_str(), 1920, 1080);
+  TCanvas* c1 = new TCanvas(CanvasName.c_str(), CanvasName.c_str(), 1920, 1080);
   c1->UseCurrentStyle();
   // c1->SetCanvasSize(1920,1080);
   // gROOT->SetStyle("Bold");
@@ -436,10 +461,10 @@ TCanvas summary_report_3x2(H1 &histo1, H2 &histo2, H3 &histo3, H4 &histo4,
   Title.Draw();
 
   c1->Divide(1, 2);
-  TPad *topPad = (TPad *)c1->cd(1);
+  TPad* topPad = (TPad*)c1->cd(1);
   topPad->SetPad(0.000, 0.0, 1, .8);
 
-  TPad *bottomPad = (TPad *)c1->cd(2);
+  TPad* bottomPad = (TPad*)c1->cd(2);
   bottomPad->SetPad(0.000, 0.0, 1, .95);
   bottomPad->Divide(3, 2, 0.005, 0.005);
 
@@ -557,5 +582,6 @@ TCanvas summary_report_3x2(H1 &histo1, H2 &histo2, H3 &histo3, H4 &histo4,
 
   c1->Update();
   c1->Write();
+  exportCanvas(c1);
   return c1;
 }

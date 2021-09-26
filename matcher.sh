@@ -1,7 +1,7 @@
 #!/bin/bash
 
-MATCHINGRESULTS="GlobalMuonTracks.root matching.log MatchingPlane_eV*.png ML_Evaluation*.root"
-CHECKRESULTS="GlobalMuonChecks.root checks.log"
+MATCHINGRESULTS="globalfwdtracks.root MatchingConfig.txt matching.log MatchingPlane_eV*.png ML_Evaluation*.root"
+CHECKRESULTS="GlobalMuonChecks.root checks.log images"
 
 Usage()
 {
@@ -11,49 +11,21 @@ Usage()
   Aliroot and O2 environments are automatically loaded.
 
   Usage:
-  1) Generate MCH Tracks:
-     Will create outputdir, include a copy of the macros and generate MCH tracks with aliroot.
 
-  ${0##*/} --genMCH -n <number_of_events> -o <outputdir> -g <generator> <generator options>
+  1) Generate MCH and MFT Tracks:
+     Will create outputdir, include a copy of the macros and generate MCH and MFT tracks with O2 simulation
 
-    -g
-     Sets one or more generators for MCH and MFT simulations. Options:
+  ${0##*/} --genMFTMCH -n <number_of_events> -o <outputdir> -g <background generator> -s <signal generator>
 
-      gun0_100GeV - Box generator for pions and muons with total momentum 0 to 100 GeV. (default)
-                    Set number of pions and muons on each event:
-          --npions <number_of_pions>
-          --nmuons <number_of_muons>
+    -g  - O2 generator (pythia8pp, pythia8hi, ...). The output of this generator is used as 
+             background events in case -s is called
+    
+    -s  - Generate a signal to embed over the generator configured by -g. Available signal generators:
+         BoxMuons : A generator for forward muons with box distribution
 
-      MuBoxGun - Box generator for muons with total momentum 0 to 100 GeV.
-                       Set number of muons on each event:
-           --nmuons <number_of_muons>
-
-      PiMuParam - AliGenParam pions and muons generator with realistic parametrized distributions.
-                  Set number of pions and muons on each event:
-          --npions <number_of_pions>
-          --nmuons <number_of_muons>
-
-      PiParam - AliGenParam pions generator with realistic parametrized distributions.
-                  Set number of pions and muons on each event:
-          --npions <number_of_pions>
-
-      hijing  - Mimic Hijing generator for particle background corresponding to the 0-10 most central PbPb collisions
-
-      dimuon  - Generate dimuons decays from J/Psi and/or Upsilon. At least one kind of mother particle must be defined.
-                 To set the number of mother particles on each event:
-         --njpsis <number of J/Psis>
-         --nupsilons <number of Upsilons>
 
     Examples:
-    ${0##*/} --genMCH -g gun0_100GeV -n 20 --nmuons 4 --npions 20 -o sampletest
-    ${0##*/} --genMCH -g hijing -g dimuon --njpsis 10 --nupsilons 10 -n 20 -o sampletest
-
-  2) Generate MFT Tracks:
-     ${0##*/} --genMFT -o <outputdir> -j <jobs>
-
-      Options:
-       --shm-segment-size  <size_in_bytes> (default 5000000000)
-         sets shm-segment-size for o2 digitizer and reconstruction workflows. Default O2 value of 1GB breaks at ~2e6 MFT tracks. 5GB for 3e6 MFT tracks.
+    ${0##*/} --genMFTMCH -g pythia8hi -s BoxMuons --nmuons 10 -n 20 -o sampletest
 
   3) Run track matching:
      ${0##*/} --match --matchFcn <matching_function> --cutFcn <cut_function> --cutParam0 <val0> -o <outputdir>
@@ -200,66 +172,93 @@ END
 }
 
 updatecode() {
-  cp -r ${SCRIPTDIR}/generators/* ${SCRIPTDIR}/*.bin ${SCRIPTDIR}/*.xml ${SCRIPTDIR}/include ${SCRIPTDIR}/*.C ${SCRIPTDIR}/*.h ${SCRIPTDIR}/*.cxx ${SCRIPTDIR}/*.py ${SCRIPTDIR}/macrohelpers ${OUTDIR}
+  cp -r ${SCRIPTDIR}/O2Generators ${SCRIPTDIR}/*.bin ${SCRIPTDIR}/*.xml ${SCRIPTDIR}/include ${SCRIPTDIR}/*.C ${SCRIPTDIR}/*.h ${SCRIPTDIR}/*.cxx ${SCRIPTDIR}/macrohelpers ${OUTDIR}
 }
 
-generateMCHTracks()
-{
 
+
+embedBoxGenMuons () {
+  NMUONS=${NMUONS:-"1"}
+    # Generate muons with flat P distribution
+    o2-sim -n ${NEV_}  $JOBS -g external -m ${MODULES} -o sgn \
+       --configKeyValues "GeneratorExternal.fileName=O2Generators/MatcherGenerators.C;GeneratorExternal.funcName=matcherMuBoxGen(${NMUONS})" \
+       --embedIntoFile o2sim_Kine.root > embedBoxGenMuons.log 2>&1
+}
+
+generateBackGroundEventsO2() {
+  echo "Generating background events..."
+
+  o2-sim -g $GENERATOR -m ${MODULES} -n ${NEV_} $JOBS | tee O2Sim.log
+}
+
+generateSignalEventsO2() {
+  echo "Generating signal events..."
+
+  if ! [ -z ${SIGNALGEN+x} ]; then
+     case $SIGNALGEN in
+       BoxMuons)
+        embedBoxGenMuons;
+        shift 1
+       ;;
+       *) echo "Wrong '-s' signal generator!"; echo "Run '${0##*/} --help'"; exit;
+  esac
+   SIMS=${SIMS},sgn
+  fi
+  }
+
+
+loadO2 () {
+echo "Loading O2 environment"
+eval `/usr/local/bin/alienv load ${O2ENV} `
+}
+
+generateMFTMCHTracksO2()
+{
+  MODULES="PIPE ITS MFT MCH MID ABSO SHIL DIPO"
+  SIMS=o2sim
   mkdir -p ${OUTDIR}
   updatecode
-  pushd ${OUTDIR}
-
-  #sed -i -e s/NPIONS/${NPIONS}/g Config.C
-  #sed -i -e s/NMUONS/${NMUONS}/g Config.C
-
-  echo "Generating MCH tracks on `pwd` ..."
-  #echo ${MCHGENERATOR}_${NPIONS}pi_${NMUONS}mu_${NEV_}evts  > GENCFG
-
-  ## 1) aliroot generation of MCH Tracks
-  export SEED=${SEED:-"123456"}
-  echo ${NEV_} > nMCHEvents
-  export NEV=${NEV_}
-  rm -rf MatcherGenConfig.txt
-  alienv setenv ${ALIROOTENV} -c bash ./runtest.sh -n ${NEV_} | tee aliroot_MCHgen.log
-
-  ## 2) aliroot conversion of MCH tracks to temporary format
-  echo " Converting MCH Tracks to O2-compatible format"
-  alienv setenv ${ALIROOTENV} -c aliroot -e 'gSystem->Load("libpythia6_4_25")' -b -q -l "ConvertMCHESDTracks.C+(\".\")" | tee MCH-O2Conversion.log
-  popd
-  echo " Finished MCH track generation `realpath ${OUTDIR}`"
-
-}
-
-
-generateMFTTracks()
-{
-
-  if ! [ -f "${OUTDIR}/Kinematics.root" ]; then
-    echo " ERROR! MCH Tracks Kinematics.root not found on `realpath ${OUTDIR}/Kinematics.root` ... exiting."
-    exit
-  fi
-
   if ! [ -z ${UPDATECODE+x} ]; then updatecode ; fi
   pushd ${OUTDIR}
 
-  echo "Generating MFT Tracks `pwd` ..."
+  echo "Generating MFT and MFT Tracks with O2: `pwd` ..."
 
-  NEV_=`cat nMCHEvents`
-  ## O2 simulation and generation of MFT tracks using same Kinematics.root
-  alienv setenv ${O2ENV} -c o2-sim -g extkin --extKinFile Kinematics.root -m PIPE ITS MFT ABS SHIL -e TGeant3 -n ${NEV_} -j $JOBS | tee O2Sim.log
-  alienv setenv ${O2ENV} -c o2-sim-digitizer-workflow ${CUSTOM_SHM} -b --skipDet TPC,ITS,TOF,FT0,EMC,HMP,ZDC,TRD,MCH,MID,FDD,PHS,FV0,CPV >  O2Digitizer.log
-  alienv setenv ${O2ENV} -c o2-mft-reco-workflow ${CUSTOM_SHM} -b > O2Reco.log
+  # Load O2 environment if needed
+  type o2-sim &> /dev/null ||  loadO2;
+
+
+  time generateBackGroundEventsO2 ;
+  time generateSignalEventsO2 ;
+
+  echo "Running digitizer ..."
+  time o2-sim-digitizer-workflow ${CUSTOM_SHM} -n ${NEV_} --sims ${SIMS} -b --onlyDet MFT,MCH,MID >  O2Digitizer.log
+  
+  echo "Running MFT reco workflow ..."
+
+  time o2-mft-reco-workflow ${CUSTOM_SHM} -b > O2MFTReco.log
+  
+  echo "Running MCH reco workflow ..."
+  time o2-mch-reco-workflow ${CUSTOM_SHM} -b > O2MCHReco.log
+  
   popd
-  echo " Finished MFT Track generation on `realpath ${OUTDIR}`"
+  echo " Finished MFT and MCH Track generation on `realpath ${OUTDIR}`"
 
+}
+
+runO2Match()
+{
+    # Load O2 environment if needed
+  type o2-sim &> /dev/null ||  loadO2;
+  echo "_default_o2-globalfwd-matcher-workflow" > MatchingConfig.txt
+  echo "Running o2-globalfwd-matcher-workflow (O2) ... "
+  o2-globalfwd-matcher-workflow ${CUSTOM_SHM} -b > matching.log
 }
 
 runMatching()
 {
 
-  if ! [ -f "${OUTDIR}/tempMCHTracks.root" ]; then
-    echo " Nothing to Match... MCH Tracks not found on `realpath ${OUTDIR}/tempMCHTracks.root` ..."
+  if ! [ -f "${OUTDIR}/mchtracks.root" ]; then
+    echo " Nothing to Match... MCH Tracks not found on `realpath ${OUTDIR}/mchtracks.root` ..."
     EXITERROR="1"
   fi
 
@@ -276,13 +275,16 @@ runMatching()
     pushd ${OUTDIR}
     echo "Matching MCH & MFT Tracks on `pwd` ..."
     ## MFT MCH track matching & global muon track fitting:
-    alienv setenv ${O2ENV} -c root.exe -e 'gSystem->Load("libO2MCHTracking")' -l -q -b runMatching.C+ | tee matching.log
+
+    time runO2Match ;
+    
+    #alienv setenv ${O2ENV} -c root.exe -e 'gSystem->Load("libO2MCHTracking")' -l -q -b runMatching.C+ | tee matching.log
     RESULTSDIR="Results`cat MatchingConfig.txt`"
     mkdir -p ${RESULTSDIR}
-    cp ${MATCHINGRESULTS} "${RESULTSDIR}"
+    cp ${MATCHINGRESULTS} "${RESULTSDIR}" &> /dev/null
 
     popd
-    echo " Finished matching on `realpath ${OUTDIR}`"
+    echo " Finished matching on `realpath ${OUTDIR}`. Results copied to ${RESULTSDIR}"
 
   fi
 
@@ -357,8 +359,8 @@ trainML()
 runChecks()
 {
 
-  if ! [ -f "${OUTDIR}/GlobalMuonTracks.root" ]; then
-    echo " Nothing to check... Global Muon Tracks not found on `realpath ${OUTDIR}/GlobalMuonChecks.root` ..."
+  if ! [ -f "${OUTDIR}/globalfwdtracks.root" ]; then
+    echo " Nothing to check... Global Muon Tracks not found on `realpath ${OUTDIR}/globalfwdtracks.root` ..."
     EXITERROR="1"
   fi
 
@@ -374,9 +376,11 @@ runChecks()
   echo "Checking global muon tracks on `pwd` ..." && \
 
   ## Check global muon Tracks
-  alienv setenv ${O2ENV} -c root.exe -l -q -b GlobalMuonChecks.C+ | tee checks.log
+  type root.exe &> /dev/null ||  loadO2;
+
+  root.exe -l -q -b GlobalMuonChecks.C | tee checks.log
   RESULTSDIR="Results`cat MatchingConfig.txt`"
-  mv ${MATCHINGRESULTS} ${CHECKRESULTS} "${RESULTSDIR}"
+  mv ${MATCHINGRESULTS} ${CHECKRESULTS} "${RESULTSDIR}"  &> /dev/null
   echo " Results moved to `realpath ${RESULTSDIR}`"
   popd
   echo " Finished checking Global muon tracks on `realpath ${OUTDIR}`"
@@ -393,7 +397,7 @@ while [ $# -gt 0 ] ; do
     shift 2
     ;;
     -j)
-    JOBS="$2";
+    JOBS="-j $2";
     shift 2
     ;;
     -o)
@@ -425,6 +429,10 @@ while [ $# -gt 0 ] ; do
     fi
     shift 2
     ;;
+    -s)
+    SIGNALGEN="$2";
+    shift 2
+    ;;
     --seed)
     export SEED="$2";
     shift 2
@@ -435,6 +443,10 @@ while [ $# -gt 0 ] ; do
     ;;
     --genMFT)
     GENERATEMFT="1";
+    shift 1
+    ;;
+    --genMFTMCH)
+    GENERATEMFTMCH="1";
     shift 1
     ;;
     --shm-segment-size)
@@ -569,55 +581,26 @@ while [ $# -gt 0 ] ; do
   esac
 done
 
-# Ensure no enviroment is loaded
-if ! [[ -z "$LOADEDMODULES" ]]
- then
-   echo "Do not run this script with alienv environment loaded. Aborting..."
-   echo "Run '${0##*/} --help'"
-   exit
- fi
 
-
-if [ -z ${GENERATEMCH+x} ] && [ -z ${GENERATEMFT+x} ] && [ -z ${MATCHING+x} ] && [ -z ${CHECKS+x} ] && [ -z ${ML_EXPORTTRAINDATA+x} ] && [ -z ${TRAIN_ML_METHOD+x} ]
+if [ -z ${GENERATEMCH+x} ] && [ -z ${GENERATEMFT+x} ] && [ -z ${GENERATEMFTMCH+x} ] && [ -z ${MATCHING+x} ] && [ -z ${CHECKS+x} ] && [ -z ${ML_EXPORTTRAINDATA+x} ] && [ -z ${TRAIN_ML_METHOD+x} ]
 then
   echo "Missing use mode!"
   echo " "
   Usage
 fi
 
-
 if [ -z ${OUTDIR+x} ]; then echo "Missing output dir" ; Usage ; fi
 NEV_=${NEV_:-"4"}
-JOBS="1" # ${JOBS:-"1"} # Forcing O2 simulation with one worker: necessary to keep event ordering
-GENERATOR=${GENERATOR:-"gun0_100GeV"}
+GENERATOR=${GENERATOR:-"pythia8hi"}
 CUSTOM_SHM="--shm-segment-size 5000000000"
 
-export MCHGENERATOR=${GENERATOR}
-export ALIROOT_OCDB_ROOT=${ALIROOT_OCDB_ROOT:-$HOME/alice/OCDB}
-
-ALIROOTENV=${ALIROOTENV:-"AliRoot/latest-master-next-root6"}
 O2ENV=${O2ENV:-"O2/latest-dev-o2"}
-#O2ENV=${O2ENV:-"O2/latest-f754608ed4-o2"}
 
-if ! [ -z ${GENERATEMCH+x} ]; then
-  if [ -d "${OUTDIR}" ]; then
-    echo " Warning! `realpath ${OUTDIR}` already exists."
-    read -p " Delete output & proceed (y/N)? " choice
-    case "$choice" in
-      y|Y )
-      rm -rf ${OUTDIR}/*.root;
-      ;;
-      *) exit ;
-    esac
-  fi
-  generateMCHTracks ;
+if ! [ -z ${GENERATEMFTMCH+x} ]; then
+  time generateMFTMCHTracksO2 ;
 fi
 
-if ! [ -z ${GENERATEMFT+x} ]; then
-  generateMFTTracks ;
-fi
-
-if ! [ -z ${MATCHING+x} ]; then runMatching ; fi
+if ! [ -z ${MATCHING+x} ]; then runMatching ; runChecks ;fi
 if ! [ -z ${ML_EXPORTTRAINDATA+x} ]; then exportMLTrainningData ; fi
 if ! [ -z ${TRAIN_ML_METHOD+x} ]; then trainML ; fi
 if ! [ -z ${CHECKS+x} ]; then runChecks ; fi
