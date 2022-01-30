@@ -72,8 +72,10 @@ enum TH3HistosCodes
   kTH3GMTrackReducedChi2PtEta,
   kTH3GMTrackPtEtaChi2,
   kTH3GMTrackPtEtaMatchScore,
+  //kTH3GMTrackPtEtaMatchScore_MC, //for Efficiencies
   kTH3GMTruePtEtaChi2,
   kTH3GMTruePtEtaMatchScore,
+  //kTH3GMTruePtEtaMatchScore_MC, //for Efficiencies
   kTH3GMCloseMatchPtEtaChi2,
   kTH3GMCloseMatchPtEtaMatchScore,
   kTH3GMPairablePtEtaZ,
@@ -98,8 +100,11 @@ std::map<int, const char *> TH3Names{
     {kTH3GMPairablePtEtaZ, "TH3GMPairablePtEtaZ"},
     {kTH3GMTrackPtEtaChi2, "TH3GMTrackPtEtaChi2"},
     {kTH3GMTrackPtEtaMatchScore, "TH3GMTrackPtEtaMatchScore"},
+    //{kTH3GMTrackPtEtaMatchScore_MC, "TH3GMTrackPtEtaMatchScore_MC"}, //for Efficiencies
     {kTH3GMTruePtEtaChi2, "TH3GMTruePtEtaChi2"},
-    {kTH3GMTruePtEtaMatchScore, "TH3GMTruePtEtaMatchScore"}};
+    {kTH3GMTruePtEtaMatchScore, "TH3GMTruePtEtaMatchScore"},
+    //{kTH3GMTruePtEtaMatchScore_MC, "TH3GMTruePtEtaMatchScore_MC"} //for Efficiencies
+  };
 
 std::map<int, const char *> TH3Titles{
     {kTH3GMTrackDeltaXDeltaYEta, "TH3GMTrackDeltaXDeltaYEta"},
@@ -119,8 +124,11 @@ std::map<int, const char *> TH3Titles{
     {kTH3GMPairablePtEtaZ, "TH3GMPairablePtEtaZ"},
     {kTH3GMTrackPtEtaChi2, "TH3GMTrackPtEtaChi2"},
     {kTH3GMTrackPtEtaMatchScore, "TH3GMTrackPtEtaMatchScore"},
+    //{kTH3GMTrackPtEtaMatchScore, "TH3GMTrackPtEtaMatchScore"}, //for Efficiencies
     {kTH3GMTruePtEtaChi2, "TH3GMTruePtEtaChi2"},
-    {kTH3GMTruePtEtaMatchScore, "TH3GMTruePtEtaMatchScore"}};
+    {kTH3GMTruePtEtaMatchScore, "TH3GMTruePtEtaMatchScore"},
+    //{kTH3GMTruePtEtaMatchScore_MC, "TH3GMTruePtEtaMatchScore_MC"}, //for Efficiencies
+  };
 
 std::map<int, std::array<double, 9>> TH3Binning{
     {kTH3GMTrackDeltaXDeltaYEta, {16, 2.2, 3.8, 1000, -1000, 1000, 1000, -1000, 1000}},
@@ -140,8 +148,11 @@ std::map<int, std::array<double, 9>> TH3Binning{
     {kTH3GMPairablePtEtaZ, {40, 0, 20, 16, 2.2, 3.8, 30, -15, 15}},
     {kTH3GMTrackPtEtaChi2, {40, 0, 20, 16, 2.2, 3.8, 1000, 0, 100}},
     {kTH3GMTrackPtEtaMatchScore, {40, 0, 20, 16, 2.2, 3.8, 2000, 0, 20.0}},
+    //{kTH3GMTrackPtEtaMatchScore_MC, {40, 0, 20, 16, 2.2, 3.8, 2000, 0, 20.0}}, //for Efficiencies
     {kTH3GMTruePtEtaChi2, {40, 0, 20, 16, 2.2, 3.8, 1000, 0, 100}},
-    {kTH3GMTruePtEtaMatchScore, {40, 0, 20, 16, 2.2, 3.8, 2000, 0, 20.0}}};
+    {kTH3GMTruePtEtaMatchScore, {40, 0, 20, 16, 2.2, 3.8, 2000, 0, 20.0}},
+    //{kTH3GMTruePtEtaMatchScore_MC, {40, 0, 20, 16, 2.2, 3.8, 2000, 0, 20.0}}, //for Efficiencies
+  };
 
 std::map<int, const char *> TH3XaxisTitles{
     {kTH3GMTrackDeltaXDeltaYEta, R"(\\eta_{MC})"},
@@ -156,13 +167,16 @@ std::map<int, const char *> TH3XaxisTitles{
     {kTH3GMTrackTanlPullPtEta, R"(p_{t}_{MC})"},
     {kTH3GMTrackInvQPtPullPtEta, R"(p_{t}_{MC})"},
     {kTH3GMTrackReducedChi2PtEta, R"(p_{t}_{MC})"},
-    {kTH3GMCloseMatchPtEtaChi2, R"(p_{t}_{Fit}_{MC})"},
-    {kTH3GMCloseMatchPtEtaMatchScore, R"(p_{t}_{Fit}_{MC})"},
-    {kTH3GMPairablePtEtaZ, R"(p_{t}_{Fit}_{MC})"},
-    {kTH3GMTrackPtEtaChi2, R"(p_{t}_{Fit}_{MC})"},
-    {kTH3GMTrackPtEtaMatchScore, R"(p_{t}_{Fit}_{MC})"},
-    {kTH3GMTruePtEtaChi2, R"(p_{t}_{Fit}_{MC})"},
-    {kTH3GMTruePtEtaMatchScore, R"(p_{t}_{Fit}_{MC})"}};
+    {kTH3GMCloseMatchPtEtaChi2, R"(p_{t}_{Fit})"},
+    {kTH3GMCloseMatchPtEtaMatchScore, R"(p_{t}_{Fit})"},
+    {kTH3GMPairablePtEtaZ, R"(p_{t}_{MC})"},
+    {kTH3GMTrackPtEtaChi2, R"(p_{t}_{Fit})"},
+    {kTH3GMTrackPtEtaMatchScore, R"(p_{t}_{Fit})"},
+    //{kTH3GMTrackPtEtaMatchScore_MC, R"(p_{t}_{MC})"}, //for Efficiencies
+    {kTH3GMTruePtEtaChi2, R"(p_{t}_{Fit})"},
+    {kTH3GMTruePtEtaMatchScore, R"(p_{t}_{Fit})"},
+    //{kTH3GMTruePtEtaMatchScore_MC, R"(p_{t}_{MC})"}, //for Efficiencies
+  };
 
 std::map<int, const char *> TH3YaxisTitles{
     {kTH3GMTrackDeltaXDeltaYEta, R"(X_{residual \rightarrow vtx} (\mu m))"},
@@ -182,8 +196,11 @@ std::map<int, const char *> TH3YaxisTitles{
     {kTH3GMPairablePtEtaZ, R"(\eta_{MC})"},
     {kTH3GMTrackPtEtaChi2, R"(\eta_{Fit})"},
     {kTH3GMTrackPtEtaMatchScore, R"(\eta_{Fit})"},
+    //{kTH3GMTrackPtEtaMatchScore_MC, R"(\eta_{Fit})"}, //for Efficiencies
     {kTH3GMTruePtEtaChi2, R"(\eta_{Fit})"},
-    {kTH3GMTruePtEtaMatchScore, R"(\eta_{Fit})"}};
+    {kTH3GMTruePtEtaMatchScore, R"(\eta_{Fit})"},
+    //{kTH3GMTruePtEtaMatchScore_MC, R"(\eta_{MC})"} //for Efficiencies
+  };
 
 std::map<int, const char *> TH3ZaxisTitles{
     {kTH3GMTrackDeltaXDeltaYEta, R"(Y_{residual \rightarrow vtx} (\mu m))"},
@@ -203,8 +220,11 @@ std::map<int, const char *> TH3ZaxisTitles{
     {kTH3GMPairablePtEtaZ, R"(z_{vtx})"},
     {kTH3GMTrackPtEtaChi2, R"(Match \chi^2)"},
     {kTH3GMTrackPtEtaMatchScore, R"(Matching Score)"},
+    //{kTH3GMTrackPtEtaMatchScore_MC, R"(Matching Score)"}, //for Efficiencies
     {kTH3GMTruePtEtaChi2, R"(Match \chi^2)"},
-    {kTH3GMTruePtEtaMatchScore, R"(Matching Score)"}};
+    {kTH3GMTruePtEtaMatchScore, R"(Matching Score)"},
+    //{kTH3GMTruePtEtaMatchScore_MC, R"(Matching Score)"}, //for Efficiencies
+  };
 
 enum TH3SlicedCodes
 {
@@ -560,18 +580,24 @@ void finalizeRecoAndPairables()
   }
   auto &Reco = mTH3Histos[kTH3GMTrackPtEtaMatchScore];
   auto &hTrue = mTH3Histos[kTH3GMTruePtEtaMatchScore];
+  //auto &Reco_MC = mTH3Histos[kTH3GMTrackPtEtaMatchScore_MC]; //for Efficiencies
+  //auto &hTrue_MC = mTH3Histos[kTH3GMTruePtEtaMatchScore_MC]; //for Efficiencies
   auto &hPairable = mTH3Histos[kTH3GMPairablePtEtaZ];
 
   auto RecoEtaPt = (TH2D *)Reco->Project3D("xy COLZ");
   auto TrueEtaPt = (TH2D *)hTrue->Project3D("xy COLZ");
+  //auto RecoEtaPt_MC = (TH2D *)Reco_MC->Project3D("xy COLZ"); //for Efficiencies
+  //auto TrueEtaPt_MC = (TH2D *)hTrue_MC->Project3D("xy COLZ"); //for Efficiencies
   auto PairableEtaPt = (TH2D *)hPairable->Project3D("xy COLZ");
 
   mPairingEtaPt = (std::unique_ptr<TH2D>)static_cast<TH2D *>(RecoEtaPt->Clone());
+  //mPairingEtaPt = (std::unique_ptr<TH2D>)static_cast<TH2D *>(RecoEtaPt_MC->Clone()); //This is better for Efficiency but not available now
   mPairingEtaPt->Divide(PairableEtaPt);
   mPairingEtaPt->SetNameTitle("GMTrackPairingEffEtaPt", "PairingEffEtaPt");
   mPairingEtaPt->SetOption("COLZ");
 
   mTPairingEtaPt = (std::unique_ptr<TH2D>)static_cast<TH2D *>(TrueEtaPt->Clone());
+  //mTPairingEtaPt = (std::unique_ptr<TH2D>)static_cast<TH2D *>(TrueEtaPt_MC->Clone()); //This is better for Efficiency but not available now
   mTPairingEtaPt->Divide(PairableEtaPt);
   mTPairingEtaPt->SetNameTitle("GMTrackTruePairingEffEtaPt", "TruePairingEffEtaPt");
   mTPairingEtaPt->SetOption("COLZ");
@@ -588,6 +614,8 @@ void finalizePurityAndEff()
 
   auto &Reco = mTH3Histos[kTH3GMTrackPtEtaMatchScore];
   auto &hTrue = mTH3Histos[kTH3GMTruePtEtaMatchScore];
+  //auto &Reco_MC = mTH3Histos[kTH3GMTrackPtEtaMatchScore_MC]; //for Efficiencies
+  //auto &hTrue_MC = mTH3Histos[kTH3GMTruePtEtaMatchScore_MC]; //for Efficiencies
   auto &hPairable = mTH3Histos[kTH3GMPairablePtEtaZ];
 
   // Inner pseudorapidity
@@ -599,6 +627,8 @@ void finalizePurityAndEff()
 
   auto RecoEtaPt = (TH2D *)Reco->Project3D("xy COLZ");
   auto TrueEtaPt = (TH2D *)hTrue->Project3D("xy COLZ");
+  //auto RecoEtaPt_MC = (TH2D *)Reco_MC->Project3D("xy COLZ"); //for Efficiencies
+  //auto TrueEtaPt_MC = (TH2D *)hTrue_MC->Project3D("xy COLZ"); //for Efficiencies
   auto PairableEtaPt = (TH2D *)hPairable->Project3D("xy COLZ");
   auto PairablePt = (TH1D *)hPairable->Project3D("x");
 
@@ -612,11 +642,15 @@ void finalizePurityAndEff()
 
     auto RecoPtProj = (TH1 *)Reco->ProjectionX(Form("_RecoPtProj%.2f", scoreCut));
     auto TruePtProj = (TH1 *)hTrue->ProjectionX(Form("_TruePtProj%.2f", scoreCut));
+    //auto RecoPtProj_MC = (TH1 *)Reco_MC->ProjectionX(Form("_RecoPtProj_MC%.2f", scoreCut)); //for Efficiencies
+    //auto TruePtProj_MC = (TH1 *)hTrue_MC->ProjectionX(Form("_TruePtProj_MC%.2f", scoreCut)); //for Efficiencies
 
     // Inner pseudorapidity
     auto maxScoreBin = Reco->GetZaxis()->FindBin(scoreCut);
     auto RecoPtProjInner = (TH1 *)Reco->ProjectionX(Form("_InnerRecoCut_%.2f", scoreCut), midBin, maxBin, 0, maxScoreBin);
     auto TruePtProjInner = (TH1 *)hTrue->ProjectionX(Form("_InnerTrueCut_%.2f", scoreCut), midBin, maxBin, 0, maxScoreBin);
+    //auto RecoPtProjInner_MC = (TH1 *)Reco_MC->ProjectionX(Form("_InnerRecoCut_MC_%.2f", scoreCut), midBin, maxBin, 0, maxScoreBin); //for Efficiencies
+    //auto TruePtProjInner_MC = (TH1 *)hTrue_MC->ProjectionX(Form("_InnerTrueCut_MC_%.2f", scoreCut), midBin, maxBin, 0, maxScoreBin); //for Efficiencies
 
     mPurityPtInnerVec.emplace_back(std::make_unique<TEfficiency>(*TruePtProjInner, *RecoPtProjInner));
     mPurityPtInnerVec.back()->SetNameTitle(Form("GMTrackPurityInnerEtaCut_%.2f", scoreCut), Form("GMTrackPurity (3.0 < #eta < 3.6 ) cut %.2f", scoreCut));
@@ -631,6 +665,7 @@ void finalizePurityAndEff()
     hPInner->SetMaximum(1.2);
 
     auto &hInner = mPairingPtInnerVecTH1.emplace_back((std::unique_ptr<TH1D>)static_cast<TH1D *>(RecoPtProjInner->Clone()));
+    //auto &hInner = mPairingPtInnerVecTH1.emplace_back((std::unique_ptr<TH1D>)static_cast<TH1D *>(RecoPtProjInner_MC->Clone())); //This is better for Efficiency but not available now
     hInner->Divide(PairablePtProjInner);
     hInner->SetNameTitle(Form("GMTrackPairingEffInnerPtCut_%.2f", scoreCut), Form("%.2f cut", scoreCut));
     hInner->GetYaxis()->SetTitle("Pairing Efficiency [ N_{Rec} / N_{pairable}]");
@@ -640,17 +675,21 @@ void finalizePurityAndEff()
     hInner->SetMaximum(1.8);
 
     auto &hTInner = mTPairingPtInnerVecTH1.emplace_back((std::unique_ptr<TH1D>)static_cast<TH1D *>(TruePtProjInner->Clone()));
+    //auto &hTInner = mTPairingPtInnerVecTH1.emplace_back((std::unique_ptr<TH1D>)static_cast<TH1D *>(TruePtProjInner->Clone())); //This is better for Efficiency but not available now
     hTInner->Divide(PairablePtProjInner);
     hTInner->SetNameTitle(Form("GMTrackTruePairingEffInnerPtCut_%.2f", scoreCut), Form("%.2f cut", scoreCut));
     hTInner->GetYaxis()->SetTitle("True Pairing Efficiency [ N_{True} / N_{pairable}]");
     hTInner->SetOption("COLZ");
     hTInner->SetMarkerStyle(kFullCircle);
     hTInner->SetMinimum(0.0);
-    hTInner->SetMaximum(1.8);
+    hTInner->SetMaximum(1.2);
 
     // Outer pseudorapidity
     auto RecoPtProjOuter = (TH1 *)Reco->ProjectionX(Form("_OuterRecoCut_%.2f", scoreCut), minBin, midBin, 0, maxScoreBin);
     auto TruePtProjOuter = (TH1 *)hTrue->ProjectionX(Form("_OuterTrueCut_%.2f", scoreCut), minBin, midBin, 0, maxScoreBin);
+
+    //auto RecoPtProjOuter_MC = (TH1 *)Reco_MC->ProjectionX(Form("_OuterRecoCut_MC_%.2f", scoreCut), minBin, midBin, 0, maxScoreBin); //for Efficiencies
+    //auto TruePtProjOuter_MC = (TH1 *)hTrue_MC->ProjectionX(Form("_OuterTrueCut_MC_%.2f", scoreCut), minBin, midBin, 0, maxScoreBin); //for Efficiencies
 
     mPurityPtOuterVec.emplace_back(std::make_unique<TEfficiency>(*TruePtProjOuter, *RecoPtProjOuter));
     mPurityPtOuterVec.back()->SetNameTitle(Form("GMTrackPurityOuterEtaCut_%.2f", scoreCut), Form("GMTrackPurity (2.4 < #eta < 3.0 ) cut %.2f", scoreCut));
@@ -665,6 +704,7 @@ void finalizePurityAndEff()
     hPOuter->SetMaximum(1.2);
 
     auto &hOuter = mPairingPtOuterVecTH1.emplace_back((std::unique_ptr<TH1D>)static_cast<TH1D *>(RecoPtProjOuter->Clone()));
+    //auto &hOuter = mPairingPtOuterVecTH1.emplace_back((std::unique_ptr<TH1D>)static_cast<TH1D *>(RecoPtProjOuter_MC->Clone())); //This is better for Efficiency but not available now
     hOuter->Divide(PairablePtProjOuter);
     hOuter->SetNameTitle(Form("GMTrackPairingEffOuterPtCut_%.2f", scoreCut), Form("%.2f cut", scoreCut));
     hOuter->GetYaxis()->SetTitle("Pairing Efficiency [ N_{Rec} / N_{pairable}]");
@@ -674,20 +714,23 @@ void finalizePurityAndEff()
     hOuter->SetMaximum(1.8);
 
     auto &hTOuter = mTPairingPtOuterVecTH1.emplace_back((std::unique_ptr<TH1D>)static_cast<TH1D *>(TruePtProjOuter->Clone()));
+    //auto &hTOuter = mTPairingPtOuterVecTH1.emplace_back((std::unique_ptr<TH1D>)static_cast<TH1D *>(TruePtProjOuter_MC->Clone())); //This is better for Efficiency but not available now
     hTOuter->Divide(PairablePtProjOuter);
     hTOuter->SetNameTitle(Form("GMTrackTruePairingEffOuterPtCut_%.2f", scoreCut), Form("%.2f cut", scoreCut));
     hTOuter->GetYaxis()->SetTitle("True Pairing Efficiency [ N_{True} / N_{pairable}]");
     hTOuter->SetOption("COLZ");
     hTOuter->SetMarkerStyle(kFullTriangleUp);
     hTOuter->SetMinimum(0.0);
-    hTOuter->SetMaximum(1.8);
+    hTOuter->SetMaximum(1.2);
 
     mPairingEtaPtVec.emplace_back((std::unique_ptr<TH2D>)static_cast<TH2D *>(RecoEtaPt->Clone()));
+    //mPairingEtaPtVec.emplace_back((std::unique_ptr<TH2D>)static_cast<TH2D *>(RecoEtaPt_MC->Clone())); //This is better for Efficiency but not available now
     mPairingEtaPtVec.back()->Divide(PairableEtaPt);
     mPairingEtaPtVec.back()->SetNameTitle(Form("GMTrackPairingEffEtaPtCut_%.2f", scoreCut), Form("%.2f", scoreCut));
     mPairingEtaPtVec.back()->SetOption("COLZ");
 
     mTPairingEtaPtVec.emplace_back((std::unique_ptr<TH2D>)static_cast<TH2D *>(TrueEtaPt->Clone()));
+    //mTPairingEtaPtVec.emplace_back((std::unique_ptr<TH2D>)static_cast<TH2D *>(TrueEtaPt_MC->Clone())); //This is better for Efficiency but not available now
     mTPairingEtaPtVec.back()->Divide(PairableEtaPt);
     mTPairingEtaPtVec.back()->SetNameTitle(Form("GMTrackTruePairingEffEtaPtCut_%.2f", scoreCut), Form("%.2f", scoreCut));
     mTPairingEtaPtVec.back()->SetOption("COLZ");
@@ -974,7 +1017,7 @@ void finalizePurityAndEff()
   gr2->SetMarkerStyle(kFullCircle);
   gr2->Draw("A P PMC");
   gr2->GetXaxis()->SetTitle("Global Muon True Pairing Efficiency [ N_{True} / N_{pairable}]");
-  gr2->GetXaxis()->SetLimits(0.f, 1.6);
+  gr2->GetXaxis()->SetLimits(0.f, 1.01);
   gr2->GetYaxis()->SetTitle("Pairing Purity [ N_{True} / N_{Rec}]");
   gr2->SetTitle("p_{t} = 2.25 || (3.0 < #eta < 3.6 )");
 
