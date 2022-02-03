@@ -1,0 +1,81 @@
+MODEL: LightGBM
+
+INPUT_NAME: FwdMatchTrainingTree.root
+
+OUTPUT_NAME:
+ ORIGIN: lgb.pkl
+ ONNX: lgb.onnx
+
+DEBUG_MODE:
+ SHOW_ACCULACY: 1
+ SHOW_PLOT: 1
+ EXPORT_TXT: 1
+
+SETUP_PARAMS:
+ TEST_SIZE: 0.1
+ EVAL_SIZE: 0.1
+ TEST_SEED: 1
+ EVAL_SEED: 1
+
+HYPER_PARAM_LIGHTGBM:
+ TYPE: gbdt
+ OBJECTIVE: binary
+ LEARN_RATE: 0.01
+ MAX_DEPTH: 5
+ N_ESTIMATOR: 5000
+ MAX_BIN: 20000
+ METRIC: binary_logloss
+
+LOAD_PARAMS:
+ - MFT_X
+ - MFT_Y
+ - MFT_Phi
+ - MFT_Tanl
+ - MFT_InvQPt
+ - MCH_X
+ - MCH_Y
+ - MCH_Phi
+ - MCH_Tanl
+ - MCH_InvQPt
+ - MFT_TrackChi2
+ - MFT_NClust
+ - MatchingChi2
+ - Truth
+
+CALC_PARAMS:
+ Delta_X:
+  - MFT_X
+  - MCH_X
+ Delta_Y:
+  - MFT_Y
+  - MCH_Y
+ Delta_Phi:
+  - MFT_Phi
+  - MCH_Phi
+ Delta_Tanl:
+  - MFT_Tanl
+  - MCH_Tanl
+ Delta_InvQPt:
+  - MFT_InvQPt
+  - MCH_InvQPt
+
+TRAIN_PARAMS:
+ - MFT_X
+ - MFT_Y
+ - MFT_Phi
+ - MFT_Tanl
+ - MFT_InvQPt
+ - MCH_X
+ - MCH_Y
+ - MCH_Phi
+ - MCH_Tanl
+ - MCH_InvQPt
+ - MFT_TrackChi2
+ - Delta_X
+ - Delta_Y
+ - Delta_Phi
+ - Delta_Tanl
+ - Delta_InvQPt
+
+OBJECT:
+ - Truth
