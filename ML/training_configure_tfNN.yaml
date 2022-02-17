@@ -1,9 +1,9 @@
-MODEL: LightGBM
+MODEL: TensorFlowNN
 
 INPUT_NAME: FwdMatchTrainingTree.root
 
 OUTPUT_NAME:
- ORIGIN: model.pkl
+ ORIGIN: tfNN.pkl
  ONNX: model.onnx
 
 DEBUG_MODE:
@@ -12,8 +12,8 @@ DEBUG_MODE:
  EXPORT_TXT: 1
 
 SETUP_PARAMS:
- TEST_SIZE: 0.2
- EVAL_SIZE: 0.2
+ TEST_SIZE: 0.1
+ EVAL_SIZE: 0.1
  TEST_SEED: 1
  EVAL_SEED: 1
 
@@ -21,10 +21,10 @@ HYPER_PARAM:
  TYPE: gbdt
  OBJECTIVE: binary
  LEARN_RATE: 0.01
- MAX_DEPTH: 64
+ MAX_DEPTH: 5
  N_ESTIMATOR: 1000
- MAX_BIN: 200
- METRIC: custom
+ MAX_BIN: 20000
+ METRIC: auc
 
 LOAD_PARAMS:
  - MFT_X
@@ -38,24 +38,11 @@ LOAD_PARAMS:
  - MCH_Tanl
  - MCH_InvQPt
  - MFT_TrackChi2
+ - MFT_NClust
+ - MatchingChi2
  - Truth
 
 CALC_PARAMS:
- Ratio_X:
-  - MFT_X
-  - MCH_X
- Ratio_Y:
-  - MFT_Y
-  - MCH_Y
- Ratio_Phi:
-  - MFT_Phi
-  - MCH_Phi
- Ratio_Tanl:
-  - MFT_Tanl
-  - MCH_Tanl
- Ratio_InvQPt:
-  - MFT_InvQPt
-  - MCH_InvQPt
  Delta_X:
   - MFT_X
   - MCH_X
@@ -84,11 +71,6 @@ TRAIN_PARAMS:
  - MCH_Tanl
  - MCH_InvQPt
  - MFT_TrackChi2
- - Ratio_X
- - Ratio_Y
- - Ratio_Phi
- - Ratio_Tanl
- - Ratio_InvQPt
  - Delta_X
  - Delta_Y
  - Delta_Phi

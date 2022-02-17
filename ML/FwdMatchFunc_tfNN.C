@@ -32,12 +32,6 @@ std::vector<float> getVariables(const GlobalFwdTrack &mchTrack, const TrackParCo
   Float_t MCH_InvQPt = mchTrack.getInvQPt();
   
   Float_t MFT_TrackChi2   = mftTrack.getTrackChi2();
-
-  Float_t Ratio_X      = MFT_X      / MCH_X;
-  Float_t Ratio_Y      = MFT_Y      / MCH_Y;
-  Float_t Ratio_Phi    = MFT_Phi    / MCH_Phi;
-  Float_t Ratio_Tanl   = MFT_Tanl   / MCH_Tanl;
-  Float_t Ratio_InvQPt = MFT_InvQPt / MCH_InvQPt;
         
   Float_t Delta_X      = MFT_X      - MCH_X;
   Float_t Delta_Y      = MFT_Y      - MCH_Y;
@@ -57,11 +51,6 @@ std::vector<float> getVariables(const GlobalFwdTrack &mchTrack, const TrackParCo
       MCH_Tanl,
       MCH_InvQPt,
       MFT_TrackChi2,
-      Ratio_X,
-      Ratio_Y,
-      Ratio_Phi,
-      Ratio_Tanl,
-      Ratio_InvQPt,
       Delta_X,
       Delta_Y,
       Delta_Phi,
@@ -90,25 +79,24 @@ MatchingFunc_t matchONNX = [](const GlobalFwdTrack &mchTrack, const TrackParCovF
   input_shapes = session.GetInputShapes();
   output_names = session.GetOutputNames();
   output_shapes = session.GetOutputShapes();
-
+  
   auto input_shape = input_shapes[0];
   input_shape[0] = 1;
-
+  
   std::vector<float> input_tensor_values;
   input_tensor_values = getVariables(mchTrack,mftTrack);
-  
+
   std::vector<Ort::Value> input_tensors;
   input_tensors.push_back(Ort::Experimental::Value::CreateTensor<float>
-  			  (input_tensor_values.data(), input_tensor_values.size(), input_shape));  
+  			  (input_tensor_values.data(), input_tensor_values.size(), input_shape));
+  
   std::vector<Ort::Value> output_tensors = session.Run(input_names, input_tensors, output_names);
 
-  const int* output_label = output_tensors[0].GetTensorData<int>();  
-  const float* output_value = output_tensors[1].GetTensorData<float>();
-  cout << "Probability of wrong matching... " << 1-output_value[1] << endl;
-  auto score = 1-output_value[1];
+  const float* output_value = output_tensors[0].GetTensorData<float>();
   
-  return score;
+  auto score = 1-output_value[0];
 
+  return score;
 };
 
 MatchingFunc_t *getMatchingFunction()
