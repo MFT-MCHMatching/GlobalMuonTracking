@@ -25,8 +25,13 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Input, Dense
+from tensorflow.keras.models import Model
+from tensorflow.keras.utils import plot_model
+from tensorflow.keras.layers import concatenate
+from tensorflow.keras.layers import BatchNormalization 
+from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import LayerNormalization
 
 import keras2onnx
 import tf2onnx
@@ -81,6 +86,7 @@ def get_external_params():
     global SETUP_PARAMS_KEY 
     global OUTPUT_NAME_KEY
     global DEBUG_MODE_KEY
+    global STRUCTURE_KEY
 
     parser = argparse.ArgumentParser()
     parser.add_argument("config")
@@ -92,6 +98,7 @@ def get_external_params():
         MODEL_KEY = obj['MODEL']
         INPUT_NAME_KEY = obj['INPUT_NAME']
         LOAD_PARAMS_KEY = obj['LOAD_PARAMS']
+        STRUCTURE_KEY = obj['STRUCTURE']
         CALC_PARAMS_KEY = obj['CALC_PARAMS']
         OBJECT_KEY = obj['OBJECT']
         HYPER_PARAM_KEY = obj['HYPER_PARAM']
@@ -180,32 +187,146 @@ def create_model_TensorFlowNN():
     import pickle
     global model
 
-    normalize = preprocessing.Normalization()
+    METRICS = [ 
+      keras.metrics.BinaryAccuracy(name='accuracy'),
+      keras.metrics.Precision(name='precision'),
+      keras.metrics.Recall(name='recall'),
+      keras.metrics.AUC(name='auc'),
+      keras.metrics.AUC(name='prc', curve='PR')]
+  
+    modelA=STRUCTURE_KEY['modelA']
+    modelB=STRUCTURE_KEY['modelB']
+    modelM=STRUCTURE_KEY['modelM']
 
-    model = tf.keras.Sequential([normalize,
-                                 layers.Dense(x_train.shape[1], use_bias=False),
-                                 layers.Dense(x_train.shape[1], activation='sigmoid',use_bias=False),
-                                 layers.Dense(x_train.shape[1], activation='sigmoid',use_bias=False),
-                                 layers.Dense(x_train.shape[1], activation='sigmoid',use_bias=False),
-                                 layers.Dense(x_train.shape[1], activation='sigmoid',use_bias=False),
-                                 layers.Dense(x_train.shape[1], activation='sigmoid',use_bias=False),
-                                 layers.Dense(x_train.shape[1], activation='sigmoid',use_bias=False),
-                                 layers.Dense(x_train.shape[1], activation='sigmoid',use_bias=False),
-                                 layers.Dense(x_train.shape[1], activation='sigmoid',use_bias=False),
-                                 layers.Dense(x_train.shape[1], activation='sigmoid',use_bias=False),
-                                 layers.Dense(1, activation='sigmoid')])                             
+    modelA=np.array(modelA)
+    modelB=np.array(modelB)
+    modelM=np.array(modelM)
 
-    model.compile(loss='binary_crossentropy', optimizer=tf.optimizers.Adam(learning_rate=0.005), metrics=['accuracy'])
+    if (modelM.shape[0] != 0): 
+      MultipleInput = 1
+    else: 
+      MultipleInput = 0
 
-    training_history = model.fit(x_train, y_train,
-                                 epochs=1500,
-                                 batch_size=1024,
-                                 verbose=1,
-                                 validation_data=(x_valid, y_valid))
+    if (MultipleInput == 0): 
+      modelA_inputShape = int(modelA[0]); 
+      modelA_Normalization = int(modelA[1]); 
+      A1 = Input(shape = (modelA_inputShape,))
+      lst = np.size(modelA);
+      it= lst/3; 
+      if (modelA_Normalization == 1):
+         A = LayerNormalization(axis=-1)(A1)
+         A = Dense(int(modelA[3]), use_bias=False)(A)
+      else: 
+         A = Dense(int(modelA[3]), use_bias=False)(A1)
+      modelA_Shape = modelA[3::3]
+      modelA_Normalization= modelA[4::3]
+      modelA_Dropout = modelA[5::3]
+      for i in range(0,int(it)-1):
+        if ((i != 0) or (int(modelA_Shape[i]) != 0)):
+            A = Dense(int(modelA_Shape[i]), activation='sigmoid',use_bias=False)(A)
+        if (int(modelA_Normalization[i]) == 1):
+            A = LayerNormalization(axis=-1)(A)
+        if (modelA_Dropout[i] != 0.0):
+            A = Dropout(modelA_Dropout[i])(A)            
+      A = Model(inputs=A1, outputs=A)
 
-    with open(OUTPUT_NAME_KEY['ORIGIN'],"wb") as f:
-        model.save('tf_model')
-        #pickle.dump(model,f)
+      #print(A.summary())
+      #plot_model(A,to_file="ModelStructA.png",show_shapes=True)
+
+      A.compile(loss='binary_crossentropy', optimizer=tf.optimizers.Adam(learning_rate=HYPER_PARAM_KEY['LEARN_RATE']), metrics=METRICS)
+      training_history = A.fit(x_train, y_train,
+                              epochs=HYPER_PARAM_KEY['EPOCHS'],
+                              batch_size=HYPER_PARAM_KEY['BATCH_SIZE'],
+                              verbose=HYPER_PARAM_KEY['VERBOSE'],
+                              validation_split=HYPER_PARAM_KEY['VALIDATION_SPLIT'])
+
+      with open(OUTPUT_NAME_KEY['ORIGIN'],"wb") as f:
+        A.save('tf_model')
+
+    else:
+      modelA_inputShape = int(modelA[0]);
+      modelA_Normalization = int(modelA[1]);
+      A1 = Input(shape = (modelA_inputShape,))
+      lst = np.size(modelA);
+      it= lst/3;
+      if (modelA_Normalization == 1):
+        A = LayerNormalization(axis=-1)(A1)
+        A = Dense(int(modelA[3]), use_bias=False)(A)
+      else:
+        A = Dense(int(modelA[3]), use_bias=False)(A1)
+      modelA_Shape = modelA[3::3]
+      modelA_Normalization= modelA[4::3]
+      modelA_Dropout = modelA[5::3]
+
+      for i in range(0,int(it)-1):
+        if ((i != 0) or (int(modelA_Shape[i]) != 0)):
+            A = Dense(int(modelA_Shape[i]), activation='sigmoid',use_bias=False)(A) 
+        if (int(modelA_Normalization[i]) == 1):
+            A = LayerNormalization(axis=-1)(A)
+        if (modelA_Dropout[i] != 0.0):
+            A = Dropout(modelA_Dropout[i])(A)
+      A = Model(inputs=A1, outputs=A)
+
+      modelB_inputShape = int(modelB[0]);
+      modelB_Normalization = int(modelB[1]);
+      B1 = Input(shape = (modelB_inputShape,))
+      lst = np.size(modelB);
+      it= lst/3;
+      if (modelB_Normalization == 1):
+        B = LayerNormalization(axis=-1)(B1)
+        B = Dense(int(modelB[3]), use_bias=False)(B)
+      else:
+        B = Dense(int(modelB[3]), use_bias=False)(B1)
+
+      modelB_Shape = modelB[3::3]
+      modelB_Normalization= modelB[4::3]
+      modelB_Dropout = modelB[5::3]
+      for i in range(0,int(it)-1):
+        if ((i != 0) or (int(modelB_Shape[i]) != 0)):
+            B = Dense(int(modelB_Shape[i]), activation='sigmoid',use_bias=False)(B)
+        if (int(modelB_Normalization[i]) == 1):
+            B = LayerNormalization(axis=-1)(B)
+        if (modelB_Dropout[i] != 0.0):
+            B = Dropout(modelB_Dropout[i])(B)
+      B = Model(inputs=B1, outputs=B)
+
+      M1 = concatenate([A.output,B.output])
+      modelM_Normalization = int(modelM[1]); 
+      lst = np.size(modelM);
+      it= lst/3;
+      if (modelM_Normalization == 1):
+          M = LayerNormalization(axis=-1)(M1)
+          M = Dense(int(modelM[3]), use_bias=False)(M)
+      else: 
+          M = Dense(int(modelM[3]), use_bias=False)(M1)
+      modelM_Shape = modelM[3::3]
+      modelM_Normalization= modelM[4::3]
+      modelM_Dropout = modelM[5::3]
+      for i in range(0,int(it)-1):
+        if ((i != 0) or (int(modelM_Shape[i]) != 0)):
+            M = Dense(int(modelM_Shape[i]), activation='sigmoid',use_bias=False)(M)
+        if (int(modelM_Normalization[i]) == 1):
+            M = LayerNormalization(axis=-1)(M)
+        if (modelM_Dropout[i] != 0.0):
+            M = Dropout(modelM_Dropout[i])(M)
+      M = Dense(1, activation='sigmoid',use_bias=False)(M)
+      full_mod = Model(inputs=[A.input, B.input], outputs=M) 
+
+      #print(full_mod.summary())
+      #plot_model(full_mod,to_file="ModelStruct.png",show_shapes=True)
+
+      x1_train, x2_train = np.hsplit(x_train, [int(modelA[0])]);
+
+      full_mod.compile(loss='binary_crossentropy', optimizer=tf.optimizers.Adam(learning_rate=HYPER_PARAM_KEY['LEARN_RATE']), metrics=METRICS)
+      training_history = full_mod.fit(x=[x1_train,x2_train], y=y_train,
+                                     epochs=HYPER_PARAM_KEY['EPOCHS'],
+                                     batch_size=HYPER_PARAM_KEY['BATCH_SIZE'],
+                                     verbose=HYPER_PARAM_KEY['VERBOSE'],
+                                     validation_split=HYPER_PARAM_KEY['VALIDATION_SPLIT'])
+    
+      with open(OUTPUT_NAME_KEY['ORIGIN'],"wb") as f:
+        full_mod.save('tf_model')
+
 
 def convert_onnx_TensorFlowNN():
     
@@ -461,6 +582,7 @@ if __name__ == "__main__":
     global SETUP_PARAMS_KEY 
     global OUTPUT_NAME_KEY
     global DEBUG_MODE_KEY
+    global STRUCTURE_KEY
     
     global df
     global df_train

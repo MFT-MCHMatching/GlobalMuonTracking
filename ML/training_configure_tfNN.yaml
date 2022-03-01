@@ -20,11 +20,20 @@ SETUP_PARAMS:
 HYPER_PARAM:
  TYPE: gbdt
  OBJECTIVE: binary
- LEARN_RATE: 0.01
- MAX_DEPTH: 5
- N_ESTIMATOR: 1000
- MAX_BIN: 20000
+ LEARN_RATE: 0.0005
  METRIC: auc
+ EPOCHS: 500
+ BATCH_SIZE: 32
+ VERBOSE: 1
+ VALIDATION_SPLIT: 0.2
+
+STRUCTURE:
+  modelA:
+    []
+  modelB:
+    []
+  modelM:
+    []
 
 LOAD_PARAMS:
  - MFT_X
@@ -61,14 +70,14 @@ CALC_PARAMS:
 
 TRAIN_PARAMS:
  - MFT_X
- - MFT_Y
- - MFT_Phi
- - MFT_Tanl
- - MFT_InvQPt
  - MCH_X
+ - MFT_Y
  - MCH_Y
+ - MFT_Phi
  - MCH_Phi
+ - MFT_Tanl
  - MCH_Tanl
+ - MFT_InvQPt
  - MCH_InvQPt
  - MFT_TrackChi2
  - Delta_X
